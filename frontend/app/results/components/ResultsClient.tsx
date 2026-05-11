@@ -168,13 +168,13 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
           return (
             <div
               key={e.id}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4 flex items-center justify-between gap-4 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm transition"
+              className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between gap-3 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm transition"
             >
               <Link href={`/results/${e.id}`} className="min-w-0 flex-1 group">
-                <p className="font-semibold text-gray-900 dark:text-slate-100 text-[15px] truncate group-hover:text-emerald-600 transition">
+                <p className="font-semibold text-gray-900 dark:text-slate-100 text-[14px] sm:text-[15px] truncate group-hover:text-emerald-600 transition">
                   {e.name}
                 </p>
-                <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1">
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                     <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
@@ -191,12 +191,12 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
               </Link>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.className}`}>
+                <span className={`hidden sm:inline px-3 py-1 rounded-full text-xs font-medium ${badge.className}`}>
                   {badge.label}
                 </span>
                 <button
                   onClick={() => toggle(e)}
-                  className={`px-4 py-1.5 rounded-lg border text-sm font-medium transition ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg border text-xs sm:text-sm font-medium transition ${
                     added
                       ? 'bg-emerald-500 border-emerald-500 text-white'
                       : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:border-gray-400'

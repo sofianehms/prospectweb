@@ -124,7 +124,7 @@ export default function ProspectsClient() {
             return (
               <div
                 key={p.id}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4 flex items-center justify-between gap-4 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm transition"
+                className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between gap-3 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm transition"
               >
                 {/* Infos */}
                 <Link href={`/results/${p.id}`} className="min-w-0 flex-1 group">
@@ -141,7 +141,7 @@ export default function ProspectsClient() {
                   <select
                     value={p.crmStatus}
                     onChange={e => setStatus(p.id, e.target.value as CrmStatus)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border focus:outline-none transition ${meta.className}`}
+                    className={`max-w-[120px] sm:max-w-none px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border focus:outline-none transition ${meta.className}`}
                   >
                     <option value="to_contact">À contacter</option>
                     <option value="contacted">Contacté</option>

@@ -48,7 +48,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         </Link>
       </AppHeader>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 transition mb-6">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -63,18 +63,18 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-5 text-center">
-                <p className="text-3xl font-bold text-gray-900 dark:text-slate-100">{data.summary.total}</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Résultats trouvés</p>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-2 sm:px-4 py-4 sm:py-5 text-center">
+                <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100">{data.summary.total}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-1 leading-tight">Résultats</p>
               </div>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-5 text-center">
-                <p className="text-3xl font-bold text-orange-500">{data.summary.none}</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Sans site web</p>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-2 sm:px-4 py-4 sm:py-5 text-center">
+                <p className="text-xl sm:text-3xl font-bold text-orange-500">{data.summary.none}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-1 leading-tight">Sans site</p>
               </div>
-              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 py-5 text-center">
-                <p className="text-3xl font-bold text-amber-500">{data.summary.outdated}</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Site obsolète</p>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-2 sm:px-4 py-4 sm:py-5 text-center">
+                <p className="text-xl sm:text-3xl font-bold text-amber-500">{data.summary.outdated}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-1 leading-tight">Obsolète</p>
               </div>
             </div>
 

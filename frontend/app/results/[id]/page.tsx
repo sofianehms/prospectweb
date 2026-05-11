@@ -31,7 +31,7 @@ export default function DetailPage() {
         </button>
       </AppHeader>
 
-      <main className="max-w-2xl mx-auto px-6 py-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
 
         <Link href="/results" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 transition mb-5">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

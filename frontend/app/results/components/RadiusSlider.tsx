@@ -45,7 +45,7 @@ export default function RadiusSlider() {
         className="disabled:opacity-50"
       />
       <div className="flex justify-between text-xs text-gray-400 dark:text-slate-500 mt-1 px-0.5">
-        <span>1 km</span><span>10 km</span><span>25 km</span><span>50 km</span>
+        <span>1 km</span><span className="hidden sm:inline">10 km</span><span className="hidden sm:inline">25 km</span><span>50 km</span>
       </div>
     </div>
   )
