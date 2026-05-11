@@ -1,0 +1,132 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import type { SearchResult, WebsiteStatus } from '@/app/types/establishment'
+
+const STATUS_COLOR: Record<WebsiteStatus, string> = {
+  none:     '#f97316', // orange
+  outdated: '#f59e0b', // amber
+  ok:       '#22c55e', // green
+}
+
+const STATUS_LABEL: Record<WebsiteStatus, string> = {
+  none:     'Pas de site',
+  outdated: 'Site obsolète',
+  ok:       'Site actif',
+}
+
+function getZoom(radiusMeters: number): number {
+  if (radiusMeters <=  1000) return 15
+  if (radiusMeters <=  2000) return 14
+  if (radiusMeters <=  5000) return 13
+  if (radiusMeters <= 10000) return 12
+  if (radiusMeters <= 25000) return 11
+  return 10
+}
+
+function dotIcon(color: string) {
+  return L.divIcon({
+    html: `<div style="
+      width:13px;height:13px;border-radius:50%;
+      background:${color};border:2.5px solid #fff;
+      box-shadow:0 1px 5px rgba(0,0,0,.35);
+      cursor:pointer;
+    "></div>`,
+    iconSize:   [13, 13],
+    iconAnchor: [6, 6],
+    className:  '',
+  })
+}
+
+export default function Map({ data }: { data: SearchResult }) {
+  const containerRef    = useRef<HTMLDivElement>(null)
+  const mapRef          = useRef<L.Map | null>(null)
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return
+
+    const map = L.map(containerRef.current, { zoomControl: true }).setView(
+      [data.center.lat, data.center.lng],
+      getZoom(data.radius)
+    )
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map)
+
+    // Cercle du rayon de recherche
+    const circle = L.circle([data.center.lat, data.center.lng], {
+      radius:      data.radius,
+      color:       '#10b981',
+      fillColor:   '#10b981',
+      fillOpacity: 0.05,
+      weight:      1.5,
+      dashArray:   '6 4',
+    }).addTo(map)
+
+    // Marqueur central
+    L.circleMarker([data.center.lat, data.center.lng], {
+      radius:      5,
+      color:       '#fff',
+      fillColor:   '#10b981',
+      fillOpacity: 1,
+      weight:      2,
+    }).addTo(map)
+
+    // Marqueurs des établissements
+    data.establishments.forEach(e => {
+      const color = STATUS_COLOR[e.websiteStatus]
+      const label = STATUS_LABEL[e.websiteStatus]
+
+      L.marker([e.lat, e.lng], { icon: dotIcon(color) })
+        .bindPopup(
+          `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:170px;padding:2px 0">
+            <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:#111827">${e.name}</p>
+            <p style="margin:0 0 8px;font-size:11px;color:#9ca3af;text-transform:capitalize">${e.type.replace(/_/g,' ')}</p>
+            <span style="
+              display:inline-block;padding:2px 8px;border-radius:9999px;
+              font-size:11px;font-weight:600;
+              background:${color}18;color:${color};
+            ">${label}</span>
+            <div style="margin-top:10px">
+              <a href="/results/${e.id}" style="
+                display:inline-block;padding:5px 12px;border-radius:7px;
+                background:#111827;color:#fff;font-size:11px;font-weight:600;
+                text-decoration:none;
+              ">Voir la fiche →</a>
+            </div>
+          </div>`,
+          { minWidth: 180, closeButton: true }
+        )
+        .addTo(map)
+    })
+
+    // Ajuste la vue sur le cercle de recherche
+    map.fitBounds(circle.getBounds().pad(0.1))
+
+    mapRef.current = map
+
+    return () => {
+      map.remove()
+      mapRef.current = null
+    }
+  }, [data])
+
+  return (
+    <div className="relative">
+      <div ref={containerRef} className="h-80 w-full rounded-xl overflow-hidden border border-gray-200" />
+      {/* Légende */}
+      <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 flex gap-3 text-xs text-gray-600 shadow-sm border border-gray-100">
+        {Object.entries(STATUS_COLOR).map(([status, color]) => (
+          <div key={status} className="flex items-center gap-1.5">
+            <span style={{ background: color }} className="w-2.5 h-2.5 rounded-full flex-shrink-0 block" />
+            {STATUS_LABEL[status as WebsiteStatus]}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

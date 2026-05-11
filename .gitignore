@@ -1,0 +1,18 @@
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Backend
+backend/dist/
+backend/node_modules/
+
+# Divers
+node_modules/
+.DS_Store
+*.log

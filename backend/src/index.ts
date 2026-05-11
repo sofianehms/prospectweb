@@ -1,0 +1,24 @@
+import path from 'path';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import searchRouter from './routes/search';
+
+// Charge le .env racine du projet (un niveau au-dessus de /backend)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
+app.use(express.json());
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.use('/api/search', searchRouter);
+
+app.listen(PORT, () => {
+  console.log(`Backend running on http://localhost:${PORT}`);
+});
