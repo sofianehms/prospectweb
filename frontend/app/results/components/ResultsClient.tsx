@@ -6,7 +6,18 @@ import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/est
 import { distanceTo, formatDistance } from '@/app/types/establishment'
 import { useProspects } from '@/app/hooks/useProspects'
 
-type Tab = 'all' | 'none' | 'outdated' | 'not_added'
+type Tab    = 'all' | 'none' | 'outdated' | 'not_added'
+type SortBy = 'relevance' | 'distance' | 'rating' | 'reviews' | 'alpha'
+
+const SORT_OPTIONS: { id: SortBy; label: string }[] = [
+  { id: 'relevance', label: 'Pertinence' },
+  { id: 'distance',  label: 'Distance'   },
+  { id: 'rating',    label: 'Note Google' },
+  { id: 'reviews',   label: 'Popularité'  },
+  { id: 'alpha',     label: 'Alphabétique'},
+]
+
+const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, outdated: 1, ok: 2 }
 
 const BADGE: Record<WebsiteStatus, { label: string; className: string }> = {
   none:     { label: 'Pas de site',   className: 'bg-red-50 text-red-500' },
@@ -33,9 +44,10 @@ const PAGE_SIZE = 10
 
 export default function ResultsClient({ data }: { data: SearchResult }) {
   const { add, remove, isAdded } = useProspects()
-  const [tab, setTab]           = useState<Tab>('all')
+  const [tab, setTab]               = useState<Tab>('all')
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
-  const [visible, setVisible]   = useState(PAGE_SIZE)
+  const [sortBy, setSortBy]         = useState<SortBy>('relevance')
+  const [visible, setVisible]       = useState(PAGE_SIZE)
 
   useEffect(() => {
     sessionStorage.setItem('pw_search_results', JSON.stringify(data))
@@ -64,8 +76,32 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
     return matchTab && matchType
   }), [data.establishments, tab, typeFilter, isAdded])
 
-  const shown     = filtered.slice(0, visible)
-  const remaining = filtered.length - shown.length
+  // Tri
+  const sorted = useMemo(() => {
+    const arr = [...filtered]
+    const dist = (e: Establishment) => distanceTo(data.center, { lat: e.lat, lng: e.lng })
+    switch (sortBy) {
+      case 'distance':
+        return arr.sort((a, b) => dist(a) - dist(b))
+      case 'rating':
+        return arr.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
+      case 'reviews':
+        return arr.sort((a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0))
+      case 'alpha':
+        return arr.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+      case 'relevance':
+      default:
+        // Prospects sans site en premier, puis site obsolète, puis actif.
+        // À égalité de statut : plus proche d'abord.
+        return arr.sort((a, b) => {
+          const s = STATUS_SCORE[a.websiteStatus] - STATUS_SCORE[b.websiteStatus]
+          return s !== 0 ? s : dist(a) - dist(b)
+        })
+    }
+  }, [filtered, sortBy, data.center])
+
+  const shown     = sorted.slice(0, visible)
+  const remaining = sorted.length - shown.length
   const addedCount = data.establishments.filter(e => isAdded(e.id)).length
 
   const tabs: { id: Tab; label: string; count: number }[] = [
@@ -82,6 +118,11 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
 
   function handleType(type: string | null) {
     setTypeFilter(type)
+    setVisible(PAGE_SIZE)
+  }
+
+  function handleSort(s: SortBy) {
+    setSortBy(s)
     setVisible(PAGE_SIZE)
   }
 
@@ -142,14 +183,25 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
         </div>
       )}
 
-      {/* Section title */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-slate-500 uppercase">
-          Commerces à prospecter
-        </p>
-        <span className="text-xs text-gray-400 dark:text-slate-500">
+      {/* Section title + tri */}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-slate-500 uppercase flex-shrink-0">
           {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
-        </span>
+        </p>
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <path d="M3 6h18M7 12h10M11 18h2"/>
+          </svg>
+          <select
+            value={sortBy}
+            onChange={e => handleSort(e.target.value as SortBy)}
+            className="bg-transparent border-none outline-none text-xs text-gray-600 dark:text-slate-300 cursor-pointer font-medium"
+          >
+            {SORT_OPTIONS.map(o => (
+              <option key={o.id} value={o.id}>{o.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* List */}
