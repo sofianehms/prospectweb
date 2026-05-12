@@ -167,7 +167,7 @@ export default function SearchForm() {
           <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Rayon de recherche</span>
           <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">{radius} km</span>
         </div>
-        <input type="range" min={1} max={50} step={1} value={radius}
+        <input type="range" min={1} max={10} step={1} value={radius}
           onChange={e => setRadius(Number(e.target.value))} aria-label="Rayon de recherche" />
       </div>
 

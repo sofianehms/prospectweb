@@ -28,8 +28,8 @@ router.get('/', async (req: Request, res: Response) => {
   const { address, lat, lng, radius, type } = req.query;
 
   const radiusMeters = Number(radius);
-  if (!radius || isNaN(radiusMeters) || radiusMeters <= 0 || radiusMeters > 50000) {
-    res.status(400).json({ error: 'Le paramètre radius est requis (1–50000 mètres).' });
+  if (!radius || isNaN(radiusMeters) || radiusMeters <= 0 || radiusMeters > 10000) {
+    res.status(400).json({ error: 'Le paramètre radius est requis (1–10000 mètres).' });
     return;
   }
 

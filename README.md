@@ -8,7 +8,7 @@ Outil de prospection locale pour créateurs de sites web. Identifie les commerce
 
 ## Fonctionnalités
 
-- **Recherche géolocalisée** — par adresse (autocomplétion) ou position GPS, rayon jusqu'à 50 km
+- **Recherche géolocalisée** — par adresse (autocomplétion) ou position GPS, rayon jusqu'à 10 km
 - **23 types de commerces** interrogés en parallèle via Google Places API
 - **Vérification des sites web** — détecte si le site répond et si son contenu est récent (< 2 ans)
 - **Classement des prospects** — `Sans site` / `Site obsolète` / `Site actif`
@@ -131,7 +131,7 @@ Recherche les commerces autour d'un point et vérifie leurs sites web.
 |-----------|------|-------------|
 | `address` | string | Adresse textuelle (ou `lat` + `lng`) |
 | `lat` / `lng` | number | Coordonnées GPS |
-| `radius` | number | Rayon en mètres (max 50 000) |
+| `radius` | number | Rayon en mètres (max 10 000) |
 | `type` | string | Type Google Places (optionnel) |
 
 **Réponse**

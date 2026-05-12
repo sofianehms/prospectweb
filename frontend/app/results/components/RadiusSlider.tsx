@@ -36,7 +36,7 @@ export default function RadiusSlider() {
         </div>
       </div>
       <input
-        type="range" min={1} max={50} step={1} value={radius}
+        type="range" min={1} max={10} step={1} value={radius}
         onChange={e => setRadius(Number(e.target.value))}
         onMouseUp={e  => apply(Number((e.target as HTMLInputElement).value))}
         onTouchEnd={e => apply(Number((e.currentTarget as HTMLInputElement).value))}
@@ -45,7 +45,7 @@ export default function RadiusSlider() {
         className="disabled:opacity-50"
       />
       <div className="flex justify-between text-xs text-gray-400 dark:text-slate-500 mt-1 px-0.5">
-        <span>1 km</span><span className="hidden sm:inline">10 km</span><span className="hidden sm:inline">25 km</span><span>50 km</span>
+        <span>1 km</span><span className="hidden sm:inline">3 km</span><span className="hidden sm:inline">7 km</span><span>10 km</span>
       </div>
     </div>
   )
