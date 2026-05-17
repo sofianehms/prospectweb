@@ -6,7 +6,7 @@ import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/est
 import { distanceTo, formatDistance } from '@/app/types/establishment'
 import { useProspects } from '@/app/hooks/useProspects'
 
-type Tab    = 'all' | 'none' | 'outdated' | 'not_added'
+type StatusFilter = 'none' | 'outdated' | 'ok' | 'not_added'
 type SortBy = 'relevance' | 'distance' | 'rating' | 'reviews' | 'alpha'
 
 const SORT_OPTIONS: { id: SortBy; label: string }[] = [
@@ -42,57 +42,74 @@ function typeLabel(type: string) {
 
 const PAGE_SIZE = 10
 
+// websiteStatus filters use OR logic between them; not_added is AND on top
+function applyStatusFilters(
+  establishments: Establishment[],
+  filters: Set<StatusFilter>,
+  isAdded: (id: string) => boolean,
+): Establishment[] {
+  if (filters.size === 0) return establishments
+  const statusPart = new Set(
+    [...filters].filter((f): f is WebsiteStatus => f !== 'not_added')
+  )
+  const hasNotAdded = filters.has('not_added')
+  return establishments.filter(e => {
+    const matchStatus   = statusPart.size === 0 || statusPart.has(e.websiteStatus)
+    const matchNotAdded = !hasNotAdded || !isAdded(e.id)
+    return matchStatus && matchNotAdded
+  })
+}
+
 export default function ResultsClient({ data }: { data: SearchResult }) {
   const { add, remove, isAdded } = useProspects()
-  const [tab, setTab]               = useState<Tab>('all')
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
-  const [sortBy, setSortBy]         = useState<SortBy>('relevance')
-  const [visible, setVisible]       = useState(PAGE_SIZE)
+  const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set())
+  const [typeFilter, setTypeFilter]       = useState<string | null>(null)
+  const [sortBy, setSortBy]               = useState<SortBy>('relevance')
+  const [visible, setVisible]             = useState(PAGE_SIZE)
 
   useEffect(() => {
     sessionStorage.setItem('pw_search_results', JSON.stringify(data))
   }, [data])
 
-  // Comptage des prospects (none + outdated) par type — trié par count desc
+  // After status filters, before type filter — used to compute dynamic type counts
+  const statusFiltered = useMemo(
+    () => applyStatusFilters(data.establishments, statusFilters, isAdded),
+    [data.establishments, statusFilters, isAdded]
+  )
+
+  // Type counts depend on current status selection
   const typeOptions = useMemo(() => {
     const counts: Record<string, number> = {}
-    for (const e of data.establishments) {
-      if (e.websiteStatus !== 'ok') {
-        counts[e.type] = (counts[e.type] ?? 0) + 1
-      }
+    for (const e of statusFiltered) {
+      counts[e.type] = (counts[e.type] ?? 0) + 1
     }
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-  }, [data.establishments])
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])
+  }, [statusFiltered])
 
-  // Filtrage combiné : onglet statut + type
-  const filtered = useMemo(() => data.establishments.filter(e => {
-    const matchTab =
-      tab === 'none'      ? e.websiteStatus === 'none' :
-      tab === 'outdated'  ? e.websiteStatus === 'outdated' :
-      tab === 'not_added' ? !isAdded(e.id) :
-      true
-    const matchType = typeFilter === null || e.type === typeFilter
-    return matchTab && matchType
-  }), [data.establishments, tab, typeFilter, isAdded])
+  // If the selected type disappears from the filtered set, reset it
+  useEffect(() => {
+    if (typeFilter !== null && !typeOptions.some(([t]) => t === typeFilter)) {
+      setTypeFilter(null)
+    }
+  }, [typeOptions, typeFilter])
 
-  // Tri
+  // Final list: status + type
+  const filtered = useMemo(
+    () => statusFiltered.filter(e => typeFilter === null || e.type === typeFilter),
+    [statusFiltered, typeFilter]
+  )
+
+  // Sort
   const sorted = useMemo(() => {
-    const arr = [...filtered]
+    const arr  = [...filtered]
     const dist = (e: Establishment) => distanceTo(data.center, { lat: e.lat, lng: e.lng })
     switch (sortBy) {
-      case 'distance':
-        return arr.sort((a, b) => dist(a) - dist(b))
-      case 'rating':
-        return arr.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
-      case 'reviews':
-        return arr.sort((a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0))
-      case 'alpha':
-        return arr.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+      case 'distance': return arr.sort((a, b) => dist(a) - dist(b))
+      case 'rating':   return arr.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
+      case 'reviews':  return arr.sort((a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0))
+      case 'alpha':    return arr.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
       case 'relevance':
       default:
-        // Prospects sans site en premier, puis site obsolète, puis actif.
-        // À égalité de statut : plus proche d'abord.
         return arr.sort((a, b) => {
           const s = STATUS_SCORE[a.websiteStatus] - STATUS_SCORE[b.websiteStatus]
           return s !== 0 ? s : dist(a) - dist(b)
@@ -100,19 +117,28 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
     }
   }, [filtered, sortBy, data.center])
 
-  const shown     = sorted.slice(0, visible)
-  const remaining = sorted.length - shown.length
+  const shown      = sorted.slice(0, visible)
+  const remaining  = sorted.length - shown.length
   const addedCount = data.establishments.filter(e => isAdded(e.id)).length
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: 'all',       label: 'Tous',         count: data.establishments.length },
+  const STATUS_TABS: { id: StatusFilter; label: string; count: number }[] = [
     { id: 'none',      label: 'Sans site',     count: data.summary.none },
     { id: 'outdated',  label: 'Site vieillot', count: data.summary.outdated },
+    { id: 'ok',        label: 'Site actif',    count: data.summary.ok },
     { id: 'not_added', label: 'Pas ajouté',    count: data.establishments.length - addedCount },
   ]
 
-  function handleTab(id: Tab) {
-    setTab(id)
+  function toggleStatus(f: StatusFilter) {
+    setStatusFilters(prev => {
+      const next = new Set(prev)
+      next.has(f) ? next.delete(f) : next.add(f)
+      return next
+    })
+    setVisible(PAGE_SIZE)
+  }
+
+  function clearStatus() {
+    setStatusFilters(new Set())
     setVisible(PAGE_SIZE)
   }
 
@@ -130,16 +156,28 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
     isAdded(e.id) ? remove(e.id) : add(e)
   }
 
+  const isAllActive = statusFilters.size === 0
+
   return (
     <>
-      {/* Tabs statut */}
+      {/* Status filters — multi-select, "Tous" deselects all */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {tabs.map(t => (
+        <button
+          onClick={clearStatus}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
+            isAllActive
+              ? 'bg-emerald-500 border-emerald-500 text-white'
+              : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
+          }`}
+        >
+          Tous ({data.establishments.length})
+        </button>
+        {STATUS_TABS.map(t => (
           <button
             key={t.id}
-            onClick={() => handleTab(t.id)}
+            onClick={() => toggleStatus(t.id)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
-              tab === t.id
+              statusFilters.has(t.id)
                 ? 'bg-emerald-500 border-emerald-500 text-white'
                 : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
             }`}
@@ -149,7 +187,7 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
         ))}
       </div>
 
-      {/* Filtre par type */}
+      {/* Type filter — counts are dynamic based on current status selection */}
       {typeOptions.length > 0 && (
         <div className="mb-6">
           <p className="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2">
@@ -183,7 +221,7 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
         </div>
       )}
 
-      {/* Section title + tri */}
+      {/* Count + sort */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-slate-500 uppercase flex-shrink-0">
           {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
