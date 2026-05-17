@@ -70,53 +70,74 @@ interface RawPlace {
   userRatingCount?:     number;
 }
 
-// Requête pour un seul type — retourne [] en cas d'erreur pour ne pas bloquer les autres
+function mapPlace(p: RawPlace, type: string): Place {
+  return {
+    id:          p.id,
+    name:        p.displayName?.text ?? 'Sans nom',
+    address:     p.formattedAddress  ?? '',
+    lat:         p.location?.latitude  ?? 0,
+    lng:         p.location?.longitude ?? 0,
+    type,
+    phone:       p.nationalPhoneNumber ?? null,
+    website:     p.websiteUri          ?? null,
+    mapsUrl:     p.googleMapsUri ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName?.text ?? '')}`,
+    rating:      p.rating          ?? null,
+    ratingCount: p.userRatingCount ?? null,
+  };
+}
+
+// Requête paginée pour un seul type.
+// Types avec peu de résultats s'arrêtent tôt ; types abondants (restaurants…)
+// vont jusqu'à MAX_PAGES × 20 résultats — compense les "slots" inutilisés.
+const MAX_PAGES = 3; // max 60 résultats par type
+
 async function fetchByType(
   center: LatLng,
   radiusMeters: number,
   type: string,
   apiKey: string,
 ): Promise<Place[]> {
-  try {
-    const res = await fetch(NEARBY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':     'application/json',
-        'X-Goog-Api-Key':   apiKey,
-        'X-Goog-FieldMask': FIELD_MASK,
-      },
-      body: JSON.stringify({
-        maxResultCount: 20,
-        includedTypes: [type],
-        locationRestriction: {
-          circle: {
-            center: { latitude: center.lat, longitude: center.lng },
-            radius: radiusMeters,
-          },
+  const results: Place[] = [];
+  let pageToken: string | undefined;
+  let page = 0;
+
+  do {
+    try {
+      const body: Record<string, unknown> = pageToken
+        ? { pageToken }
+        : {
+            maxResultCount: 20,
+            includedTypes: [type],
+            locationRestriction: {
+              circle: {
+                center: { latitude: center.lat, longitude: center.lng },
+                radius: radiusMeters,
+              },
+            },
+          };
+
+      const res = await fetch(NEARBY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-Goog-Api-Key':   apiKey,
+          'X-Goog-FieldMask': FIELD_MASK,
         },
-      }),
-    });
+        body: JSON.stringify(body),
+      });
 
-    if (!res.ok) return [];
+      if (!res.ok) break;
 
-    const data = await res.json() as { places?: RawPlace[] };
+      const data = await res.json() as { places?: RawPlace[]; nextPageToken?: string };
+      results.push(...(data.places ?? []).map(p => mapPlace(p, type)));
+      pageToken = data.nextPageToken;
+      page++;
+    } catch {
+      break;
+    }
+  } while (pageToken && page < MAX_PAGES);
 
-    return (data.places ?? []).map((p): Place => ({
-      id:          p.id,
-      name:        p.displayName?.text ?? 'Sans nom',
-      address:     p.formattedAddress  ?? '',
-      lat:         p.location?.latitude  ?? 0,
-      lng:         p.location?.longitude ?? 0,
-      type,
-      phone:       p.nationalPhoneNumber ?? null,
-      website:     p.websiteUri          ?? null,
-      mapsUrl:     p.googleMapsUri ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName?.text ?? '')}`,
-      rating:      p.rating          ?? null,
-      ratingCount: p.userRatingCount ?? null,
-    }));
-  } catch {
-    return [];
-  }
+  return results;
 }
 
 export async function nearbySearch(
