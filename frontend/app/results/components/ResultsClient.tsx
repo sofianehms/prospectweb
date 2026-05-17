@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/establishment'
 import { distanceTo, formatDistance } from '@/app/types/establishment'
@@ -63,7 +63,6 @@ function applyStatusFilters(
 export default function ResultsClient({ data }: { data: SearchResult }) {
   const { add, remove, isAdded } = useProspects()
   const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set())
-  const [typeFilter, setTypeFilter]       = useState<string | null>(null)
   const [sortBy, setSortBy]               = useState<SortBy>('relevance')
   const [visible, setVisible]             = useState(PAGE_SIZE)
 
@@ -77,27 +76,7 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
     [data.establishments, statusFilters, isAdded]
   )
 
-  // Type counts depend on current status selection
-  const typeOptions = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const e of statusFiltered) {
-      counts[e.type] = (counts[e.type] ?? 0) + 1
-    }
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])
-  }, [statusFiltered])
-
-  // If the selected type disappears from the filtered set, reset it
-  useEffect(() => {
-    if (typeFilter !== null && !typeOptions.some(([t]) => t === typeFilter)) {
-      setTypeFilter(null)
-    }
-  }, [typeOptions, typeFilter])
-
-  // Final list: status + type
-  const filtered = useMemo(
-    () => statusFiltered.filter(e => typeFilter === null || e.type === typeFilter),
-    [statusFiltered, typeFilter]
-  )
+  const filtered = statusFiltered
 
   // Sort
   const sorted = useMemo(() => {
@@ -142,11 +121,6 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
     setVisible(PAGE_SIZE)
   }
 
-  function handleType(type: string | null) {
-    setTypeFilter(type)
-    setVisible(PAGE_SIZE)
-  }
-
   function handleSort(s: SortBy) {
     setSortBy(s)
     setVisible(PAGE_SIZE)
@@ -186,40 +160,6 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
           </button>
         ))}
       </div>
-
-      {/* Type filter — counts are dynamic based on current status selection */}
-      {typeOptions.length > 0 && (
-        <div className="mb-6">
-          <p className="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            Type d'établissement
-          </p>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <button
-              onClick={() => handleType(null)}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium border transition ${
-                typeFilter === null
-                  ? 'bg-gray-900 dark:bg-slate-100 border-gray-900 dark:border-slate-100 text-white dark:text-slate-900'
-                  : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
-              }`}
-            >
-              Tous les types
-            </button>
-            {typeOptions.map(([type, count]) => (
-              <button
-                key={type}
-                onClick={() => handleType(typeFilter === type ? null : type)}
-                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium border transition ${
-                  typeFilter === type
-                    ? 'bg-gray-900 dark:bg-slate-100 border-gray-900 dark:border-slate-100 text-white dark:text-slate-900'
-                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
-                }`}
-              >
-                {typeLabel(type)} ({count})
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Count + sort */}
       <div className="flex items-center justify-between mb-3 gap-2">

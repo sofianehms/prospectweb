@@ -86,101 +86,98 @@ function mapPlace(p: RawPlace, type: string): Place {
   };
 }
 
-// Requête paginée pour un seul type.
-// Types avec peu de résultats s'arrêtent tôt ; types abondants (restaurants…)
-// vont jusqu'à MAX_PAGES × 20 résultats — compense les "slots" inutilisés.
-const MAX_PAGES = 3; // max 60 résultats par type
-
 async function fetchByType(
   center: LatLng,
   radiusMeters: number,
   type: string,
   apiKey: string,
 ): Promise<Place[]> {
-  const results: Place[] = [];
-  let pageToken: string | undefined;
-  let page = 0;
-
-  do {
-    try {
-      const body: Record<string, unknown> = pageToken
-        ? { pageToken }
-        : {
-            maxResultCount: 20,
-            includedTypes: [type],
-            locationRestriction: {
-              circle: {
-                center: { latitude: center.lat, longitude: center.lng },
-                radius: radiusMeters,
-              },
-            },
-          };
-
-      const res = await fetch(NEARBY_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type':     'application/json',
-          'X-Goog-Api-Key':   apiKey,
-          'X-Goog-FieldMask': FIELD_MASK,
+  try {
+    const res = await fetch(NEARBY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type':     'application/json',
+        'X-Goog-Api-Key':   apiKey,
+        'X-Goog-FieldMask': FIELD_MASK,
+      },
+      body: JSON.stringify({
+        maxResultCount: 20,
+        includedTypes: [type],
+        locationRestriction: {
+          circle: {
+            center: { latitude: center.lat, longitude: center.lng },
+            radius: radiusMeters,
+          },
         },
-        body: JSON.stringify(body),
-      });
+      }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json() as { places?: RawPlace[] };
+    return (data.places ?? []).map(p => mapPlace(p, type));
+  } catch {
+    return [];
+  }
+}
 
-      if (!res.ok) break;
+// Nearby Search is capped at 20 per request. To get more results for a specific
+// type, we query from 5 sub-centers (original + 4 cardinal offsets). Each center
+// returns its own "top 20 closest", giving up to 100 distinct establishments.
+function subCenters(center: LatLng, radiusMeters: number): LatLng[] {
+  const offset    = radiusMeters * 0.5;
+  const latDelta  = offset / 111000;
+  const lngDelta  = offset / (111000 * Math.cos(center.lat * Math.PI / 180));
+  return [
+    center,
+    { lat: center.lat + latDelta, lng: center.lng },
+    { lat: center.lat - latDelta, lng: center.lng },
+    { lat: center.lat, lng: center.lng + lngDelta },
+    { lat: center.lat, lng: center.lng - lngDelta },
+  ];
+}
 
-      const data = await res.json() as { places?: RawPlace[]; nextPageToken?: string };
-      results.push(...(data.places ?? []).map(p => mapPlace(p, type)));
-      pageToken = data.nextPageToken;
-      page++;
-    } catch {
-      break;
+async function fetchByTypeMultiArea(
+  center: LatLng,
+  radiusMeters: number,
+  type: string,
+  apiKey: string,
+): Promise<Place[]> {
+  const centers = subCenters(center, radiusMeters);
+  const batches = await Promise.all(
+    centers.map(c => fetchByType(c, radiusMeters, type, apiKey))
+  );
+  const seen    = new Set<string>();
+  const results: Place[] = [];
+  for (const batch of batches) {
+    for (const place of batch) {
+      if (!seen.has(place.id)) { seen.add(place.id); results.push(place); }
     }
-  } while (pageToken && page < MAX_PAGES);
-
+  }
   return results;
 }
 
 export async function nearbySearch(
   center: LatLng,
   radiusMeters: number,
-  type: string | null,
+  types: string[], // vide = tous les COMMERCIAL_TYPES (zone unique) ; sinon multi-zones
 ): Promise<Place[]> {
-  const apiKey = process.env.GOOGLE_PLACES_KEY!;
+  const apiKey      = process.env.GOOGLE_PLACES_KEY!;
+  const useMulti    = types.length > 0;
+  const targetTypes = useMulti ? types : COMMERCIAL_TYPES;
 
-  // Type spécifique : une seule requête
-  if (type) {
-    const places = await fetchByType(center, radiusMeters, type, apiKey);
-    if (!places.length) {
-      // Remonte l'erreur uniquement si aucun résultat et type explicite
-      const res = await fetch(NEARBY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey, 'X-Goog-FieldMask': FIELD_MASK },
-        body: JSON.stringify({ maxResultCount: 1, includedTypes: [type], locationRestriction: { circle: { center: { latitude: center.lat, longitude: center.lng }, radius: radiusMeters } } }),
-      });
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Google Places API error ${res.status}: ${err}`);
-      }
-    }
-    return places;
-  }
-
-  // Tous les types : requêtes parallèles + dédoublonnage par id
   const batches = await Promise.all(
-    COMMERCIAL_TYPES.map(t => fetchByType(center, radiusMeters, t, apiKey))
+    targetTypes.map(t =>
+      useMulti
+        ? fetchByTypeMultiArea(center, radiusMeters, t, apiKey)
+        : fetchByType(center, radiusMeters, t, apiKey)
+    )
   );
 
-  const seen = new Set<string>();
+  const seen   = new Set<string>();
   const merged: Place[] = [];
-
   for (const batch of batches) {
     for (const place of batch) {
-      if (!seen.has(place.id)) {
-        seen.add(place.id);
-        merged.push(place);
-      }
+      if (!seen.has(place.id)) { seen.add(place.id); merged.push(place); }
     }
   }
-
   return merged;
 }

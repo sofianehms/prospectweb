@@ -4,16 +4,24 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 const CATEGORIES = [
-  { value: '',                    label: 'Tous' },
-  { value: 'restaurant',          label: 'Restaurant' },
-  { value: 'cafe',                label: 'Café / Bar' },
-  { value: 'hotel',               label: 'Hôtel' },
-  { value: 'bakery',              label: 'Boulangerie / Pâtisserie' },
-  { value: 'clothing_store',      label: 'Boutique / Commerce' },
-  { value: 'pharmacy',            label: 'Pharmacie / Santé' },
-  { value: 'hair_salon',          label: 'Coiffeur / Beauté' },
-  { value: 'real_estate_agency',  label: 'Immobilier' },
-  { value: 'gym',                 label: 'Sport / Fitness' },
+  { value: 'restaurant',         label: 'Restaurant' },
+  { value: 'cafe',               label: 'Café / Bar' },
+  { value: 'bar',                label: 'Bar / Pub' },
+  { value: 'hotel',              label: 'Hôtel' },
+  { value: 'bakery',             label: 'Boulangerie / Pâtisserie' },
+  { value: 'clothing_store',     label: 'Boutique / Commerce' },
+  { value: 'pharmacy',           label: 'Pharmacie / Santé' },
+  { value: 'hair_salon',         label: 'Coiffeur' },
+  { value: 'beauty_salon',       label: 'Institut beauté' },
+  { value: 'real_estate_agency', label: 'Immobilier' },
+  { value: 'gym',                label: 'Sport / Fitness' },
+  { value: 'car_repair',         label: 'Garagiste' },
+  { value: 'florist',            label: 'Fleuriste' },
+  { value: 'dentist',            label: 'Dentiste' },
+  { value: 'doctor',             label: 'Médecin' },
+  { value: 'supermarket',        label: 'Supermarché' },
+  { value: 'pet_store',          label: 'Animalerie' },
+  { value: 'travel_agency',      label: 'Agence de voyage' },
 ]
 
 const FILTERS = [
@@ -34,18 +42,21 @@ export default function SearchForm() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [showSugg, setShowSugg]       = useState(false)
   const [activeIdx, setActiveIdx]     = useState(-1)
-  const [category, setCategory]       = useState('')
+  const [categories, setCategories]   = useState<string[]>([])
+  const [showCatMenu, setShowCatMenu] = useState(false)
   const [radius, setRadius]           = useState(5)
   const [activeFilters, setActiveFilters] = useState<string[]>(['no_website'])
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const wrapperRef  = useRef<HTMLDivElement>(null)
+  const addrRef     = useRef<HTMLDivElement>(null)
+  const catRef      = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setShowSugg(false)
+      if (addrRef.current && !addrRef.current.contains(e.target as Node)) setShowSugg(false)
+      if (catRef.current  && !catRef.current.contains(e.target as Node))  setShowCatMenu(false)
     }
     document.addEventListener('mousedown', onOutside)
     return () => document.removeEventListener('mousedown', onOutside)
@@ -83,12 +94,23 @@ export default function SearchForm() {
     setActiveFilters(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id])
   }
 
+  function toggleCategory(value: string) {
+    setCategories(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    )
+  }
+
+  const categoryLabel =
+    categories.length === 0 ? 'Tous les types' :
+    categories.length === 1 ? (CATEGORIES.find(c => c.value === categories[0])?.label ?? categories[0]) :
+    `${categories.length} types sélectionnés`
+
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault(); setError(''); setShowSugg(false)
+    e.preventDefault(); setError(''); setShowSugg(false); setShowCatMenu(false)
     if (!address.trim() && !coords) { setError('Entrez une adresse ou utilisez votre position.'); return }
     setLoading(true)
     const params = new URLSearchParams({ radius: String(radius * 1000) })
-    if (category) params.set('type', category)
+    if (categories.length > 0) params.set('types', categories.join(','))
     if (coords) { params.set('lat', String(coords.lat)); params.set('lng', String(coords.lng)) }
     else params.set('address', address.trim())
     router.push(`/results?${params.toString()}`)
@@ -107,11 +129,12 @@ export default function SearchForm() {
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-8">
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 mb-6">
+        {/* Address */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="address" className="text-sm font-medium text-gray-700 dark:text-slate-300">
             Ville ou adresse
           </label>
-          <div ref={wrapperRef} className="relative flex gap-2">
+          <div ref={addrRef} className="relative flex gap-2">
             <div className="relative flex-1">
               <input
                 id="address" type="text" value={address} autoComplete="off"
@@ -153,15 +176,59 @@ export default function SearchForm() {
           </div>
         </div>
 
+        {/* Category multi-select */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-slate-300">Type de commerce</label>
-          <select id="category" value={category} onChange={e => setCategory(e.target.value)}
-            className="h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition cursor-pointer">
-            {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
+          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Type de commerce</label>
+          <div ref={catRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowCatMenu(v => !v)}
+              className="w-full h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+            >
+              <span className={categories.length === 0 ? 'text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-slate-100'}>
+                {categoryLabel}
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                className={`flex-shrink-0 text-gray-400 transition-transform ${showCatMenu ? 'rotate-180' : ''}`}>
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+
+            {showCatMenu && (
+              <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                {/* Tout sélectionner / désélectionner */}
+                <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setCategories([])}
+                    className="text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                  >
+                    {categories.length === 0 ? 'Tous les types (par défaut)' : 'Tout désélectionner'}
+                  </button>
+                </div>
+                <div className="max-h-56 overflow-y-auto">
+                  {CATEGORIES.map(c => (
+                    <label
+                      key={c.value}
+                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={categories.includes(c.value)}
+                        onChange={() => toggleCategory(c.value)}
+                        className="w-4 h-4 rounded accent-emerald-500 cursor-pointer flex-shrink-0"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-slate-300">{c.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Radius */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Rayon de recherche</span>
@@ -171,6 +238,7 @@ export default function SearchForm() {
           onChange={e => setRadius(Number(e.target.value))} aria-label="Rayon de recherche" />
       </div>
 
+      {/* Quick filters */}
       <div className="mb-8">
         <span className="text-sm font-medium text-gray-700 dark:text-slate-300 mr-3">Filtres rapides :</span>
         <div className="flex flex-wrap gap-2 mt-2">

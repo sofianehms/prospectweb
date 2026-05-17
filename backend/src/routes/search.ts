@@ -25,7 +25,7 @@ function resolveWebsiteStatus(
 // GET /api/search?address=Paris&radius=1000&type=restaurant
 // GET /api/search?lat=48.85&lng=2.35&radius=1000&type=restaurant
 router.get('/', async (req: Request, res: Response) => {
-  const { address, lat, lng, radius, type } = req.query;
+  const { address, lat, lng, radius, types } = req.query;
 
   const radiusMeters = Number(radius);
   if (!radius || isNaN(radiusMeters) || radiusMeters <= 0 || radiusMeters > 10000) {
@@ -54,8 +54,10 @@ router.get('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const placeType = typeof type === 'string' && type.trim() ? type.trim() : null;
-    const places    = await nearbySearch(center, radiusMeters, placeType);
+    const typeList = typeof types === 'string' && types.trim()
+      ? types.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    const places = await nearbySearch(center, radiusMeters, typeList);
 
     // Vérification des sites web en parallèle (uniquement ceux qui en ont un)
     const establishments: Establishment[] = await Promise.all(

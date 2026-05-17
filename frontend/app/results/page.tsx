@@ -9,7 +9,7 @@ import MapWrapper from './components/MapWrapper'
 
 async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
   const params = new URLSearchParams({ radius: sp.radius })
-  if (sp.type) params.set('type', sp.type)
+  if (sp.types) params.set('types', sp.types)
   if (sp.lat && sp.lng) { params.set('lat', sp.lat); params.set('lng', sp.lng) }
   else params.set('address', sp.address)
 
