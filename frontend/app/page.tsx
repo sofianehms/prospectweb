@@ -19,7 +19,8 @@ export default function Home() {
         <div className="w-full max-w-3xl">
           <div className="text-center mb-10">
             <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-slate-100 tracking-tight mb-3">
-              Trouvez vos prochains clients
+              Trouvez vos<br/>
+              <span style={{ color: 'var(--accent)' }}>prochains clients</span>
             </h1>
             <p className="text-gray-500 dark:text-slate-400 text-base leading-relaxed">
               Repérez les commerces sans site web autour de vous, prêts à<br className="hidden sm:block" /> être prospectés.

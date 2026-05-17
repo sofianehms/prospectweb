@@ -1,32 +1,33 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import ThemeProvider from './components/ThemeProvider'
+import { cookies } from 'next/headers'
 import ThemeToggle from './components/ThemeToggle'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+
+type Theme = 'sable' | 'violet' | 'minuit' | 'cosmos'
+const DARK_THEMES: Theme[] = ['minuit', 'cosmos']
 
 export const metadata: Metadata = {
   title: 'ProspectWeb — Trouvez vos prochains clients',
   description: 'Repérez les commerces sans site web autour de vous, prêts à être prospectés.',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const store  = await cookies()
+  const theme  = (store.get('pw_theme')?.value ?? 'sable') as Theme
+  const isDark = DARK_THEMES.includes(theme)
+
   return (
-    <html lang="fr" className={inter.className} suppressHydrationWarning>
-      <head>
-        {/* Anti-flash : applique le thème avant le premier rendu */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function(){
-            var t=localStorage.getItem('pw_theme')||'light';
-            var h=document.documentElement;
-            h.setAttribute('data-theme',t);
-            if(t==='dark'||t==='darker')h.classList.add('dark');
-          })()
-        `}} />
-      </head>
+    <html
+      lang="fr"
+      className={`${inter.className}${isDark ? ' dark' : ''}`}
+      data-theme={theme}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors duration-200 pb-20">
-        <ThemeProvider>{children}</ThemeProvider>
+        {children}
         <ThemeToggle />
       </body>
     </html>

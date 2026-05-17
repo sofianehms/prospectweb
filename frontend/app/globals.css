@@ -1,70 +1,147 @@
 @import "tailwindcss";
 
-/* ── Variants ── */
+/* ── Variant dark via classe .dark ── */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ════════════════════════════════════════════════════
-   THÈME CLAIR (défaut)
+   VALEURS PAR DÉFAUT (thème SABLE actif par défaut)
+   Seront surchargées par chaque [data-theme]
    ════════════════════════════════════════════════════ */
 :root {
-  color-scheme: light;
+  --accent:   #10b981;
+  --accent-2: #059669;
+}
+
+/* ── Remappe toute l'échelle emerald sur --accent ──
+   Tous les bg-emerald-*, text-emerald-*, border-emerald-*,
+   focus:ring-emerald-* utilisent automatiquement la couleur du thème. ── */
+:root, [data-theme] {
+  --color-emerald-50:  color-mix(in srgb, var(--accent) 10%, white);
+  --color-emerald-100: color-mix(in srgb, var(--accent) 18%, white);
+  --color-emerald-200: color-mix(in srgb, var(--accent) 30%, white);
+  --color-emerald-300: color-mix(in srgb, var(--accent) 50%, white);
+  --color-emerald-400: color-mix(in srgb, var(--accent) 70%, white);
+  --color-emerald-500: var(--accent);
+  --color-emerald-600: var(--accent-2);
+  --color-emerald-700: color-mix(in srgb, var(--accent-2) 85%, black);
 }
 
 /* ════════════════════════════════════════════════════
-   THÈME BEIGE — remplace l'échelle gray par du sable chaud
+   THÈME SABLE — Chaud, beige, or ambré
    ════════════════════════════════════════════════════ */
-[data-theme="beige"] {
+[data-theme="sable"] {
   color-scheme: light;
-  --color-gray-50:  #faf6ef;
+  --accent:   #c49010;
+  --accent-2: #e6b820;
+  --color-gray-50:  #faf7f0;
   --color-gray-100: #f2ebe0;
   --color-gray-200: #e5d5bc;
   --color-gray-300: #d0b896;
-  --color-gray-400: #b89060;
-  --color-gray-500: #9a7442;
-  --color-gray-600: #7d5c2e;
-  --color-gray-700: #5e4422;
-  --color-gray-800: #3e2c14;
-  --color-gray-900: #231508;
+  --color-gray-400: #b09060;
+  --color-gray-500: #8b7050;
+  --color-gray-600: #6b5238;
+  --color-gray-700: #4e3820;
+  --color-gray-800: #321f0e;
+  --color-gray-900: #1a0f04;
   --color-stone-50: #f2ebe0;
 }
-
-/* bg-white ne passe pas par une CSS var dans Tailwind v4 */
-[data-theme="beige"] .bg-white   { background-color: #fdf8f0; }
-[data-theme="beige"] .bg-stone-50 { background-color: #f2ebe0; }
-
-/* ════════════════════════════════════════════════════
-   THÈME NUIT SLATE (dark existant)
-   Activé par la classe .dark → dark: variants Tailwind
-   ════════════════════════════════════════════════════ */
+[data-theme="sable"] .bg-white { background-color: #ffffff; }
+[data-theme="sable"] body {
+  background-color: #faf7f0;
+  background-image: radial-gradient(ellipse at 90% 100%, rgba(196,144,16,.1) 0%, transparent 55%);
+}
 
 /* ════════════════════════════════════════════════════
-   THÈME NUIT NOIR — remplace l'échelle slate par du noir/gris
-   .dark est aussi ajouté pour activer les dark: variants
+   THÈME VIOLET — Lavande clair, violet electric
    ════════════════════════════════════════════════════ */
-[data-theme="darker"] {
+[data-theme="violet"] {
+  color-scheme: light;
+  --accent:   #7c3aed;
+  --accent-2: #4f46e5;
+  --color-gray-50:  #f5f3ff;
+  --color-gray-100: #ede9fe;
+  --color-gray-200: #ddd6fe;
+  --color-gray-300: #c4b5fd;
+  --color-gray-400: #9490b8;
+  --color-gray-500: #6b6090;
+  --color-gray-600: #4e4570;
+  --color-gray-700: #342c58;
+  --color-gray-800: #201840;
+  --color-gray-900: #100c28;
+  --color-stone-50: #ede9fe;
+}
+[data-theme="violet"] .bg-white { background-color: #ffffff; }
+[data-theme="violet"] body {
+  background-color: #f5f3ff;
+  background-image: radial-gradient(ellipse at 85% 95%, rgba(124,58,237,.1) 0%, transparent 55%);
+}
+
+/* ════════════════════════════════════════════════════
+   THÈME MINUIT — Noir profond, accents violets
+   (.dark est aussi appliqué pour activer dark: variants)
+   ════════════════════════════════════════════════════ */
+[data-theme="minuit"] {
   color-scheme: dark;
+  --accent:   #a78bfa;
+  --accent-2: #7c3aed;
   --color-slate-950: #000000;
-  --color-slate-900: #0c0c0c;
-  --color-slate-800: #161616;
-  --color-slate-700: #222222;
-  --color-slate-600: #2e2e2e;
-  --color-slate-500: #505050;
-  --color-slate-400: #8a8a8a;
-  --color-slate-300: #aaaaaa;
-  --color-slate-200: #cccccc;
-  --color-slate-100: #eeeeee;
-  --color-slate-50:  #f5f5f5;
+  --color-slate-900: #0a0a14;
+  --color-slate-800: #14141e;
+  --color-slate-700: #1e1e30;
+  --color-slate-600: #2a2a42;
+  --color-slate-500: #504880;
+  --color-slate-400: #9080c8;
+  --color-slate-300: #b8a8e8;
+  --color-slate-200: #d8ccff;
+  --color-slate-100: #f0ecff;
+}
+[data-theme="minuit"] body {
+  background-color: #0a0a14;
+  background-image: radial-gradient(ellipse at 85% 10%, rgba(167,139,250,.14) 0%, transparent 50%);
 }
 
-/* ── Base body ── */
-body {
-  background-color: var(--color-gray-50, #f9fafb);
-  transition: background-color 0.2s, color 0.2s;
+/* ════════════════════════════════════════════════════
+   THÈME COSMOS — Bleu nuit, accents indigo
+   ════════════════════════════════════════════════════ */
+[data-theme="cosmos"] {
+  color-scheme: dark;
+  --accent:   #818cf8;
+  --accent-2: #60a5fa;
+  --color-slate-950: #000000;
+  --color-slate-900: #080814;
+  --color-slate-800: #0f0f1e;
+  --color-slate-700: #181830;
+  --color-slate-600: #222248;
+  --color-slate-500: #3a4070;
+  --color-slate-400: #7888c0;
+  --color-slate-300: #a0b0e0;
+  --color-slate-200: #c8d4f8;
+  --color-slate-100: #e8eeff;
+}
+[data-theme="cosmos"] body {
+  background-color: #080814;
+  background-image:
+    radial-gradient(ellipse at 90% 5%,  rgba(129,140,248,.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 10% 95%, rgba(96,165,250,.07)  0%, transparent 45%);
 }
 
-.dark body {
-  background-color: var(--color-slate-900, #0f172a);
+/* ── Base ── */
+body { transition: background-color .2s, color .2s; }
+
+/* ════════════════════════════════════════════════════
+   BOUTON PRINCIPAL — gradient accent par thème
+   ════════════════════════════════════════════════════ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2, var(--accent)));
+  color: white;
+  border: none;
 }
+.btn-primary:hover:not(:disabled) {
+  opacity: .9;
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
 /* ── Slider ── */
 input[type="range"] {
@@ -77,10 +154,7 @@ input[type="range"] {
   outline: none;
   cursor: pointer;
 }
-
-.dark input[type="range"] {
-  background: var(--color-slate-700, #334155);
-}
+.dark input[type="range"] { background: var(--color-slate-700, #334155); }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -89,19 +163,16 @@ input[type="range"]::-webkit-slider-thumb {
   height: 18px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #10b981;
+  border: 2px solid var(--accent, #10b981);
   box-shadow: 0 1px 4px rgba(0,0,0,.15);
   cursor: pointer;
   transition: transform .15s;
 }
-
 input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
-
 input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #10b981;
+  border: 2px solid var(--accent, #10b981);
   cursor: pointer;
 }
