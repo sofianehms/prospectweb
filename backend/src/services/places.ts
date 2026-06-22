@@ -102,6 +102,7 @@ async function fetchByType(
       },
       body: JSON.stringify({
         maxResultCount: 20,
+        rankPreference: 'DISTANCE',
         includedTypes: [type],
         locationRestriction: {
           circle: {
@@ -135,6 +136,8 @@ function subCenters(center: LatLng, radiusMeters: number): LatLng[] {
   ];
 }
 
+const NO_WEBSITE_TARGET = 15;
+
 async function fetchByTypeMultiArea(
   center: LatLng,
   radiusMeters: number,
@@ -142,16 +145,22 @@ async function fetchByTypeMultiArea(
   apiKey: string,
 ): Promise<Place[]> {
   const centers = subCenters(center, radiusMeters);
-  const batches = await Promise.all(
-    centers.map(c => fetchByType(c, radiusMeters, type, apiKey))
-  );
   const seen    = new Set<string>();
   const results: Place[] = [];
-  for (const batch of batches) {
+  let noWebsiteCount = 0;
+
+  for (const c of centers) {
+    const batch = await fetchByType(c, radiusMeters, type, apiKey);
     for (const place of batch) {
-      if (!seen.has(place.id)) { seen.add(place.id); results.push(place); }
+      if (!seen.has(place.id)) {
+        seen.add(place.id);
+        results.push(place);
+        if (!place.website) noWebsiteCount++;
+      }
     }
+    if (noWebsiteCount >= NO_WEBSITE_TARGET) break;
   }
+
   return results;
 }
 
