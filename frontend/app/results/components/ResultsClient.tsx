@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/establishment'
 import { distanceTo, formatDistance } from '@/app/types/establishment'

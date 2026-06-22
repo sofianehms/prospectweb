@@ -2,8 +2,13 @@ import { Router, Request, Response } from 'express';
 import { geocodeAddress } from '../services/geocode';
 import { nearbySearch, Place } from '../services/places';
 import { checkWebsite } from '../services/websiteChecker';
+import { cacheKey, getCached, setCached } from '../services/cache';
+import { requireInternalSecret } from '../middleware/auth';
+import { searchRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+router.use(searchRateLimiter);
+router.use(requireInternalSecret);
 
 export type WebsiteStatus = 'none' | 'outdated' | 'ok';
 
@@ -57,9 +62,21 @@ router.get('/', async (req: Request, res: Response) => {
     const typeList = typeof types === 'string' && types.trim()
       ? types.split(',').map(t => t.trim()).filter(Boolean)
       : [];
+
+    const key = cacheKey({
+      lat: Number(center.lat.toFixed(4)),
+      lng: Number(center.lng.toFixed(4)),
+      radius: radiusMeters,
+      types: typeList.slice().sort().join(','),
+    });
+    const cached = getCached<{ center: typeof center; radius: number; summary: object; establishments: unknown[] }>(key);
+    if (cached) {
+      res.json(cached);
+      return;
+    }
+
     const places = await nearbySearch(center, radiusMeters, typeList);
 
-    // Vérification des sites web en parallèle (uniquement ceux qui en ont un)
     const establishments: Establishment[] = await Promise.all(
       places.map(async (p): Promise<Establishment> => {
         if (!p.website) {
@@ -81,7 +98,9 @@ router.get('/', async (req: Request, res: Response) => {
       ok:       establishments.filter(e => e.websiteStatus === 'ok').length,
     };
 
-    res.json({ center, radius: radiusMeters, summary, establishments });
+    const payload = { center, radius: radiusMeters, summary, establishments };
+    setCached(key, payload);
+    res.json(payload);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }

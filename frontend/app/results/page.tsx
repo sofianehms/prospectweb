@@ -14,7 +14,10 @@ async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
   else params.set('address', sp.address)
 
   const url = `${process.env.BACKEND_URL ?? 'http://localhost:4000'}/api/search?${params}`
-  const res  = await fetch(url, { cache: 'no-store' })
+  const res  = await fetch(url, {
+    cache: 'no-store',
+    headers: { 'x-internal-secret': process.env.BACKEND_SECRET ?? '' },
+  })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.error ?? `Erreur ${res.status}`)
