@@ -143,7 +143,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
       {tab === 'script' && (
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">Personnalisez votre script avant l'appel.</p>
+          <p className="text-sm text-gray-500">Personnalisez votre script avant l&apos;appel.</p>
           <textarea
             value={script}
             onChange={e => setScript(e.target.value)}
