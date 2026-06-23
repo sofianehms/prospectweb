@@ -52,7 +52,8 @@ router.get('/', async (req: Request, res: Response) => {
     try {
       center = await geocodeAddress(address);
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+      const msg = (err as Error).message;
+      res.status(400).json({ error: msg });
       return;
     }
   } else {
@@ -132,7 +133,8 @@ router.get('/', async (req: Request, res: Response) => {
       res.status(status).json({ error: `Service Google indisponible (${err.status}). Réessayez plus tard.` });
       return;
     }
-    res.status(502).json({ error: (err as Error).message });
+    console.error('[search] unhandled error:', err);
+    res.status(502).json({ error: 'Erreur interne du serveur.' });
   }
 });
 
