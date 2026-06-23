@@ -12,6 +12,7 @@ import { requireAuth } from './middleware/requireAuth';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));

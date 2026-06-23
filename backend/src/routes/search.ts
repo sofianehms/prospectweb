@@ -11,9 +11,9 @@ import { GoogleApiError } from '../services/places';
 import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
 
 const router = Router();
-router.use(searchRateLimiter);
 router.use(requireInternalSecret);
 router.use(requireAuth);
+router.use(searchRateLimiter);
 
 export type WebsiteStatus = 'none' | 'outdated' | 'ok';
 

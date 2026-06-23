@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { findByEmail, createUser, verifyPassword } from '../services/userStore';
+import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
+router.use(authRateLimiter);
 
 function jwtSecret(): string {
   const secret = process.env.JWT_SECRET;
