@@ -5,6 +5,7 @@ import { checkWebsite } from '../services/websiteChecker';
 import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
+import { QuotaExceededError } from '../services/googleQuota';
 
 const router = Router();
 router.use(searchRateLimiter);
@@ -121,6 +122,10 @@ router.get('/', async (req: Request, res: Response) => {
     setCached(key, payload);
     res.json(payload);
   } catch (err) {
+    if (err instanceof QuotaExceededError) {
+      res.status(429).json({ error: err.message });
+      return;
+    }
     res.status(502).json({ error: (err as Error).message });
   }
 });

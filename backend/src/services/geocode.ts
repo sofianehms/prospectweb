@@ -1,3 +1,5 @@
+import { checkQuota, trackCall } from './googleQuota';
+
 const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
 export interface LatLng {
@@ -6,10 +8,12 @@ export interface LatLng {
 }
 
 export async function geocodeAddress(address: string): Promise<LatLng> {
+  checkQuota();
   const apiKey = process.env.GOOGLE_PLACES_KEY;
   const url = `${GEOCODE_URL}?address=${encodeURIComponent(address)}&key=${apiKey}&language=fr`;
 
   const res = await fetch(url);
+  trackCall('geocoding');
   const data = await res.json() as {
     status: string;
     results: { geometry: { location: LatLng } }[];

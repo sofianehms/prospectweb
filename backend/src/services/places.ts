@@ -1,4 +1,5 @@
 import type { LatLng } from './geocode';
+import { checkQuota, trackCall } from './googleQuota';
 
 const NEARBY_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 
@@ -93,6 +94,7 @@ async function fetchByType(
   apiKey: string,
 ): Promise<Place[]> {
   try {
+    checkQuota();
     const res = await fetch(NEARBY_URL, {
       method: 'POST',
       headers: {
@@ -112,10 +114,12 @@ async function fetchByType(
         },
       }),
     });
+    trackCall('places');
     if (!res.ok) return [];
     const data = await res.json() as { places?: RawPlace[] };
     return (data.places ?? []).map(p => mapPlace(p, type));
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.name === 'QuotaExceededError') throw err;
     return [];
   }
 }
