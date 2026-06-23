@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { timingSafeEqual } from 'crypto';
 
 export function requireInternalSecret(req: Request, res: Response, next: NextFunction): void {
   const expected = process.env.BACKEND_SECRET;
@@ -9,8 +10,10 @@ export function requireInternalSecret(req: Request, res: Response, next: NextFun
     return;
   }
 
-  const provided = req.header('x-internal-secret');
-  if (provided !== expected) {
+  const provided = req.header('x-internal-secret') ?? '';
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     res.status(401).json({ error: 'Non autorisé.' });
     return;
   }

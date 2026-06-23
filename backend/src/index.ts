@@ -1,5 +1,6 @@
 import path from 'path';
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import searchRouter from './routes/search';
@@ -15,6 +16,7 @@ export const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
 
+app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 app.use(express.json());
 
