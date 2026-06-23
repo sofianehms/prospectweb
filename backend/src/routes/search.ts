@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { geocodeAddress } from '../services/geocode';
-import { nearbySearch, Place } from '../services/places';
+import { nearbySearch, Place, COMMERCIAL_TYPES } from '../services/places';
 import { checkWebsite } from '../services/websiteChecker';
 import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
@@ -59,9 +59,28 @@ router.get('/', async (req: Request, res: Response) => {
   }
 
   try {
+    const MAX_TYPES = 8;
+
     const typeList = typeof types === 'string' && types.trim()
       ? types.split(',').map(t => t.trim()).filter(Boolean)
       : [];
+
+    if (typeList.length > 0) {
+      const invalid = typeList.filter(t => !COMMERCIAL_TYPES.includes(t));
+      if (invalid.length > 0) {
+        res.status(400).json({
+          error: `Types invalides : ${invalid.join(', ')}. Types autorisés : ${COMMERCIAL_TYPES.join(', ')}.`,
+        });
+        return;
+      }
+    }
+
+    if (typeList.length > MAX_TYPES) {
+      res.status(400).json({
+        error: `Trop de types demandés (${typeList.length}). Maximum autorisé : ${MAX_TYPES}.`,
+      });
+      return;
+    }
 
     const key = cacheKey({
       lat: Number(center.lat.toFixed(4)),

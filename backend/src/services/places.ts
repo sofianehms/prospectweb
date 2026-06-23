@@ -17,7 +17,7 @@ const FIELD_MASK = [
 
 // Types de commerces pertinents pour la prospection web.
 // Chaque type génère une requête indépendante (max 20 résultats chacune).
-const COMMERCIAL_TYPES = [
+export const COMMERCIAL_TYPES = [
   'restaurant',
   'cafe',
   'bar',
