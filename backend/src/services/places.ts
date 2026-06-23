@@ -71,6 +71,13 @@ interface RawPlace {
   userRatingCount?:     number;
 }
 
+export class GoogleApiError extends Error {
+  constructor(public status: number, public body: string) {
+    super(`Google API ${status}: ${body}`);
+    this.name = 'GoogleApiError';
+  }
+}
+
 function mapPlace(p: RawPlace, type: string): Place {
   return {
     id:          p.id,
@@ -93,35 +100,34 @@ async function fetchByType(
   type: string,
   apiKey: string,
 ): Promise<Place[]> {
-  try {
-    checkQuota();
-    const res = await fetch(NEARBY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':     'application/json',
-        'X-Goog-Api-Key':   apiKey,
-        'X-Goog-FieldMask': FIELD_MASK,
-      },
-      body: JSON.stringify({
-        maxResultCount: 20,
-        rankPreference: 'DISTANCE',
-        includedTypes: [type],
-        locationRestriction: {
-          circle: {
-            center: { latitude: center.lat, longitude: center.lng },
-            radius: radiusMeters,
-          },
+  checkQuota();
+  const res = await fetch(NEARBY_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type':     'application/json',
+      'X-Goog-Api-Key':   apiKey,
+      'X-Goog-FieldMask': FIELD_MASK,
+    },
+    body: JSON.stringify({
+      maxResultCount: 20,
+      rankPreference: 'DISTANCE',
+      includedTypes: [type],
+      locationRestriction: {
+        circle: {
+          center: { latitude: center.lat, longitude: center.lng },
+          radius: radiusMeters,
         },
-      }),
-    });
-    trackCall('places');
-    if (!res.ok) return [];
-    const data = await res.json() as { places?: RawPlace[] };
-    return (data.places ?? []).map(p => mapPlace(p, type));
-  } catch (err) {
-    if (err instanceof Error && err.name === 'QuotaExceededError') throw err;
-    return [];
+      },
+    }),
+  });
+  trackCall('places');
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error(`[google-places] HTTP ${res.status} for type="${type}": ${body}`);
+    throw new GoogleApiError(res.status, body);
   }
+  const data = await res.json() as { places?: RawPlace[] };
+  return (data.places ?? []).map(p => mapPlace(p, type));
 }
 
 // Nearby Search is capped at 20 per request. To get more results for a specific
@@ -154,7 +160,10 @@ async function fetchByTypeMultiArea(
   let noWebsiteCount = 0;
 
   for (const c of centers) {
-    const batch = await fetchByType(c, radiusMeters, type, apiKey);
+    // First sub-center must succeed; subsequent ones are best-effort
+    const batch = results.length === 0
+      ? await fetchByType(c, radiusMeters, type, apiKey)
+      : await fetchByType(c, radiusMeters, type, apiKey).catch(() => [] as Place[]);
     for (const place of batch) {
       if (!seen.has(place.id)) {
         seen.add(place.id);
@@ -171,13 +180,13 @@ async function fetchByTypeMultiArea(
 export async function nearbySearch(
   center: LatLng,
   radiusMeters: number,
-  types: string[], // vide = tous les COMMERCIAL_TYPES (zone unique) ; sinon multi-zones
+  types: string[],
 ): Promise<Place[]> {
   const apiKey      = process.env.GOOGLE_PLACES_KEY!;
   const useMulti    = types.length > 0;
   const targetTypes = useMulti ? types : COMMERCIAL_TYPES;
 
-  const batches = await Promise.all(
+  const results = await Promise.allSettled(
     targetTypes.map(t =>
       useMulti
         ? fetchByTypeMultiArea(center, radiusMeters, t, apiKey)
@@ -185,10 +194,22 @@ export async function nearbySearch(
     )
   );
 
+  const fulfilled = results.filter((r): r is PromiseFulfilledResult<Place[]> => r.status === 'fulfilled');
+  const rejected  = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+
+  for (const r of rejected) {
+    console.error('[google-places] batch failed:', r.reason?.message ?? r.reason);
+  }
+
+  if (fulfilled.length === 0 && rejected.length > 0) {
+    const first = rejected[0].reason;
+    throw first instanceof Error ? first : new Error(String(first));
+  }
+
   const seen   = new Set<string>();
   const merged: Place[] = [];
-  for (const batch of batches) {
-    for (const place of batch) {
+  for (const batch of fulfilled) {
+    for (const place of batch.value) {
       if (!seen.has(place.id)) { seen.add(place.id); merged.push(place); }
     }
   }
