@@ -5,12 +5,14 @@ import { checkWebsite } from '../services/websiteChecker';
 import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
+import { requireAuth } from '../middleware/requireAuth';
 import { QuotaExceededError } from '../services/googleQuota';
 import { GoogleApiError } from '../services/places';
 
 const router = Router();
 router.use(searchRateLimiter);
 router.use(requireInternalSecret);
+router.use(requireAuth);
 
 export type WebsiteStatus = 'none' | 'outdated' | 'ok';
 
@@ -97,6 +99,7 @@ router.get('/', async (req: Request, res: Response) => {
       return;
     }
 
+    console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
     const places = await nearbySearch(center, radiusMeters, typeList);
 
     const establishments: Establishment[] = await Promise.all(

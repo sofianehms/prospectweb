@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import AppHeader from './components/AppHeader'
+import LogoutButton from './components/LogoutButton'
 import SearchForm from './components/SearchForm'
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
           </svg>
           <span className="hidden sm:inline">Mes prospects</span>
         </Link>
+        <LogoutButton />
       </AppHeader>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">

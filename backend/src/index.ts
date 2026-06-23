@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import searchRouter from './routes/search';
+import authRouter from './routes/auth';
 import { getUsage } from './services/googleQuota';
 
 // Charge le .env racine du projet (un niveau au-dessus de /backend)
@@ -17,6 +18,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
+
+app.use('/api/auth', authRouter);
 
 app.get('/api/usage', (_req, res) => {
   res.json(getUsage());

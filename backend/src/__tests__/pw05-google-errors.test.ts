@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GoogleApiError } from '../services/places';
+import { setupAuthEnv, testToken } from './helpers/auth';
 
 process.env.NODE_ENV = 'test';
 process.env.BACKEND_SECRET = 'test-secret';
 process.env.GOOGLE_DAILY_LIMIT = '9999';
+setupAuthEnv();
+
+const TOKEN = testToken();
 
 import { resetForTesting } from '../services/googleQuota';
 
@@ -40,7 +44,8 @@ describe('PW-05 — le contrôleur remonte les erreurs Google au frontend', () =
 
     const res = await request(app)
       .get('/api/search?lat=41.00&lng=2.00&radius=500&types=bakery')
-      .set('x-internal-secret', 'test-secret');
+      .set('x-internal-secret', 'test-secret')
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(503);
     expect(res.body.error).toContain('Service Google indisponible');
@@ -59,7 +64,8 @@ describe('PW-05 — le contrôleur remonte les erreurs Google au frontend', () =
 
     const res = await request(app)
       .get('/api/search?lat=42.00&lng=3.00&radius=500&types=florist')
-      .set('x-internal-secret', 'test-secret');
+      .set('x-internal-secret', 'test-secret')
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(502);
     expect(res.body.error).toContain('Service Google indisponible');
@@ -78,7 +84,8 @@ describe('PW-05 — le contrôleur remonte les erreurs Google au frontend', () =
 
     const res = await request(app)
       .get('/api/search?lat=43.00&lng=4.00&radius=500&types=dentist')
-      .set('x-internal-secret', 'test-secret');
+      .set('x-internal-secret', 'test-secret')
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     // Must NOT be 200 with empty results — error must be visible
     expect(res.status).toBeGreaterThanOrEqual(400);

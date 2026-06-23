@@ -6,10 +6,14 @@ import {
   resetForTesting,
   QuotaExceededError,
 } from '../services/googleQuota';
+import { setupAuthEnv, testToken } from './helpers/auth';
 
 process.env.GOOGLE_DAILY_LIMIT = '10';
 process.env.NODE_ENV = 'test';
 process.env.BACKEND_SECRET = 'test-secret';
+setupAuthEnv();
+
+const TOKEN = testToken();
 
 describe('PW-02 — compteur & plafond quotidien Google', () => {
   beforeEach(() => {
@@ -69,7 +73,8 @@ describe('PW-02 — intégration HTTP 429', () => {
     // Use unique coords to avoid cache hits from other tests
     const res = await request(app)
       .get('/api/search?lat=40.00&lng=3.00&radius=500&types=restaurant')
-      .set('x-internal-secret', 'test-secret');
+      .set('x-internal-secret', 'test-secret')
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(429);
     expect(res.body.error).toContain('Quota journalier');

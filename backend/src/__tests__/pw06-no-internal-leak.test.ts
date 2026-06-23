@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import request from 'supertest';
+import { setupAuthEnv, testToken } from './helpers/auth';
 
 process.env.NODE_ENV = 'test';
 process.env.BACKEND_SECRET = 'test-secret';
 process.env.GOOGLE_DAILY_LIMIT = '9999';
+setupAuthEnv();
 
 import { app } from '../index';
 import { resetForTesting } from '../services/googleQuota';
 
 const SECRET = 'test-secret';
+const TOKEN = testToken();
 
 describe('PW-06 — aucun détail interne dans les réponses d\'erreur', () => {
   const originalFetch = globalThis.fetch;
@@ -30,7 +33,8 @@ describe('PW-06 — aucun détail interne dans les réponses d\'erreur', () => {
 
     const res = await request(app)
       .get('/api/search?address=Paris&radius=1000')
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.body.error).not.toContain('API key');
     expect(res.body.error).not.toContain('REQUEST_DENIED');
@@ -48,7 +52,8 @@ describe('PW-06 — aucun détail interne dans les réponses d\'erreur', () => {
 
     const res = await request(app)
       .get('/api/search?address=xyznonexistent&radius=1000')
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('introuvable');
@@ -60,7 +65,8 @@ describe('PW-06 — aucun détail interne dans les réponses d\'erreur', () => {
 
     const res = await request(app)
       .get('/api/search?lat=44.00&lng=5.00&radius=500&types=bar')
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBeGreaterThanOrEqual(500);
     expect(res.body.error).not.toContain('ECONNREFUSED');
@@ -77,7 +83,8 @@ describe('PW-06 — aucun détail interne dans les réponses d\'erreur', () => {
 
     const res = await request(app)
       .get('/api/search?lat=45.00&lng=6.00&radius=500&types=cafe')
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.body.error).not.toContain('Billing');
     expect(res.body.error).toContain('Service Google indisponible');

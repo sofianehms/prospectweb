@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import { setupAuthEnv, testToken } from './helpers/auth';
 
 process.env.NODE_ENV = 'test';
 process.env.BACKEND_SECRET = 'test-secret';
+setupAuthEnv();
 
 import { app } from '../index';
 
 const SECRET = 'test-secret';
+const TOKEN = testToken();
 const BASE = '/api/search';
 const VALID_PARAMS = 'lat=48.85&lng=2.35&radius=1000';
 
@@ -14,7 +17,8 @@ describe('PW-01 — validation du paramètre types', () => {
   it('rejette un type hors liste blanche avec 400', async () => {
     const res = await request(app)
       .get(`${BASE}?${VALID_PARAMS}&types=fake_type`)
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('Types invalides');
@@ -25,7 +29,8 @@ describe('PW-01 — validation du paramètre types', () => {
   it('rejette un mélange de types valides et invalides', async () => {
     const res = await request(app)
       .get(`${BASE}?${VALID_PARAMS}&types=restaurant,bogus_type,cafe`)
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('bogus_type');
@@ -42,7 +47,8 @@ describe('PW-01 — validation du paramètre types', () => {
 
     const res = await request(app)
       .get(`${BASE}?${VALID_PARAMS}&types=${types}`)
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('Trop de types');
@@ -52,7 +58,8 @@ describe('PW-01 — validation du paramètre types', () => {
   it('ne rejette pas des types valides en nombre autorisé', async () => {
     const res = await request(app)
       .get(`${BASE}?${VALID_PARAMS}&types=restaurant,cafe`)
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     // Not a validation error — any non-400 means validation passed
     expect(res.status).not.toBe(400);
@@ -66,7 +73,8 @@ describe('PW-01 — validation du paramètre types', () => {
 
     const res = await request(app)
       .get(`${BASE}?${VALID_PARAMS}&types=${types}`)
-      .set('x-internal-secret', SECRET);
+      .set('x-internal-secret', SECRET)
+      .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).not.toBe(400);
   }, 60000);

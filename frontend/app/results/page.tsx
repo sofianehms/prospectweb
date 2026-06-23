@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 import type { SearchResult } from '@/app/types/establishment'
 import AppHeader from '@/app/components/AppHeader'
@@ -13,10 +14,16 @@ async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
   if (sp.lat && sp.lng) { params.set('lat', sp.lat); params.set('lng', sp.lng) }
   else params.set('address', sp.address)
 
+  const store = await cookies()
+  const token = store.get('pw_token')?.value ?? ''
+
   const url = `${process.env.BACKEND_URL ?? 'http://localhost:4000'}/api/search?${params}`
   const res  = await fetch(url, {
     cache: 'no-store',
-    headers: { 'x-internal-secret': process.env.BACKEND_SECRET ?? '' },
+    headers: {
+      'x-internal-secret': process.env.BACKEND_SECRET ?? '',
+      'Authorization': `Bearer ${token}`,
+    },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
