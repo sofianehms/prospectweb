@@ -6,8 +6,9 @@ import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
-import { QuotaExceededError } from '../services/googleQuota';
+import { QuotaExceededError, getUsage } from '../services/googleQuota';
 import { GoogleApiError } from '../services/places';
+import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
 
 const router = Router();
 router.use(searchRateLimiter);
@@ -99,8 +100,15 @@ router.get('/', async (req: Request, res: Response) => {
       return;
     }
 
+    const userId = req.user!.sub;
+    checkUserQuota(userId);
+
     console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
+    const globalBefore = getUsage().total;
     const places = await nearbySearch(center, radiusMeters, typeList);
+    const globalAfter = getUsage().total;
+    const callsMade = globalAfter - globalBefore;
+    if (callsMade > 0) trackUserCalls(userId, callsMade);
 
     const establishments: Establishment[] = await Promise.all(
       places.map(async (p): Promise<Establishment> => {
@@ -127,7 +135,7 @@ router.get('/', async (req: Request, res: Response) => {
     setCached(key, payload);
     res.json(payload);
   } catch (err) {
-    if (err instanceof QuotaExceededError) {
+    if (err instanceof UserQuotaExceededError || err instanceof QuotaExceededError) {
       res.status(429).json({ error: err.message });
       return;
     }

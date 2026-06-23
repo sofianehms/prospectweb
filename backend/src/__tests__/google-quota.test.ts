@@ -92,9 +92,11 @@ describe('PW-02 — intégration HTTP 429', () => {
     const res = await request(app).get('/api/usage');
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('total');
-    expect(res.body).toHaveProperty('limit');
-    expect(res.body).toHaveProperty('places');
-    expect(res.body).toHaveProperty('geocoding');
+    expect(res.body).toHaveProperty('global');
+    expect(res.body.global).toHaveProperty('total');
+    expect(res.body.global).toHaveProperty('limit');
+    expect(res.body.global).toHaveProperty('places');
+    expect(res.body.global).toHaveProperty('geocoding');
+    expect(res.body).toHaveProperty('users');
   });
 });

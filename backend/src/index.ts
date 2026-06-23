@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import searchRouter from './routes/search';
 import authRouter from './routes/auth';
 import { getUsage } from './services/googleQuota';
+import { getUserUsage, getAllUsersUsage } from './services/userQuota';
+import { requireAuth } from './middleware/requireAuth';
 
 // Charge le .env racine du projet (un niveau au-dessus de /backend)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -22,7 +24,11 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRouter);
 
 app.get('/api/usage', (_req, res) => {
-  res.json(getUsage());
+  res.json({ global: getUsage(), users: getAllUsersUsage() });
+});
+
+app.get('/api/usage/me', requireAuth, (req, res) => {
+  res.json(getUserUsage(req.user!.sub));
 });
 
 app.use('/api/search', searchRouter);
