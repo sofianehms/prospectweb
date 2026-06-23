@@ -108,7 +108,6 @@ export default function DetailClient({ e }: { e: Establishment }) {
                 ? <Row icon="📞"><a href={`tel:${e.phone}`} className="hover:text-emerald-600 transition">{e.phone}</a></Row>
                 : <Row icon="📞"><span className="text-gray-400 italic">Non renseigné</span></Row>
               }
-              <Row icon="🕐">Lun–Sam 7h–20h</Row>
               {e.rating && (
                 <Row icon="⭐">{e.rating} / 5 · {e.ratingCount} avis Google</Row>
               )}
@@ -123,8 +122,11 @@ export default function DetailClient({ e }: { e: Establishment }) {
               {e.websiteStatus === 'outdated' && (
                 <Row icon="🌐">Site web présent mais obsolète — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
               )}
-              <Row icon="📷">Instagram présent (783 abonnés)</Row>
-              <Row icon="🗺️">Fiche Google Maps complète</Row>
+              <Row icon="🗺️">
+                <a href={e.mapsUrl} target="_blank" rel="noopener" className="text-emerald-600 underline">
+                  Voir la fiche Google Maps
+                </a>
+              </Row>
             </div>
           </section>
 
