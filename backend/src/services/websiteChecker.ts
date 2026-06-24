@@ -3,6 +3,27 @@ import { lookup } from 'dns/promises';
 const TIMEOUT_MS      = 6_000;
 const MAX_BODY_BYTES  = 50_000;
 const MAX_REDIRECTS   = 3;
+export const MAX_CONCURRENT = Number(process.env.WEBSITE_CHECK_CONCURRENCY) || 5;
+
+let running = 0;
+const queue: Array<{ resolve: () => void }> = [];
+
+async function acquireSlot(): Promise<void> {
+  if (running < MAX_CONCURRENT) {
+    running++;
+    return;
+  }
+  await new Promise<void>(resolve => queue.push({ resolve }));
+}
+
+function releaseSlot(): void {
+  const next = queue.shift();
+  if (next) {
+    next.resolve();
+  } else {
+    running--;
+  }
+}
 const CURRENT_YEAR    = new Date().getFullYear();
 const RECENT_YEARS    = [CURRENT_YEAR, CURRENT_YEAR - 1];
 
@@ -71,6 +92,7 @@ export interface WebsiteStatus {
 }
 
 export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
+  await acquireSlot();
   let url = normalizeUrl(rawUrl);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -133,6 +155,7 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
     };
   } finally {
     clearTimeout(timer);
+    releaseSlot();
   }
 }
 
