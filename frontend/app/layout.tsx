@@ -29,6 +29,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors duration-200 pb-20">
         {children}
         <ThemeToggle />
+        <footer className="mt-auto py-4 text-center text-xs text-gray-400 dark:text-slate-500">
+          <a href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition underline">Politique de confidentialit&eacute;</a>
+        </footer>
       </body>
     </html>
   )

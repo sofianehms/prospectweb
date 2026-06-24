@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { findByEmail, createUser, verifyPassword } from '../services/userStore';
+import { findByEmail, createUser, verifyPassword, deleteUser } from '../services/userStore';
 import { authRateLimiter } from '../middleware/rateLimit';
 
 const router = Router();
@@ -60,6 +60,25 @@ router.get('/me', (req: Request, res: Response) => {
   try {
     const payload = jwt.verify(header.slice(7), jwtSecret()) as { sub: string; email: string };
     res.json({ id: payload.sub, email: payload.email });
+  } catch {
+    res.status(401).json({ error: 'Token invalide ou expiré.' });
+  }
+});
+
+router.delete('/me', async (req: Request, res: Response) => {
+  const header = req.header('Authorization');
+  if (!header?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Non authentifié.' });
+    return;
+  }
+  try {
+    const payload = jwt.verify(header.slice(7), jwtSecret()) as { sub: string; email: string };
+    const deleted = await deleteUser(payload.sub);
+    if (!deleted) {
+      res.status(404).json({ error: 'Compte introuvable.' });
+      return;
+    }
+    res.status(204).end();
   } catch {
     res.status(401).json({ error: 'Token invalide ou expiré.' });
   }

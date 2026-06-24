@@ -52,6 +52,9 @@ if (process.env.NODE_ENV !== 'test') {
       const { purgeStaleGoogleData } = await import('./services/prospectStore');
       const purged = await purgeStaleGoogleData();
       if (purged > 0) console.log(`[compliance] Purged stale Google data from ${purged} prospects`);
+      const { purgeInactiveUsers } = await import('./services/userStore');
+      const purgedUsers = await purgeInactiveUsers();
+      if (purgedUsers > 0) console.log(`[compliance] Purged ${purgedUsers} inactive users (>12 months)`);
       console.log('Database initialized');
     }
     app.listen(PORT, () => {

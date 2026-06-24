@@ -44,3 +44,18 @@ export async function createUser(email: string, password: string): Promise<User>
 export async function verifyPassword(user: User, password: string): Promise<boolean> {
   return bcrypt.compare(password, user.passwordHash);
 }
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  const { rowCount } = await getPool().query('DELETE FROM users WHERE id = $1', [userId]);
+  return (rowCount ?? 0) > 0;
+}
+
+export async function purgeInactiveUsers(maxInactiveDays: number = 365): Promise<number> {
+  const { rowCount } = await getPool().query(
+    `DELETE FROM users WHERE created_at < NOW() - INTERVAL '1 day' * $1
+     AND id NOT IN (SELECT DISTINCT user_id FROM prospects)
+     AND id NOT IN (SELECT DISTINCT user_id FROM user_usage WHERE date > CURRENT_DATE - INTERVAL '1 day' * $1)`,
+    [maxInactiveDays],
+  );
+  return rowCount ?? 0;
+}
