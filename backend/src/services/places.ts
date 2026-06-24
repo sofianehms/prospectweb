@@ -94,6 +94,8 @@ function mapPlace(p: RawPlace, type: string): Place {
   };
 }
 
+const RESULTS_CAP = 20;
+
 async function fetchByType(
   center: LatLng,
   radiusMeters: number,
@@ -177,11 +179,17 @@ async function fetchByTypeMultiArea(
   return results;
 }
 
+export interface SearchMeta {
+  partial: boolean;
+  cappedTypes: string[];
+  failedTypes: string[];
+}
+
 export async function nearbySearch(
   center: LatLng,
   radiusMeters: number,
   types: string[],
-): Promise<Place[]> {
+): Promise<{ places: Place[]; meta: SearchMeta }> {
   const apiKey      = process.env.GOOGLE_PLACES_KEY!;
   const useMulti    = types.length > 0;
   const targetTypes = useMulti ? types : COMMERCIAL_TYPES;
@@ -197,8 +205,19 @@ export async function nearbySearch(
   const fulfilled = results.filter((r): r is PromiseFulfilledResult<Place[]> => r.status === 'fulfilled');
   const rejected  = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
-  for (const r of rejected) {
-    console.error('[google-places] batch failed:', r.reason?.message ?? r.reason);
+  const cappedTypes: string[] = [];
+  const failedTypes: string[] = [];
+
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status === 'rejected') {
+      failedTypes.push(targetTypes[i]);
+      console.error('[google-places] batch failed:', (results[i] as PromiseRejectedResult).reason?.message);
+    } else {
+      const batch = (results[i] as PromiseFulfilledResult<Place[]>).value;
+      if (batch.length >= RESULTS_CAP) {
+        cappedTypes.push(targetTypes[i]);
+      }
+    }
   }
 
   if (fulfilled.length === 0 && rejected.length > 0) {
@@ -213,5 +232,13 @@ export async function nearbySearch(
       if (!seen.has(place.id)) { seen.add(place.id); merged.push(place); }
     }
   }
-  return merged;
+
+  return {
+    places: merged,
+    meta: {
+      partial: cappedTypes.length > 0 || failedTypes.length > 0,
+      cappedTypes,
+      failedTypes,
+    },
+  };
 }

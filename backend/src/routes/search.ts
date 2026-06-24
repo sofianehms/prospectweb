@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { geocodeAddress } from '../services/geocode';
-import { nearbySearch, Place, COMMERCIAL_TYPES } from '../services/places';
+import { nearbySearch, Place, COMMERCIAL_TYPES, SearchMeta } from '../services/places';
 import { checkWebsite } from '../services/websiteChecker';
 import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
@@ -106,7 +106,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
     const globalBefore = getUsage().total;
-    const places = await nearbySearch(center, radiusMeters, typeList);
+    const { places, meta } = await nearbySearch(center, radiusMeters, typeList);
     const globalAfter = getUsage().total;
     const callsMade = globalAfter - globalBefore;
     if (callsMade > 0) trackUserCalls(userId, callsMade);
@@ -134,7 +134,7 @@ router.get('/', async (req: Request, res: Response) => {
       active:      establishments.filter(e => e.websiteStatus === 'active').length,
     };
 
-    const payload = { center, radius: radiusMeters, summary, establishments };
+    const payload = { center, radius: radiusMeters, summary, meta, establishments };
     await setCached(key, payload);
     await Promise.all(
       establishments.map(e => setCached(`establishment:${e.id}`, e))

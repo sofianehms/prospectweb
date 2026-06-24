@@ -16,6 +16,12 @@ export interface Establishment {
   confidenceScore: number
 }
 
+export interface SearchMeta {
+  partial: boolean
+  cappedTypes: string[]
+  failedTypes: string[]
+}
+
 export interface SearchResult {
   center: { lat: number; lng: number }
   radius: number
@@ -26,6 +32,7 @@ export interface SearchResult {
     outdated:    number
     active:      number
   }
+  meta?: SearchMeta
   establishments: Establishment[]
 }
 

@@ -147,6 +147,22 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
 
   return (
     <>
+      {/* Partial results warning */}
+      {data.meta?.partial && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 mb-4 text-sm">
+          <p className="font-medium text-amber-700 dark:text-amber-400">Résultats potentiellement incomplets</p>
+          <p className="text-amber-600 dark:text-amber-300 mt-1">
+            {data.meta.cappedTypes.length > 0 && (
+              <>Certains types ont atteint le plafond de résultats ({data.meta.cappedTypes.join(', ')}). </>
+            )}
+            {data.meta.failedTypes.length > 0 && (
+              <>Certains types n&apos;ont pas pu être chargés ({data.meta.failedTypes.join(', ')}). </>
+            )}
+            Affinez la zone ou sélectionnez des types spécifiques pour une couverture plus complète.
+          </p>
+        </div>
+      )}
+
       {/* Status filters — multi-select, "Tous" deselects all */}
       <div className="flex flex-wrap gap-2 mb-4">
         <button
