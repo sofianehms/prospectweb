@@ -67,7 +67,7 @@ export default function SearchForm() {
     if (!address.trim() || coords || address.trim().length < 3) { setSuggestions([]); return }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=6`, { headers: { 'Accept-Language': 'fr' } })
+        const res  = await fetch(`/api/autocomplete?q=${encodeURIComponent(address)}`)
         const data: Suggestion[] = await res.json()
         setSuggestions(data)
         setShowSugg(data.length > 0)

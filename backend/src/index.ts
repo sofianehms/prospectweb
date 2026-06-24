@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import searchRouter from './routes/search';
 import authRouter from './routes/auth';
+import autocompleteRouter from './routes/autocomplete';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth } from './middleware/requireAuth';
@@ -34,6 +35,7 @@ app.get('/api/usage/me', requireAuth, (req, res) => {
   res.json(getUserUsage(req.user!.sub));
 });
 
+app.use('/api/autocomplete', autocompleteRouter);
 app.use('/api/search', searchRouter);
 
 if (process.env.NODE_ENV !== 'test') {

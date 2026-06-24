@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://*.tile.openstreetmap.org https://*.googleapis.com",
               "font-src 'self'",
-              "connect-src 'self' https://nominatim.openstreetmap.org " +
+              "connect-src 'self' " +
                 (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000"),
               "frame-ancestors 'none'",
             ].join("; "),
