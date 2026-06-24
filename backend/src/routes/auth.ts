@@ -41,7 +41,7 @@ router.post('/login', async (req: Request, res: Response) => {
     return;
   }
 
-  const user = findByEmail(email);
+  const user = await findByEmail(email);
   if (!user || !(await verifyPassword(user, password))) {
     res.status(401).json({ error: 'Identifiants incorrects.' });
     return;

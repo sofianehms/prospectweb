@@ -1,6 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
 import bcrypt from 'bcryptjs';
+import { getPool } from './db';
 
 export interface User {
   id: string;
@@ -9,40 +8,37 @@ export interface User {
   createdAt: string;
 }
 
-const STORE_PATH = resolve(__dirname, '../../data/users.json');
-
-function load(): User[] {
-  if (!existsSync(STORE_PATH)) return [];
-  return JSON.parse(readFileSync(STORE_PATH, 'utf-8'));
+interface UserRow {
+  id: string;
+  email: string;
+  password_hash: string;
+  created_at: string;
 }
 
-function save(users: User[]): void {
-  const dir = resolve(STORE_PATH, '..');
-  if (!existsSync(dir)) {
-    const { mkdirSync } = require('fs');
-    mkdirSync(dir, { recursive: true });
-  }
-  writeFileSync(STORE_PATH, JSON.stringify(users, null, 2));
+function rowToUser(r: UserRow): User {
+  return { id: r.id, email: r.email, passwordHash: r.password_hash, createdAt: r.created_at };
 }
 
-export function findByEmail(email: string): User | undefined {
-  return load().find(u => u.email === email.toLowerCase());
+export async function findByEmail(email: string): Promise<User | undefined> {
+  const { rows } = await getPool().query<UserRow>(
+    'SELECT * FROM users WHERE email = $1',
+    [email.toLowerCase()],
+  );
+  return rows.length ? rowToUser(rows[0]) : undefined;
 }
 
 export async function createUser(email: string, password: string): Promise<User> {
-  const users = load();
-  if (users.find(u => u.email === email.toLowerCase())) {
-    throw new Error('Un compte existe déjà avec cet e-mail.');
-  }
-  const user: User = {
-    id: crypto.randomUUID(),
-    email: email.toLowerCase(),
-    passwordHash: await bcrypt.hash(password, 10),
-    createdAt: new Date().toISOString(),
-  };
-  users.push(user);
-  save(users);
-  return user;
+  const existing = await findByEmail(email);
+  if (existing) throw new Error('Un compte existe déjà avec cet e-mail.');
+
+  const id = crypto.randomUUID();
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const { rows } = await getPool().query<UserRow>(
+    'INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3) RETURNING *',
+    [id, email.toLowerCase(), passwordHash],
+  );
+  return rowToUser(rows[0]);
 }
 
 export async function verifyPassword(user: User, password: string): Promise<boolean> {

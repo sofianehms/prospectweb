@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import searchRouter from './routes/search';
 import authRouter from './routes/auth';
 import autocompleteRouter from './routes/autocomplete';
+import prospectsRouter from './routes/prospects';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth } from './middleware/requireAuth';
@@ -36,10 +37,20 @@ app.get('/api/usage/me', requireAuth, (req, res) => {
 });
 
 app.use('/api/autocomplete', autocompleteRouter);
+app.use('/api/prospects', prospectsRouter);
 app.use('/api/search', searchRouter);
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Backend running on http://localhost:${PORT}`);
-  });
+  (async () => {
+    if (process.env.DATABASE_URL) {
+      const { initDb } = await import('./services/db');
+      await initDb();
+      const { loadFromDb: loadGoogleQuota } = await import('./services/googleQuota');
+      await loadGoogleQuota();
+      console.log('Database initialized');
+    }
+    app.listen(PORT, () => {
+      console.log(`Backend running on http://localhost:${PORT}`);
+    });
+  })();
 }

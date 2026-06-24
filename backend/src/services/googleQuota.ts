@@ -19,6 +19,14 @@ function ensureToday(): void {
   }
 }
 
+function getDb() {
+  try {
+    if (!process.env.DATABASE_URL) return null;
+    const { getPool } = require('./db') as typeof import('./db');
+    return getPool();
+  } catch { return null; }
+}
+
 export type GoogleService = 'places' | 'geocoding';
 
 export function getQuotaLimit(): number {
@@ -55,6 +63,16 @@ export function trackCall(service: GoogleService, count: number = 1): void {
   if (total >= limit * 0.8 && total - count < limit * 0.8) {
     console.warn(`[google-quota] WARNING: 80% du quota journalier atteint (${total}/${limit})`);
   }
+
+  const db = getDb();
+  if (db) {
+    const col = service === 'places' ? 'places' : 'geocoding';
+    db.query(
+      `INSERT INTO google_usage (date, ${col}) VALUES (CURRENT_DATE, $1)
+       ON CONFLICT (date) DO UPDATE SET ${col} = google_usage.${col} + $1`,
+      [count],
+    ).catch((err: Error) => console.error('[google-quota] DB write failed:', err.message));
+  }
 }
 
 export function checkQuota(needed: number = 1): void {
@@ -65,6 +83,19 @@ export function checkQuota(needed: number = 1): void {
   if (total + needed > limit) {
     throw new QuotaExceededError(total, limit);
   }
+}
+
+export async function loadFromDb(): Promise<void> {
+  const db = getDb();
+  if (!db) return;
+  try {
+    const { rows } = await db.query<{ places: number; geocoding: number }>(
+      'SELECT places, geocoding FROM google_usage WHERE date = CURRENT_DATE',
+    );
+    if (rows.length) {
+      counter = { date: todayKey(), places: rows[0].places, geocoding: rows[0].geocoding };
+    }
+  } catch { /* fallback to in-memory */ }
 }
 
 export function resetForTesting(): void {

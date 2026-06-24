@@ -17,12 +17,12 @@ export interface SavedProspect {
   websiteStatus: Establishment['websiteStatus']
   crmStatus: CrmStatus
   notes:     string
-  addedAt:   string // ISO date
+  addedAt:   string
 }
 
 const STORAGE_KEY = 'pw_prospects'
 
-function load(): SavedProspect[] {
+function loadLocal(): SavedProspect[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? (JSON.parse(raw) as SavedProspect[]) : []
@@ -31,72 +31,89 @@ function load(): SavedProspect[] {
   }
 }
 
-function save(prospects: SavedProspect[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prospects))
+async function migrateLocal(): Promise<void> {
+  const local = loadLocal()
+  if (local.length === 0) return
+
+  for (const p of local) {
+    try {
+      await fetch('/api/prospects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p),
+      })
+    } catch { /* best effort */ }
+  }
+
+  localStorage.removeItem(STORAGE_KEY)
 }
 
 export function useProspects() {
   const [prospects, setProspects] = useState<SavedProspect[]>([])
   const [ready, setReady] = useState(false)
 
-  // Hydration depuis localStorage (client seulement)
   useEffect(() => {
-    setProspects(load())
-    setReady(true)
-  }, [])
+    (async () => {
+      await migrateLocal()
 
-  const update = useCallback((next: SavedProspect[]) => {
-    setProspects(next)
-    save(next)
+      try {
+        const res = await fetch('/api/prospects')
+        if (res.ok) {
+          const data: SavedProspect[] = await res.json()
+          setProspects(data)
+        }
+      } catch { /* offline fallback: empty list */ }
+
+      setReady(true)
+    })()
   }, [])
 
   const add = useCallback((e: Establishment) => {
+    const body = {
+      id:            e.id,
+      name:          e.name,
+      address:       e.address,
+      type:          e.type,
+      phone:         e.phone,
+      mapsUrl:       e.mapsUrl,
+      rating:        e.rating,
+      ratingCount:   e.ratingCount,
+      websiteStatus: e.websiteStatus,
+    }
+
     setProspects(prev => {
       if (prev.some(p => p.id === e.id)) return prev
-      const next: SavedProspect[] = [
-        {
-          id:            e.id,
-          name:          e.name,
-          address:       e.address,
-          type:          e.type,
-          phone:         e.phone,
-          mapsUrl:       e.mapsUrl,
-          rating:        e.rating,
-          ratingCount:   e.ratingCount,
-          websiteStatus: e.websiteStatus,
-          crmStatus:     'to_contact',
-          notes:         '',
-          addedAt:       new Date().toISOString(),
-        },
-        ...prev,
-      ]
-      save(next)
-      return next
+      return [{ ...body, crmStatus: 'to_contact' as CrmStatus, notes: '', addedAt: new Date().toISOString() }, ...prev]
     })
+
+    fetch('/api/prospects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).catch(() => {})
   }, [])
 
   const remove = useCallback((id: string) => {
-    setProspects(prev => {
-      const next = prev.filter(p => p.id !== id)
-      save(next)
-      return next
-    })
+    setProspects(prev => prev.filter(p => p.id !== id))
+    fetch(`/api/prospects/${id}`, { method: 'DELETE' }).catch(() => {})
   }, [])
 
   const setStatus = useCallback((id: string, status: CrmStatus) => {
-    setProspects(prev => {
-      const next = prev.map(p => p.id === id ? { ...p, crmStatus: status } : p)
-      save(next)
-      return next
-    })
+    setProspects(prev => prev.map(p => p.id === id ? { ...p, crmStatus: status } : p))
+    fetch(`/api/prospects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(() => {})
   }, [])
 
   const setNotes = useCallback((id: string, notes: string) => {
-    setProspects(prev => {
-      const next = prev.map(p => p.id === id ? { ...p, notes } : p)
-      save(next)
-      return next
-    })
+    setProspects(prev => prev.map(p => p.id === id ? { ...p, notes } : p))
+    fetch(`/api/prospects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes }),
+    }).catch(() => {})
   }, [])
 
   const isAdded = useCallback((id: string) => prospects.some(p => p.id === id), [prospects])

@@ -1,0 +1,65 @@
+import { Pool } from 'pg';
+
+let pool: Pool | null = null;
+
+export function getPool(): Pool {
+  if (!pool) {
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error('DATABASE_URL non configuré');
+    pool = new Pool({ connectionString: url, max: 10 });
+  }
+  return pool;
+}
+
+export async function initDb(): Promise<void> {
+  const db = getPool();
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            TEXT PRIMARY KEY,
+      email         TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS prospects (
+      id              TEXT NOT NULL,
+      user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name            TEXT NOT NULL,
+      address         TEXT NOT NULL,
+      type            TEXT NOT NULL,
+      phone           TEXT,
+      maps_url        TEXT NOT NULL,
+      rating          REAL,
+      rating_count    INTEGER,
+      website_status  TEXT NOT NULL DEFAULT 'none',
+      crm_status      TEXT NOT NULL DEFAULT 'to_contact',
+      notes           TEXT NOT NULL DEFAULT '',
+      added_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (id, user_id)
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_prospects_user ON prospects(user_id)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS user_usage (
+      user_id   TEXT NOT NULL,
+      date      DATE NOT NULL DEFAULT CURRENT_DATE,
+      calls     INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, date)
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS google_usage (
+      date      DATE PRIMARY KEY DEFAULT CURRENT_DATE,
+      places    INTEGER NOT NULL DEFAULT 0,
+      geocoding INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+}
