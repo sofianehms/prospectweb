@@ -38,8 +38,13 @@ export async function initDb(): Promise<void> {
       crm_status      TEXT NOT NULL DEFAULT 'to_contact',
       notes           TEXT NOT NULL DEFAULT '',
       added_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      cached_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       PRIMARY KEY (id, user_id)
     )
+  `);
+
+  await db.query(`
+    ALTER TABLE prospects ADD COLUMN IF NOT EXISTS cached_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   `);
 
   await db.query(`

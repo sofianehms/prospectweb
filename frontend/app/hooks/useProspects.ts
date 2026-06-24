@@ -18,6 +18,8 @@ export interface SavedProspect {
   crmStatus: CrmStatus
   notes:     string
   addedAt:   string
+  cachedAt?: string
+  stale?:    boolean
 }
 
 const STORAGE_KEY = 'pw_prospects'
@@ -119,12 +121,13 @@ export function useProspects() {
   const isAdded = useCallback((id: string) => prospects.some(p => p.id === id), [prospects])
 
   const exportCsv = useCallback(() => {
-    const header = ['Nom', 'Adresse', 'Téléphone', 'Type', 'Statut CRM', 'Ajouté le', 'Notes']
+    const header = ['Place ID', 'Nom', 'Adresse', 'Type', 'Fiche Google Maps', 'Statut CRM', 'Ajouté le', 'Notes']
     const rows = prospects.map(p => [
-      p.name, p.address, p.phone ?? '', p.type,
+      p.id, p.name, p.address, p.type, p.mapsUrl,
       p.crmStatus, new Date(p.addedAt).toLocaleDateString('fr-FR'), p.notes,
     ])
-    const csv = [header, ...rows]
+    const notice = [['# Données commerciales issues de Google Places. Place ID conservé conformément aux conditions d\'utilisation Google Maps Platform.']]
+    const csv = [...notice, header, ...rows]
       .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
       .join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })

@@ -2,6 +2,8 @@ import { getPool } from './db';
 
 export type CrmStatus = 'to_contact' | 'contacted' | 'discussing' | 'won' | 'lost';
 
+const CACHE_MAX_DAYS = 30;
+
 export interface Prospect {
   id: string;
   userId: string;
@@ -16,6 +18,8 @@ export interface Prospect {
   crmStatus: CrmStatus;
   notes: string;
   addedAt: string;
+  cachedAt: string;
+  stale: boolean;
 }
 
 interface ProspectRow {
@@ -32,9 +36,12 @@ interface ProspectRow {
   crm_status: CrmStatus;
   notes: string;
   added_at: string;
+  cached_at: string;
 }
 
 function rowToProspect(r: ProspectRow): Prospect {
+  const cachedAt = new Date(r.cached_at);
+  const ageDays = (Date.now() - cachedAt.getTime()) / 86_400_000;
   return {
     id: r.id,
     userId: r.user_id,
@@ -49,6 +56,8 @@ function rowToProspect(r: ProspectRow): Prospect {
     crmStatus: r.crm_status,
     notes: r.notes,
     addedAt: r.added_at,
+    cachedAt: r.cached_at,
+    stale: ageDays > CACHE_MAX_DAYS,
   };
 }
 
@@ -62,23 +71,33 @@ export async function listProspects(userId: string): Promise<Prospect[]> {
 
 export async function addProspect(
   userId: string,
-  data: Omit<Prospect, 'userId' | 'crmStatus' | 'notes' | 'addedAt'>,
+  data: Omit<Prospect, 'userId' | 'crmStatus' | 'notes' | 'addedAt' | 'cachedAt' | 'stale'>,
 ): Promise<Prospect> {
   const { rows } = await getPool().query<ProspectRow>(
-    `INSERT INTO prospects (id, user_id, name, address, type, phone, maps_url, rating, rating_count, website_status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-     ON CONFLICT (id, user_id) DO NOTHING
+    `INSERT INTO prospects (id, user_id, name, address, type, phone, maps_url, rating, rating_count, website_status, cached_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+     ON CONFLICT (id, user_id) DO UPDATE SET
+       name = EXCLUDED.name, address = EXCLUDED.address, type = EXCLUDED.type,
+       phone = EXCLUDED.phone, maps_url = EXCLUDED.maps_url, rating = EXCLUDED.rating,
+       rating_count = EXCLUDED.rating_count, website_status = EXCLUDED.website_status,
+       cached_at = NOW()
      RETURNING *`,
     [data.id, userId, data.name, data.address, data.type, data.phone, data.mapsUrl, data.rating, data.ratingCount, data.websiteStatus],
   );
-  if (!rows.length) {
-    const existing = await getPool().query<ProspectRow>(
-      'SELECT * FROM prospects WHERE id = $1 AND user_id = $2',
-      [data.id, userId],
-    );
-    return rowToProspect(existing.rows[0]);
-  }
   return rowToProspect(rows[0]);
+}
+
+export async function refreshProspect(
+  userId: string,
+  prospectId: string,
+  data: { name: string; address: string; phone: string | null; rating: number | null; ratingCount: number | null },
+): Promise<Prospect | null> {
+  const { rows } = await getPool().query<ProspectRow>(
+    `UPDATE prospects SET name = $1, address = $2, phone = $3, rating = $4, rating_count = $5, cached_at = NOW()
+     WHERE id = $6 AND user_id = $7 RETURNING *`,
+    [data.name, data.address, data.phone, data.rating, data.ratingCount, prospectId, userId],
+  );
+  return rows.length ? rowToProspect(rows[0]) : null;
 }
 
 export async function removeProspect(userId: string, prospectId: string): Promise<boolean> {
@@ -103,4 +122,12 @@ export async function updateNotes(userId: string, prospectId: string, notes: str
     [notes, prospectId, userId],
   );
   return rows.length ? rowToProspect(rows[0]) : null;
+}
+
+export async function purgeStaleGoogleData(): Promise<number> {
+  const { rowCount } = await getPool().query(
+    `UPDATE prospects SET name = '[Données expirées]', address = '', phone = NULL, rating = NULL, rating_count = NULL
+     WHERE cached_at < NOW() - INTERVAL '${CACHE_MAX_DAYS} days' AND name != '[Données expirées]'`,
+  );
+  return rowCount ?? 0;
 }

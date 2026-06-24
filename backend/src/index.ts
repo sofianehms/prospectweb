@@ -49,6 +49,9 @@ if (process.env.NODE_ENV !== 'test') {
       await initDb();
       const { loadFromDb: loadGoogleQuota } = await import('./services/googleQuota');
       await loadGoogleQuota();
+      const { purgeStaleGoogleData } = await import('./services/prospectStore');
+      const purged = await purgeStaleGoogleData();
+      if (purged > 0) console.log(`[compliance] Purged stale Google data from ${purged} prospects`);
       console.log('Database initialized');
     }
     app.listen(PORT, () => {
