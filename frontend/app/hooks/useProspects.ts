@@ -20,6 +20,7 @@ export interface SavedProspect {
   addedAt:   string
   cachedAt?: string
   stale?:    boolean
+  followUpAt?: string | null
 }
 
 const STORAGE_KEY = 'pw_prospects'
@@ -118,6 +119,15 @@ export function useProspects() {
     }).catch(() => {})
   }, [])
 
+  const setFollowUp = useCallback((id: string, followUpAt: string | null) => {
+    setProspects(prev => prev.map(p => p.id === id ? { ...p, followUpAt } : p))
+    fetch(`/api/prospects/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ followUpAt }),
+    }).catch(() => {})
+  }, [])
+
   const isAdded = useCallback((id: string) => prospects.some(p => p.id === id), [prospects])
 
   const exportCsv = useCallback(() => {
@@ -138,5 +148,5 @@ export function useProspects() {
     URL.revokeObjectURL(a.href)
   }, [prospects])
 
-  return { prospects, ready, add, remove, setStatus, setNotes, isAdded, exportCsv }
+  return { prospects, ready, add, remove, setStatus, setNotes, setFollowUp, isAdded, exportCsv }
 }

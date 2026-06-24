@@ -20,6 +20,7 @@ export interface Prospect {
   addedAt: string;
   cachedAt: string;
   stale: boolean;
+  followUpAt: string | null;
 }
 
 interface ProspectRow {
@@ -37,6 +38,7 @@ interface ProspectRow {
   notes: string;
   added_at: string;
   cached_at: string;
+  follow_up_at: string | null;
 }
 
 function rowToProspect(r: ProspectRow): Prospect {
@@ -58,6 +60,7 @@ function rowToProspect(r: ProspectRow): Prospect {
     addedAt: r.added_at,
     cachedAt: r.cached_at,
     stale: ageDays > CACHE_MAX_DAYS,
+    followUpAt: r.follow_up_at,
   };
 }
 
@@ -71,7 +74,7 @@ export async function listProspects(userId: string): Promise<Prospect[]> {
 
 export async function addProspect(
   userId: string,
-  data: Omit<Prospect, 'userId' | 'crmStatus' | 'notes' | 'addedAt' | 'cachedAt' | 'stale'>,
+  data: Omit<Prospect, 'userId' | 'crmStatus' | 'notes' | 'addedAt' | 'cachedAt' | 'stale' | 'followUpAt'>,
 ): Promise<Prospect> {
   const { rows } = await getPool().query<ProspectRow>(
     `INSERT INTO prospects (id, user_id, name, address, type, phone, maps_url, rating, rating_count, website_status, cached_at)
@@ -120,6 +123,14 @@ export async function updateNotes(userId: string, prospectId: string, notes: str
   const { rows } = await getPool().query<ProspectRow>(
     'UPDATE prospects SET notes = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
     [notes, prospectId, userId],
+  );
+  return rows.length ? rowToProspect(rows[0]) : null;
+}
+
+export async function updateFollowUp(userId: string, prospectId: string, followUpAt: string | null): Promise<Prospect | null> {
+  const { rows } = await getPool().query<ProspectRow>(
+    'UPDATE prospects SET follow_up_at = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+    [followUpAt, prospectId, userId],
   );
   return rows.length ? rowToProspect(rows[0]) : null;
 }

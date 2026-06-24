@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/requireAuth';
 import { QuotaExceededError, getUsage } from '../services/googleQuota';
 import { GoogleApiError } from '../services/places';
 import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
+import { recordSearch, getKnownPlaceIds } from '../services/searchHistory';
 
 const router = Router();
 router.use(requireInternalSecret);
@@ -20,6 +21,7 @@ export type SiteStatus = 'none' | 'unreachable' | 'outdated' | 'active';
 export interface Establishment extends Place {
   websiteStatus: SiteStatus;
   confidenceScore: number;
+  alreadySaved?: boolean;
 }
 
 function resolveSiteStatus(
@@ -134,11 +136,28 @@ router.get('/', async (req: Request, res: Response) => {
       active:      establishments.filter(e => e.websiteStatus === 'active').length,
     };
 
+    let knownIds = new Set<string>();
+    try { knownIds = await getKnownPlaceIds(userId); } catch { /* DB may be absent */ }
+    for (const e of establishments) {
+      if (knownIds.has(e.id)) e.alreadySaved = true;
+    }
+
     const payload = { center, radius: radiusMeters, summary, meta, establishments };
     await setCached(key, payload);
     await Promise.all(
       establishments.map(e => setCached(`establishment:${e.id}`, e))
     );
+
+    const addressStr = typeof address === 'string' ? address : `${center.lat},${center.lng}`;
+    recordSearch(userId, {
+      address: addressStr,
+      lat: center.lat,
+      lng: center.lng,
+      radius: radiusMeters,
+      types: typeList.join(','),
+      resultCount: establishments.length,
+    }).catch(err => console.error('[search-history] save failed:', err.message));
+
     res.json(payload);
   } catch (err) {
     if (err instanceof UserQuotaExceededError || err instanceof QuotaExceededError) {

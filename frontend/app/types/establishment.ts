@@ -14,6 +14,7 @@ export interface Establishment {
   ratingCount: number | null
   websiteStatus: WebsiteStatus
   confidenceScore: number
+  alreadySaved?: boolean
 }
 
 export interface SearchMeta {

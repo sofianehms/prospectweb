@@ -28,7 +28,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
-  const endpoint = body.notes !== undefined ? 'notes' : 'status'
+  const endpoint = body.followUpAt !== undefined ? 'follow-up' : body.notes !== undefined ? 'notes' : 'status'
   const res = await fetch(`${BACKEND}/api/prospects/${id}/${endpoint}`, {
     method: 'PATCH',
     headers: await authHeaders(),

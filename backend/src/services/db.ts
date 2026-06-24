@@ -67,4 +67,26 @@ export async function initDb(): Promise<void> {
       geocoding INTEGER NOT NULL DEFAULT 0
     )
   `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS search_history (
+      id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      address     TEXT NOT NULL,
+      lat         REAL NOT NULL,
+      lng         REAL NOT NULL,
+      radius      INTEGER NOT NULL,
+      types       TEXT NOT NULL DEFAULT '',
+      result_count INTEGER NOT NULL DEFAULT 0,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_search_history_user ON search_history(user_id)
+  `);
+
+  await db.query(`
+    ALTER TABLE prospects ADD COLUMN IF NOT EXISTS follow_up_at TIMESTAMPTZ
+  `);
 }

@@ -7,6 +7,7 @@ import {
   removeProspect,
   updateCrmStatus,
   updateNotes,
+  updateFollowUp,
   CrmStatus,
 } from '../services/prospectStore';
 
@@ -70,6 +71,20 @@ router.patch('/:id/notes', async (req: Request, res: Response) => {
     return;
   }
   const prospect = await updateNotes(req.user!.sub, req.params.id as string, notes);
+  if (!prospect) {
+    res.status(404).json({ error: 'Prospect non trouvé.' });
+    return;
+  }
+  res.json(prospect);
+});
+
+router.patch('/:id/follow-up', async (req: Request, res: Response) => {
+  const { followUpAt } = req.body ?? {};
+  if (followUpAt !== null && typeof followUpAt !== 'string') {
+    res.status(400).json({ error: 'followUpAt doit être une date ISO ou null.' });
+    return;
+  }
+  const prospect = await updateFollowUp(req.user!.sub, req.params.id as string, followUpAt);
   if (!prospect) {
     res.status(404).json({ error: 'Prospect non trouvé.' });
     return;

@@ -8,6 +8,7 @@ import authRouter from './routes/auth';
 import autocompleteRouter from './routes/autocomplete';
 import prospectsRouter from './routes/prospects';
 import establishmentRouter from './routes/establishment';
+import historyRouter from './routes/history';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth } from './middleware/requireAuth';
@@ -40,6 +41,7 @@ app.get('/api/usage/me', requireAuth, (req, res) => {
 app.use('/api/autocomplete', autocompleteRouter);
 app.use('/api/prospects', prospectsRouter);
 app.use('/api/establishment', establishmentRouter);
+app.use('/api/history', historyRouter);
 app.use('/api/search', searchRouter);
 
 if (process.env.NODE_ENV !== 'test') {
