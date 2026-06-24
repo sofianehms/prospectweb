@@ -9,6 +9,7 @@ import autocompleteRouter from './routes/autocomplete';
 import prospectsRouter from './routes/prospects';
 import establishmentRouter from './routes/establishment';
 import historyRouter from './routes/history';
+import plansRouter from './routes/plans';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth } from './middleware/requireAuth';
@@ -42,6 +43,7 @@ app.use('/api/autocomplete', autocompleteRouter);
 app.use('/api/prospects', prospectsRouter);
 app.use('/api/establishment', establishmentRouter);
 app.use('/api/history', historyRouter);
+app.use('/api/plans', plansRouter);
 app.use('/api/search', searchRouter);
 
 if (process.env.NODE_ENV !== 'test') {

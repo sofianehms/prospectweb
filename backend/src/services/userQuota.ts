@@ -29,7 +29,14 @@ function getDb() {
   } catch { return null; }
 }
 
-export function getUserDailyLimit(): number {
+const userLimitOverrides = new Map<string, number>();
+
+export function setUserLimitOverride(userId: string, limit: number): void {
+  userLimitOverrides.set(userId, limit);
+}
+
+export function getUserDailyLimit(userId?: string): number {
+  if (userId && userLimitOverrides.has(userId)) return userLimitOverrides.get(userId)!;
   return Number(process.env.USER_DAILY_LIMIT) || DEFAULT_USER_DAILY_LIMIT;
 }
 
@@ -42,7 +49,7 @@ export class UserQuotaExceededError extends Error {
 
 export function checkUserQuota(userId: string, needed: number = 1): void {
   const entry = ensureTodayMem(userId);
-  const limit = getUserDailyLimit();
+  const limit = getUserDailyLimit(userId);
   if (entry.calls + needed > limit) {
     throw new UserQuotaExceededError(entry.calls, limit);
   }
@@ -52,7 +59,7 @@ export function trackUserCalls(userId: string, count: number = 1): void {
   const entry = ensureTodayMem(userId);
   entry.calls += count;
 
-  const limit = getUserDailyLimit();
+  const limit = getUserDailyLimit(userId);
   console.log(
     `[user-quota] user=${userId} +${count} | today=${entry.date} calls=${entry.calls}/${limit}`,
   );
@@ -73,7 +80,7 @@ export function trackUserCalls(userId: string, count: number = 1): void {
 
 export function getUserUsage(userId: string): { date: string; calls: number; limit: number; remaining: number } {
   const entry = ensureTodayMem(userId);
-  const limit = getUserDailyLimit();
+  const limit = getUserDailyLimit(userId);
   return {
     date: entry.date,
     calls: entry.calls,

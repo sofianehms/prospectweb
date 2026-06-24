@@ -89,4 +89,26 @@ export async function initDb(): Promise<void> {
   await db.query(`
     ALTER TABLE prospects ADD COLUMN IF NOT EXISTS follow_up_at TIMESTAMPTZ
   `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS plans (
+      id              TEXT PRIMARY KEY,
+      name            TEXT NOT NULL,
+      daily_limit     INTEGER NOT NULL,
+      monthly_price   INTEGER NOT NULL DEFAULT 0,
+      max_prospects   INTEGER NOT NULL DEFAULT 100
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO plans (id, name, daily_limit, monthly_price, max_prospects) VALUES
+      ('free',     'Gratuit',    50,   0,  100),
+      ('pro',      'Pro',       300,  29,  1000),
+      ('business', 'Business', 1000,  79, 10000)
+    ON CONFLICT (id) DO NOTHING
+  `);
+
+  await db.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'
+  `);
 }

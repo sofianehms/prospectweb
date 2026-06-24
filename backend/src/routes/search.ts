@@ -104,6 +104,16 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     const userId = req.user!.sub;
+
+    if (process.env.DATABASE_URL) {
+      try {
+        const { getUserPlan } = await import('../services/planStore');
+        const { setUserLimitOverride } = await import('../services/userQuota');
+        const plan = await getUserPlan(userId);
+        setUserLimitOverride(userId, plan.dailyLimit);
+      } catch { /* fallback to env default */ }
+    }
+
     checkUserQuota(userId);
 
     console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
