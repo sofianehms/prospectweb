@@ -15,21 +15,22 @@ router.use(requireInternalSecret);
 router.use(requireAuth);
 router.use(searchRateLimiter);
 
-export type WebsiteStatus = 'none' | 'outdated' | 'ok';
+export type SiteStatus = 'none' | 'unreachable' | 'outdated' | 'active';
 
 export interface Establishment extends Place {
-  websiteStatus: WebsiteStatus;
+  websiteStatus: SiteStatus;
+  confidenceScore: number;
 }
 
-function resolveWebsiteStatus(
+function resolveSiteStatus(
   website: string | null,
   reachable: boolean,
-  hasRecentContent: boolean
-): WebsiteStatus {
-  if (!website)              return 'none';
-  if (!reachable)            return 'outdated';
-  if (!hasRecentContent)     return 'outdated';
-  return 'ok';
+  hasRecentContent: boolean,
+): SiteStatus {
+  if (!website)          return 'none';
+  if (!reachable)        return 'unreachable';
+  if (!hasRecentContent) return 'outdated';
+  return 'active';
 }
 
 // GET /api/search?address=Paris&radius=1000&type=restaurant
@@ -113,22 +114,24 @@ router.get('/', async (req: Request, res: Response) => {
     const establishments: Establishment[] = await Promise.all(
       places.map(async (p): Promise<Establishment> => {
         if (!p.website) {
-          return { ...p, websiteStatus: 'none' };
+          return { ...p, websiteStatus: 'none', confidenceScore: 0 };
         }
 
-        const { reachable, hasRecentContent } = await checkWebsite(p.website);
+        const result = await checkWebsite(p.website);
         return {
           ...p,
-          websiteStatus: resolveWebsiteStatus(p.website, reachable, hasRecentContent),
+          websiteStatus: resolveSiteStatus(p.website, result.reachable, result.hasRecentContent),
+          confidenceScore: result.confidenceScore,
         };
       })
     );
 
     const summary = {
-      total:    establishments.length,
-      none:     establishments.filter(e => e.websiteStatus === 'none').length,
-      outdated: establishments.filter(e => e.websiteStatus === 'outdated').length,
-      ok:       establishments.filter(e => e.websiteStatus === 'ok').length,
+      total:       establishments.length,
+      none:        establishments.filter(e => e.websiteStatus === 'none').length,
+      unreachable: establishments.filter(e => e.websiteStatus === 'unreachable').length,
+      outdated:    establishments.filter(e => e.websiteStatus === 'outdated').length,
+      active:      establishments.filter(e => e.websiteStatus === 'active').length,
     };
 
     const payload = { center, radius: radiusMeters, summary, establishments };

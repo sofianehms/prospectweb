@@ -16,9 +16,10 @@ const CRM_STATUSES: { id: CrmStatus; label: string }[] = [
 ]
 
 const BADGE_STYLE: Record<WebsiteStatus, { label: string; className: string }> = {
-  none:     { label: 'Pas de site web', className: 'bg-red-50 text-red-500 border border-red-100' },
-  outdated: { label: 'Site obsolète',   className: 'bg-orange-50 text-orange-500 border border-orange-100' },
-  ok:       { label: 'Site actif',      className: 'bg-green-50 text-green-600 border border-green-100' },
+  none:        { label: 'Pas de site web',   className: 'bg-red-50 text-red-500 border border-red-100' },
+  unreachable: { label: 'Site injoignable',  className: 'bg-gray-50 text-gray-500 border border-gray-200' },
+  outdated:    { label: 'Site obsolète',     className: 'bg-orange-50 text-orange-500 border border-orange-100' },
+  active:      { label: 'Site actif',        className: 'bg-green-50 text-green-600 border border-green-100' },
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -119,8 +120,14 @@ export default function DetailClient({ e }: { e: Establishment }) {
             <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-2">Opportunité</h2>
             <div className="border-t border-gray-100 dark:border-slate-700 pt-3 space-y-3">
               {e.websiteStatus === 'none' && <Row icon="🌐">Aucun site web détecté</Row>}
+              {e.websiteStatus === 'unreachable' && (
+                <Row icon="🌐">Site web renseigné mais injoignable — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
+              )}
               {e.websiteStatus === 'outdated' && (
-                <Row icon="🌐">Site web présent mais obsolète — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
+                <Row icon="🌐">Site web présent mais obsolète (confiance {e.confidenceScore}%) — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
+              )}
+              {e.websiteStatus === 'active' && (
+                <Row icon="🌐">Site web actif (confiance {e.confidenceScore}%) — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
               )}
               <Row icon="🗺️">
                 <a href={e.mapsUrl} target="_blank" rel="noopener" className="text-emerald-600 underline">

@@ -6,7 +6,7 @@ import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/est
 import { distanceTo, formatDistance } from '@/app/types/establishment'
 import { useProspects } from '@/app/hooks/useProspects'
 
-type StatusFilter = 'none' | 'outdated' | 'ok' | 'not_added'
+type StatusFilter = 'none' | 'unreachable' | 'outdated' | 'active' | 'not_added'
 type SortBy = 'relevance' | 'distance' | 'rating' | 'reviews' | 'alpha'
 
 const SORT_OPTIONS: { id: SortBy; label: string }[] = [
@@ -17,12 +17,13 @@ const SORT_OPTIONS: { id: SortBy; label: string }[] = [
   { id: 'alpha',     label: 'Alphabétique'},
 ]
 
-const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, outdated: 1, ok: 2 }
+const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, unreachable: 1, outdated: 2, active: 3 }
 
 const BADGE: Record<WebsiteStatus, { label: string; className: string }> = {
-  none:     { label: 'Pas de site',   className: 'bg-red-50 text-red-500' },
-  outdated: { label: 'Site vieillot', className: 'bg-orange-50 text-orange-500' },
-  ok:       { label: 'Site actif',    className: 'bg-green-50 text-green-600' },
+  none:        { label: 'Pas de site',      className: 'bg-red-50 text-red-500' },
+  unreachable: { label: 'Site injoignable', className: 'bg-gray-50 text-gray-500' },
+  outdated:    { label: 'Site obsolète',    className: 'bg-orange-50 text-orange-500' },
+  active:      { label: 'Site actif',       className: 'bg-green-50 text-green-600' },
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -101,10 +102,11 @@ export default function ResultsClient({ data }: { data: SearchResult }) {
   const addedCount = data.establishments.filter(e => isAdded(e.id)).length
 
   const STATUS_TABS: { id: StatusFilter; label: string; count: number }[] = [
-    { id: 'none',      label: 'Sans site',     count: data.summary.none },
-    { id: 'outdated',  label: 'Site vieillot', count: data.summary.outdated },
-    { id: 'ok',        label: 'Site actif',    count: data.summary.ok },
-    { id: 'not_added', label: 'Pas ajouté',    count: data.establishments.length - addedCount },
+    { id: 'none',        label: 'Sans site',       count: data.summary.none },
+    { id: 'unreachable', label: 'Injoignable',     count: data.summary.unreachable },
+    { id: 'outdated',    label: 'Site obsolète',    count: data.summary.outdated },
+    { id: 'active',      label: 'Site actif',       count: data.summary.active },
+    { id: 'not_added',   label: 'Pas ajouté',       count: data.establishments.length - addedCount },
   ]
 
   function toggleStatus(f: StatusFilter) {

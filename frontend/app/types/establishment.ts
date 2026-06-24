@@ -1,4 +1,4 @@
-export type WebsiteStatus = 'none' | 'outdated' | 'ok'
+export type WebsiteStatus = 'none' | 'unreachable' | 'outdated' | 'active'
 
 export interface Establishment {
   id:          string
@@ -13,16 +13,18 @@ export interface Establishment {
   rating:      number | null
   ratingCount: number | null
   websiteStatus: WebsiteStatus
+  confidenceScore: number
 }
 
 export interface SearchResult {
   center: { lat: number; lng: number }
   radius: number
   summary: {
-    total:    number
-    none:     number
-    outdated: number
-    ok:       number
+    total:       number
+    none:        number
+    unreachable: number
+    outdated:    number
+    active:      number
   }
   establishments: Establishment[]
 }

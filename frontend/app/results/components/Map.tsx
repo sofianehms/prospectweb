@@ -6,15 +6,17 @@ import 'leaflet/dist/leaflet.css'
 import type { SearchResult, WebsiteStatus } from '@/app/types/establishment'
 
 const STATUS_COLOR: Record<WebsiteStatus, string> = {
-  none:     '#f97316', // orange
-  outdated: '#f59e0b', // amber
-  ok:       '#22c55e', // green
+  none:        '#f97316', // orange
+  unreachable: '#9ca3af', // gray
+  outdated:    '#f59e0b', // amber
+  active:      '#22c55e', // green
 }
 
 const STATUS_LABEL: Record<WebsiteStatus, string> = {
-  none:     'Pas de site',
-  outdated: 'Site obsolète',
-  ok:       'Site actif',
+  none:        'Pas de site',
+  unreachable: 'Site injoignable',
+  outdated:    'Site obsolète',
+  active:      'Site actif',
 }
 
 function getZoom(radiusMeters: number): number {

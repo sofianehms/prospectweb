@@ -82,13 +82,21 @@ async function assertPublicHost(url: string): Promise<void> {
   }
 }
 
+export interface ConfidenceSignal {
+  name: string;
+  weight: number;
+  found: boolean;
+}
+
 export interface WebsiteStatus {
-  reachable:        boolean;
-  statusCode:       number | null;
-  hasRecentContent: boolean;
-  lastModified:     string | null;
-  responseTimeMs:   number;
-  error:            string | null;
+  reachable:          boolean;
+  statusCode:         number | null;
+  hasRecentContent:   boolean;
+  lastModified:       string | null;
+  responseTimeMs:     number;
+  error:              string | null;
+  confidenceScore:    number;
+  confidenceSignals:  ConfidenceSignal[];
 }
 
 export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
@@ -129,15 +137,17 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
     const responseTimeMs = Date.now() - start;
     const lastModified   = res.headers.get('last-modified');
     const html           = await readFirstBytes(res, MAX_BODY_BYTES);
-    const hasRecentContent = detectRecentContent(html, lastModified);
+    const { score, signals } = computeConfidence(html, lastModified);
 
     return {
       reachable:  res.status < 500,
       statusCode: res.status,
-      hasRecentContent,
+      hasRecentContent: score >= 30,
       lastModified,
       responseTimeMs,
       error: null,
+      confidenceScore: score,
+      confidenceSignals: signals,
     };
   } catch (err: unknown) {
     if (err instanceof SsrfError) {
@@ -152,6 +162,8 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
       lastModified:     null,
       responseTimeMs:   Date.now() - start,
       error:            controller.signal.aborted ? `Timeout (>${TIMEOUT_MS}ms)` : msg,
+      confidenceScore:  0,
+      confidenceSignals: [],
     };
   } finally {
     clearTimeout(timer);
@@ -167,6 +179,8 @@ function errorResult(start: number, error: string): WebsiteStatus {
     lastModified: null,
     responseTimeMs: Date.now() - start,
     error,
+    confidenceScore: 0,
+    confidenceSignals: [],
   };
 }
 
@@ -196,25 +210,38 @@ async function readFirstBytes(res: Response, maxBytes: number): Promise<string> 
   return new TextDecoder().decode(buffer);
 }
 
-function detectRecentContent(html: string, lastModified: string | null): boolean {
-  if (isDateRecent(lastModified)) return true;
+function computeConfidence(html: string, lastModified: string | null): { score: number; signals: ConfidenceSignal[] } {
+  const signals: ConfidenceSignal[] = [];
+
+  const lmRecent = isDateRecent(lastModified);
+  signals.push({ name: 'Last-Modified récent', weight: 30, found: lmRecent });
 
   const metaDate = html.match(
     /<meta[^>]+(?:last-modified|modified_time|updated_time)[^>]+content="([^"]+)"/i
   );
-  if (metaDate && isDateRecent(metaDate[1])) return true;
+  const metaRecent = !!metaDate && isDateRecent(metaDate[1]);
+  signals.push({ name: 'Meta date récente (OG/schema)', weight: 25, found: metaRecent });
 
   const jsonLdDate = html.match(/"date(?:Modified|Published)"\s*:\s*"([^"]+)"/i);
-  if (jsonLdDate && isDateRecent(jsonLdDate[1])) return true;
+  const jsonLdRecent = !!jsonLdDate && isDateRecent(jsonLdDate[1]);
+  signals.push({ name: 'JSON-LD dateModified/Published', weight: 25, found: jsonLdRecent });
 
   const timeTag = html.match(/<time[^>]+datetime="(\d{4}-\d{2}[^"]*?)"/i);
-  if (timeTag && isDateRecent(timeTag[1])) return true;
+  const timeRecent = !!timeTag && isDateRecent(timeTag[1]);
+  signals.push({ name: 'Balise <time> récente', weight: 20, found: timeRecent });
 
-  for (const year of RECENT_YEARS) {
-    if (html.includes(String(year))) return true;
-  }
+  const hasSitemap = /sitemap\.xml/i.test(html);
+  signals.push({ name: 'Référence sitemap.xml', weight: 10, found: hasSitemap });
 
-  return false;
+  const modernStack = /(?:next|nuxt|gatsby|react|vue|svelte|astro|webpack|vite)/i.test(html);
+  signals.push({ name: 'Framework moderne détecté', weight: 10, found: modernStack });
+
+  const yearFound = RECENT_YEARS.some(y => html.includes(String(y)));
+  signals.push({ name: `Année récente (${RECENT_YEARS.join('/')})`, weight: 10, found: yearFound });
+
+  const score = Math.min(100, signals.reduce((sum, s) => sum + (s.found ? s.weight : 0), 0));
+
+  return { score, signals };
 }
 
 function isDateRecent(raw: string | null | undefined): boolean {
