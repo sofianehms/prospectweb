@@ -78,6 +78,29 @@ export class GoogleApiError extends Error {
   }
 }
 
+const BREAKER_THRESHOLD = 3;
+const BREAKER_RESET_MS = 60_000;
+let consecutiveFailures = 0;
+let breakerOpenUntil = 0;
+
+function checkBreaker(): void {
+  if (Date.now() < breakerOpenUntil) {
+    throw new GoogleApiError(503, 'Circuit-breaker ouvert : Google Places temporairement désactivé.');
+  }
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+}
+
+function recordFailure(): void {
+  consecutiveFailures++;
+  if (consecutiveFailures >= BREAKER_THRESHOLD) {
+    breakerOpenUntil = Date.now() + BREAKER_RESET_MS;
+    console.error(`[circuit-breaker] Google Places circuit OPEN after ${consecutiveFailures} failures, retry in ${BREAKER_RESET_MS / 1000}s`);
+  }
+}
+
 function mapPlace(p: RawPlace, type: string): Place {
   return {
     id:          p.id,
@@ -101,6 +124,7 @@ export interface PlaceDetails {
 }
 
 export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> {
+  checkBreaker();
   const apiKey = process.env.GOOGLE_PLACES_KEY!;
   checkQuota();
   const res = await fetch(`${DETAIL_URL}/${placeId}`, {
@@ -112,8 +136,10 @@ export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> 
   trackCall('places');
   if (!res.ok) {
     const body = await res.text().catch(() => '');
+    recordFailure();
     throw new GoogleApiError(res.status, body);
   }
+  recordSuccess();
   const data = await res.json() as RawPlace;
   return {
     phone: data.nationalPhoneNumber ?? null,
@@ -130,6 +156,7 @@ async function fetchByType(
   type: string,
   apiKey: string,
 ): Promise<Place[]> {
+  checkBreaker();
   checkQuota();
   const res = await fetch(NEARBY_URL, {
     method: 'POST',
@@ -154,8 +181,10 @@ async function fetchByType(
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     console.error(`[google-places] HTTP ${res.status} for type="${type}": ${body}`);
+    recordFailure();
     throw new GoogleApiError(res.status, body);
   }
+  recordSuccess();
   const data = await res.json() as { places?: RawPlace[] };
   return (data.places ?? []).map(p => mapPlace(p, type));
 }
