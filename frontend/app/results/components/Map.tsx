@@ -28,16 +28,25 @@ function getZoom(radiusMeters: number): number {
   return 10
 }
 
-function dotIcon(color: string) {
+const STATUS_SYMBOL: Record<WebsiteStatus, string> = {
+  none:        '!',
+  unreachable: '?',
+  outdated:    '~',
+  active:      '✓',
+}
+
+function dotIcon(color: string, status: WebsiteStatus) {
+  const symbol = STATUS_SYMBOL[status]
   return L.divIcon({
     html: `<div style="
-      width:13px;height:13px;border-radius:50%;
+      width:18px;height:18px;border-radius:50%;
       background:${color};border:2.5px solid #fff;
       box-shadow:0 1px 5px rgba(0,0,0,.35);
-      cursor:pointer;
-    "></div>`,
-    iconSize:   [13, 13],
-    iconAnchor: [6, 6],
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:#fff;line-height:1;
+    " role="img" aria-label="${STATUS_LABEL[status]}">${symbol}</div>`,
+    iconSize:   [18, 18],
+    iconAnchor: [9, 9],
     className:  '',
   })
 }
@@ -83,11 +92,11 @@ export default function Map({ data }: { data: SearchResult }) {
       const color = STATUS_COLOR[e.websiteStatus]
       const label = STATUS_LABEL[e.websiteStatus]
 
-      L.marker([e.lat, e.lng], { icon: dotIcon(color) })
+      L.marker([e.lat, e.lng], { icon: dotIcon(color, e.websiteStatus) })
         .bindPopup(
           `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:170px;padding:2px 0">
             <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:#111827">${e.name}</p>
-            <p style="margin:0 0 8px;font-size:11px;color:#9ca3af;text-transform:capitalize">${e.type.replace(/_/g,' ')}</p>
+            <p style="margin:0 0 8px;font-size:11px;color:#9ca3af">${e.type.replace(/_/g,' ')}</p>
             <span style="
               display:inline-block;padding:2px 8px;border-radius:9999px;
               font-size:11px;font-weight:600;

@@ -155,7 +155,7 @@ export default function SearchForm() {
                             : 'text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                         } ${i < suggestions.length - 1 ? 'border-b border-gray-100 dark:border-slate-700' : ''}`}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5 text-gray-400 dark:text-slate-500">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5 text-gray-400 dark:text-slate-500">
                           <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
                         </svg>
                         <span className="line-clamp-2 leading-snug">{s.display_name}</span>
@@ -167,7 +167,7 @@ export default function SearchForm() {
             </div>
             <button type="button" onClick={handleGeolocate} title="Utiliser ma position"
               className="h-11 px-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
               </svg>
             </button>
@@ -186,7 +186,7 @@ export default function SearchForm() {
               <span className={categories.length === 0 ? 'text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-slate-100'}>
                 {categoryLabel}
               </span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                 className={`flex-shrink-0 text-gray-400 transition-transform ${showCatMenu ? 'rotate-180' : ''}`}>
                 <path d="m6 9 6 6 6-6"/>
               </svg>
@@ -262,7 +262,7 @@ export default function SearchForm() {
           className="btn-primary inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition">
           {loading
             ? <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            : <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           }
           {loading ? 'Recherche…' : 'Lancer la recherche'}
         </button>

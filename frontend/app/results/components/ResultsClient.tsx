@@ -26,20 +26,7 @@ const BADGE: Record<WebsiteStatus, { label: string; className: string }> = {
   active:      { label: 'Site actif',       className: 'bg-green-50 text-green-600' },
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  restaurant: 'Restaurant', cafe: 'Café', bar: 'Bar', pub: 'Bar / Pub',
-  bakery: 'Boulangerie', pharmacy: 'Pharmacie', hair_salon: 'Coiffeur',
-  clothing_store: 'Boutique', hotel: 'Hôtel', gym: 'Salle de sport',
-  real_estate_agency: 'Immobilier', car_repair: 'Garagiste',
-  beauty_salon: 'Institut beauté', florist: 'Fleuriste',
-  convenience: 'Épicerie', laundry: 'Pressing', locksmith: 'Serrurier',
-  supermarket: 'Supermarché', dentist: 'Dentiste', doctor: 'Médecin',
-  veterinary: 'Vétérinaire', bank: 'Banque', fast_food: 'Restauration rapide',
-}
-
-function typeLabel(type: string) {
-  return TYPE_LABELS[type] ?? type.replace(/_/g, ' ')
-}
+import { typeLabel } from '@/app/lib/typeConfig'
 
 const PAGE_SIZE = 10
 
@@ -196,7 +183,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
           {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
         </p>
         <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
             <path d="M3 6h18M7 12h10M11 18h2"/>
           </svg>
           <select
@@ -234,13 +221,13 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
                   {e.name}
                 </p>
                 <p className="text-xs sm:text-sm text-gray-400 mt-0.5 flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                     <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
                   {dist} · {typeLabel(e.type)}
                   {e.rating && (
                     <span className="ml-2 flex items-center gap-0.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1">
+                      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" strokeWidth="1">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                       </svg>
                       {e.rating.toFixed(1)}
@@ -273,7 +260,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
       {remaining > 0 && (
         <div className="mt-8 flex flex-col items-center gap-2">
           <div className="w-8 h-8 rounded-full border border-gray-300 dark:border-slate-600 flex items-center justify-center text-gray-400 dark:text-slate-500">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>
             </svg>
           </div>
