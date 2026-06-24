@@ -90,7 +90,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
 
             <Suspense><RadiusSlider /></Suspense>
             <div className="mb-6"><MapWrapper data={data} /></div>
-            <ResultsClient data={data} />
+            <ResultsClient data={data} initialFilters={sp.filters ?? ''} />
           </>
         )}
       </main>

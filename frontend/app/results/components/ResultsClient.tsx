@@ -61,9 +61,20 @@ function applyStatusFilters(
   })
 }
 
-export default function ResultsClient({ data }: { data: SearchResult }) {
+function parseInitialFilters(raw: string): Set<StatusFilter> {
+  if (!raw) return new Set()
+  const mapping: Record<string, StatusFilter> = { no_website: 'none', outdated: 'outdated' }
+  const set = new Set<StatusFilter>()
+  for (const f of raw.split(',')) {
+    const mapped = mapping[f.trim()]
+    if (mapped) set.add(mapped)
+  }
+  return set
+}
+
+export default function ResultsClient({ data, initialFilters = '' }: { data: SearchResult; initialFilters?: string }) {
   const { add, remove, isAdded } = useProspects()
-  const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(new Set())
+  const [statusFilters, setStatusFilters] = useState<Set<StatusFilter>>(() => parseInitialFilters(initialFilters))
   const [sortBy, setSortBy]               = useState<SortBy>('relevance')
   const [visible, setVisible]             = useState(PAGE_SIZE)
 

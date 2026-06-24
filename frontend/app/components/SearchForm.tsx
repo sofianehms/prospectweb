@@ -27,9 +27,6 @@ const CATEGORIES = [
 const FILTERS = [
   { id: 'no_website', label: 'Sans site web' },
   { id: 'outdated',   label: 'Site obsolète' },
-  { id: 'no_maps',    label: 'Pas de Google Maps' },
-  { id: 'no_social',  label: 'Pas de réseaux sociaux' },
-  { id: 'recent',     label: 'Ouvert récemment' },
 ]
 
 interface Suggestion { display_name: string; lat: string; lon: string }
@@ -111,6 +108,7 @@ export default function SearchForm() {
     setLoading(true)
     const params = new URLSearchParams({ radius: String(radius * 1000) })
     if (categories.length > 0) params.set('types', categories.join(','))
+    if (activeFilters.length > 0) params.set('filters', activeFilters.join(','))
     if (coords) { params.set('lat', String(coords.lat)); params.set('lng', String(coords.lng)) }
     else params.set('address', address.trim())
     router.push(`/results?${params.toString()}`)
