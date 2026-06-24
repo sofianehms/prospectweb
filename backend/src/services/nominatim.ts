@@ -23,7 +23,7 @@ export interface NominatimResult {
 
 export async function searchNominatim(query: string, limit = 6): Promise<NominatimResult[]> {
   const key = cacheKey({ provider: 'nominatim', q: query, limit });
-  const cached = getCached<NominatimResult[]>(key);
+  const cached = await getCached<NominatimResult[]>(key);
   if (cached) return cached;
 
   await throttle();
@@ -42,6 +42,6 @@ export async function searchNominatim(query: string, limit = 6): Promise<Nominat
   }
 
   const data: NominatimResult[] = await res.json();
-  setCached(key, data);
+  await setCached(key, data);
   return data;
 }

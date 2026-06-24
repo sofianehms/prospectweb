@@ -94,7 +94,7 @@ router.get('/', async (req: Request, res: Response) => {
       radius: radiusMeters,
       types: typeList.slice().sort().join(','),
     });
-    const cached = getCached<{ center: typeof center; radius: number; summary: object; establishments: unknown[] }>(key);
+    const cached = await getCached<{ center: typeof center; radius: number; summary: object; establishments: unknown[] }>(key);
     if (cached) {
       res.json(cached);
       return;
@@ -132,7 +132,7 @@ router.get('/', async (req: Request, res: Response) => {
     };
 
     const payload = { center, radius: radiusMeters, summary, establishments };
-    setCached(key, payload);
+    await setCached(key, payload);
     res.json(payload);
   } catch (err) {
     if (err instanceof UserQuotaExceededError || err instanceof QuotaExceededError) {
