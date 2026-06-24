@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Establishment, WebsiteStatus } from '@/app/types/establishment'
+import { useProspects, type CrmStatus } from '@/app/hooks/useProspects'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type Tab       = 'infos' | 'script' | 'notes'
-type CrmStatus = 'to_contact' | 'contacted' | 'discussing' | 'won' | 'lost'
+type Tab = 'infos' | 'script' | 'notes'
 
 const CRM_STATUSES: { id: CrmStatus; label: string }[] = [
   { id: 'to_contact', label: 'À contacter'   },
@@ -53,10 +53,36 @@ const TYPE_COLOR: Record<string, string> = {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export default function DetailClient({ e }: { e: Establishment }) {
+  const { prospects, add, setStatus, setNotes: persistNotes, isAdded } = useProspects()
+  const saved = prospects.find(p => p.id === e.id)
+
   const [tab, setTab]       = useState<Tab>('infos')
-  const [crm, setCrm]       = useState<CrmStatus>('to_contact')
-  const [notes, setNotes]   = useState('')
+  const [crm, setCrmLocal]  = useState<CrmStatus>(saved?.crmStatus ?? 'to_contact')
+  const [notes, setNotesLocal] = useState(saved?.notes ?? '')
   const [script, setScript] = useState(buildScript(e))
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!isAdded(e.id)) add(e)
+  }, [e, add, isAdded])
+
+  useEffect(() => {
+    if (saved) {
+      setCrmLocal(saved.crmStatus)
+      setNotesLocal(saved.notes)
+    }
+  }, [saved?.crmStatus, saved?.notes])
+
+  const handleCrmChange = useCallback((status: CrmStatus) => {
+    setCrmLocal(status)
+    setStatus(e.id, status)
+  }, [e.id, setStatus])
+
+  const handleNotesChange = useCallback((value: string) => {
+    setNotesLocal(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => persistNotes(e.id, value), 500)
+  }, [e.id, persistNotes])
 
   const badge  = BADGE_STYLE[e.websiteStatus]
   const icon   = TYPE_ICON[e.type]  ?? '🏪'
@@ -175,7 +201,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
           <p className="text-sm text-gray-500">Vos notes privées sur ce prospect.</p>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={e => handleNotesChange(e.target.value)}
             placeholder="Ex : Propriétaire sympa, à rappeler jeudi matin…"
             rows={10}
             className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-4 text-sm text-gray-700 dark:text-slate-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
@@ -191,7 +217,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
             {CRM_STATUSES.map(s => (
               <button
                 key={s.id}
-                onClick={() => setCrm(s.id)}
+                onClick={() => handleCrmChange(s.id)}
                 className={`px-4 py-1.5 rounded-lg border text-sm font-medium transition ${
                   crm === s.id
                     ? 'bg-gray-900 dark:bg-slate-100 border-gray-900 dark:border-slate-100 text-white dark:text-slate-900'
