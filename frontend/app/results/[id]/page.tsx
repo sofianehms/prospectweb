@@ -15,30 +15,39 @@ export default function DetailPage() {
 
   useEffect(() => {
     (async () => {
+      let base: Establishment | null = null
+
       const raw = sessionStorage.getItem('pw_search_results')
       if (raw) {
         const data: SearchResult = JSON.parse(raw)
-        const found = data.establishments.find(e => e.id === id)
-        if (found) {
-          setEstablishment(found)
-          setLoading(false)
-          return
-        }
+        base = data.establishments.find(e => e.id === id) ?? null
       }
 
-      try {
-        const res = await fetch(`/api/establishment/${encodeURIComponent(id)}`)
-        if (res.ok) {
-          const data: Establishment = await res.json()
-          setEstablishment(data)
-        } else {
-          setNotFound(true)
-        }
-      } catch {
+      if (!base) {
+        try {
+          const res = await fetch(`/api/establishment/${encodeURIComponent(id)}`)
+          if (res.ok) base = await res.json()
+        } catch { /* fall through */ }
+      }
+
+      if (!base) {
         setNotFound(true)
+        setLoading(false)
+        return
       }
 
+      setEstablishment(base)
       setLoading(false)
+
+      if (base.phone === null && base.rating === null) {
+        try {
+          const res = await fetch(`/api/establishment/${encodeURIComponent(id)}?details=1`)
+          if (res.ok) {
+            const details = await res.json()
+            setEstablishment(prev => prev ? { ...prev, ...details } : prev)
+          }
+        } catch { /* non-blocking */ }
+      }
     })()
   }, [id])
 

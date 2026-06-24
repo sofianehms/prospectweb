@@ -3,18 +3,18 @@ import { checkQuota, trackCall } from './googleQuota';
 
 const NEARBY_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 
-const FIELD_MASK = [
+const FIELD_MASK_SEARCH = [
   'places.id',
   'places.displayName',
   'places.formattedAddress',
   'places.location',
   'places.websiteUri',
-  'places.nationalPhoneNumber',
   'places.types',
   'places.googleMapsUri',
-  'places.rating',
-  'places.userRatingCount',
 ].join(',');
+
+const DETAIL_FIELD_MASK = 'id,displayName,formattedAddress,location,websiteUri,nationalPhoneNumber,types,googleMapsUri,rating,userRatingCount';
+const DETAIL_URL = 'https://places.googleapis.com/v1/places';
 
 // Types de commerces pertinents pour la prospection web.
 // Chaque type génère une requête indépendante (max 20 résultats chacune).
@@ -89,8 +89,36 @@ function mapPlace(p: RawPlace, type: string): Place {
     phone:       p.nationalPhoneNumber ?? null,
     website:     p.websiteUri          ?? null,
     mapsUrl:     p.googleMapsUri ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName?.text ?? '')}`,
-    rating:      p.rating          ?? null,
+    rating:      p.rating ?? null,
     ratingCount: p.userRatingCount ?? null,
+  };
+}
+
+export interface PlaceDetails {
+  phone: string | null;
+  rating: number | null;
+  ratingCount: number | null;
+}
+
+export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> {
+  const apiKey = process.env.GOOGLE_PLACES_KEY!;
+  checkQuota();
+  const res = await fetch(`${DETAIL_URL}/${placeId}`, {
+    headers: {
+      'X-Goog-Api-Key':   apiKey,
+      'X-Goog-FieldMask': DETAIL_FIELD_MASK,
+    },
+  });
+  trackCall('places');
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new GoogleApiError(res.status, body);
+  }
+  const data = await res.json() as RawPlace;
+  return {
+    phone: data.nationalPhoneNumber ?? null,
+    rating: data.rating ?? null,
+    ratingCount: data.userRatingCount ?? null,
   };
 }
 
@@ -108,7 +136,7 @@ async function fetchByType(
     headers: {
       'Content-Type':     'application/json',
       'X-Goog-Api-Key':   apiKey,
-      'X-Goog-FieldMask': FIELD_MASK,
+      'X-Goog-FieldMask': FIELD_MASK_SEARCH,
     },
     body: JSON.stringify({
       maxResultCount: 20,
