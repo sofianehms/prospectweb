@@ -11,13 +11,35 @@ export default function DetailPage() {
   const { id } = useParams<{ id: string }>()
   const [establishment, setEstablishment] = useState<Establishment | null>(null)
   const [notFound, setNotFound] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('pw_search_results')
-    if (!raw) { setNotFound(true); return }
-    const data: SearchResult = JSON.parse(raw)
-    const found = data.establishments.find(e => e.id === id)
-    found ? setEstablishment(found) : setNotFound(true)
+    (async () => {
+      const raw = sessionStorage.getItem('pw_search_results')
+      if (raw) {
+        const data: SearchResult = JSON.parse(raw)
+        const found = data.establishments.find(e => e.id === id)
+        if (found) {
+          setEstablishment(found)
+          setLoading(false)
+          return
+        }
+      }
+
+      try {
+        const res = await fetch(`/api/establishment/${encodeURIComponent(id)}`)
+        if (res.ok) {
+          const data: Establishment = await res.json()
+          setEstablishment(data)
+        } else {
+          setNotFound(true)
+        }
+      } catch {
+        setNotFound(true)
+      }
+
+      setLoading(false)
+    })()
   }, [id])
 
   return (
@@ -42,11 +64,11 @@ export default function DetailPage() {
 
         {notFound && (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-10 text-center text-gray-400 dark:text-slate-500 text-sm">
-            Commerce introuvable. <Link href="/results" className="text-emerald-600 underline">Retour aux résultats</Link>
+            Établissement introuvable ou lien expiré. <Link href="/" className="text-emerald-600 underline">Lancer une recherche</Link>
           </div>
         )}
 
-        {!notFound && !establishment && (
+        {loading && !notFound && (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-10 text-center text-gray-400 dark:text-slate-500 text-sm">
             Chargement…
           </div>

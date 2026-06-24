@@ -136,6 +136,9 @@ router.get('/', async (req: Request, res: Response) => {
 
     const payload = { center, radius: radiusMeters, summary, establishments };
     await setCached(key, payload);
+    await Promise.all(
+      establishments.map(e => setCached(`establishment:${e.id}`, e))
+    );
     res.json(payload);
   } catch (err) {
     if (err instanceof UserQuotaExceededError || err instanceof QuotaExceededError) {
