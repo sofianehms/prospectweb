@@ -68,8 +68,12 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
         </Link>
 
         {fetchError ? (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl px-5 py-4 text-sm">
-            ⚠️ {fetchError}
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4 space-y-2">
+            <p className="text-sm font-medium text-red-700 dark:text-red-400">
+              {fetchError.includes('indisponible') ? 'Service temporairement indisponible' : 'Erreur lors de la recherche'}
+            </p>
+            <p className="text-sm text-red-600 dark:text-red-300">{fetchError}</p>
+            <Link href="/" className="inline-block text-sm text-emerald-600 underline mt-1">Modifier la recherche et réessayer</Link>
           </div>
         ) : (
           <>
