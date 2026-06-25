@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store  = await cookies()
-  const theme  = (store.get('pw_theme')?.value ?? 'sable') as Theme
+  const theme  = (store.get('pw_theme')?.value ?? 'cosmos') as Theme
   const isDark = DARK_THEMES.includes(theme)
 
   return (
