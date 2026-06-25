@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 export interface AuthPayload {
   sub: string;
   email: string;
+  role?: string;
 }
 
 declare global {
@@ -35,4 +36,12 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   } catch {
     res.status(401).json({ error: 'Token invalide ou expiré.' });
   }
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (req.user?.role !== 'admin') {
+    res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
+    return;
+  }
+  next();
 }
