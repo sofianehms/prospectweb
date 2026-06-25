@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useClerk } from '@clerk/nextjs'
 import { useEffect, useRef, useState } from 'react'
 
 type Theme = 'light' | 'dark'
@@ -63,6 +64,7 @@ function extractInitial(user: UserInfo | null): string {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { signOut } = useClerk()
   const [theme, setTheme] = useState<Theme>('dark')
   const [user, setUser] = useState<UserInfo | null>(null)
   const [plan, setPlan] = useState<PlanInfo | null>(null)
@@ -99,9 +101,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   function handleLogout() {
-    document.cookie = 'pw_token=; path=/; max-age=0'
-    router.push('/login')
-    router.refresh()
+    signOut({ redirectUrl: '/sign-in' })
   }
 
   function isActive(href: string) {

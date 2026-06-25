@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 import type { SearchResult } from '@/app/types/establishment'
 import AppShell from '@/app/components/AppShell'
 import ResultsClient from './components/ResultsClient'
 import RadiusSlider from './components/RadiusSlider'
 import MapWrapper from './components/MapWrapper'
+import { backendHeaders } from '@/app/lib/auth'
 
 async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
   const params = new URLSearchParams({ radius: sp.radius })
@@ -14,16 +14,10 @@ async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
   if (sp.lat && sp.lng) { params.set('lat', sp.lat); params.set('lng', sp.lng) }
   else params.set('address', sp.address)
 
-  const store = await cookies()
-  const token = store.get('pw_token')?.value ?? ''
-
   const url = `${process.env.BACKEND_URL ?? 'http://localhost:4000'}/api/search?${params}`
   const res  = await fetch(url, {
     cache: 'no-store',
-    headers: {
-      'x-internal-secret': process.env.BACKEND_SECRET ?? '',
-      'Authorization': `Bearer ${token}`,
-    },
+    headers: await backendHeaders(),
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))

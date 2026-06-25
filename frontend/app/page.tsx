@@ -1,17 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
+import { useState } from 'react'
 
 /* ══════════════════════════════════════════════════════
    NAV
    ══════════════════════════════════════════════════════ */
 function Nav() {
-  const [loggedIn, setLoggedIn] = useState(false)
-
-  useEffect(() => {
-    setLoggedIn(document.cookie.includes('pw_token='))
-  }, [])
+  const { isSignedIn } = useUser()
+  const loggedIn = !!isSignedIn
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-200 h-16 px-6 md:px-16 flex items-center justify-between backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-transparent">
