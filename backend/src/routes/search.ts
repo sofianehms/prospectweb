@@ -6,7 +6,7 @@ import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
-import { QuotaExceededError, getUsage } from '../services/googleQuota';
+import { QuotaExceededError } from '../services/googleQuota';
 import { GoogleApiError } from '../services/places';
 import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
 import { recordSearch, getKnownPlaceIds } from '../services/searchHistory';
@@ -117,11 +117,8 @@ router.get('/', async (req: Request, res: Response) => {
     checkUserQuota(userId);
 
     console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
-    const globalBefore = getUsage().total;
-    const { places, meta } = await nearbySearch(center, radiusMeters, typeList);
-    const globalAfter = getUsage().total;
-    const callsMade = globalAfter - globalBefore;
-    if (callsMade > 0) trackUserCalls(userId, callsMade);
+    const { places, meta, apiCalls } = await nearbySearch(center, radiusMeters, typeList);
+    if (apiCalls > 0) trackUserCalls(userId, apiCalls);
 
     const establishments: Establishment[] = await Promise.all(
       places.map(async (p): Promise<Establishment> => {

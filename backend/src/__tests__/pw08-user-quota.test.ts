@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import request from 'supertest';
-import { setupAuthEnv, testToken, TEST_USER } from './helpers/auth';
+import { setupAuthEnv, testToken, adminToken, TEST_USER } from './helpers/auth';
 import jwt from 'jsonwebtoken';
 
 process.env.NODE_ENV = 'test';
@@ -163,7 +163,9 @@ describe('PW-08 — /api/usage inclut le détail par utilisateur', () => {
     trackUserCalls('user-1', 2);
     trackUserCalls('user-2', 3);
 
-    const res = await request(app).get('/api/usage');
+    const res = await request(app)
+      .get('/api/usage')
+      .set('Authorization', `Bearer ${adminToken()}`);
 
     expect(res.status).toBe(200);
     expect(res.body.global).toBeDefined();

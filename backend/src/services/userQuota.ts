@@ -1,3 +1,5 @@
+import Redis from 'ioredis';
+
 const DEFAULT_USER_DAILY_LIMIT = 100;
 
 interface UserDailyCounter {
@@ -6,6 +8,7 @@ interface UserDailyCounter {
 }
 
 const memCounters = new Map<string, UserDailyCounter>();
+let usingFallback = false;
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -19,6 +22,18 @@ function ensureTodayMem(userId: string): UserDailyCounter {
     memCounters.set(userId, entry);
   }
   return entry;
+}
+
+function getRedis(): Redis | null {
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+  try {
+    return new Redis(url, { maxRetriesPerRequest: 1, lazyConnect: false });
+  } catch { return null; }
+}
+
+function redisKey(userId: string): string {
+  return `uquota:${todayKey()}:${userId}`;
 }
 
 function getDb() {
@@ -55,6 +70,26 @@ export function checkUserQuota(userId: string, needed: number = 1): void {
   }
 }
 
+export async function checkUserQuotaAtomic(userId: string, needed: number = 1): Promise<void> {
+  const r = getRedis();
+  if (r) {
+    try {
+      const val = await r.get(redisKey(userId));
+      r.quit().catch(() => {});
+      const calls = Number(val) || 0;
+      const limit = getUserDailyLimit(userId);
+      if (calls + needed > limit) {
+        throw new UserQuotaExceededError(calls, limit);
+      }
+      return;
+    } catch (err) {
+      r.quit().catch(() => {});
+      if (err instanceof UserQuotaExceededError) throw err;
+    }
+  }
+  checkUserQuota(userId, needed);
+}
+
 export function trackUserCalls(userId: string, count: number = 1): void {
   const entry = ensureTodayMem(userId);
   entry.calls += count;
@@ -76,6 +111,36 @@ export function trackUserCalls(userId: string, count: number = 1): void {
       [userId, count],
     ).catch((err: Error) => console.error('[user-quota] DB write failed:', err.message));
   }
+}
+
+export async function trackUserCallsAtomic(userId: string, count: number = 1): Promise<number> {
+  const r = getRedis();
+  if (r) {
+    try {
+      const key = redisKey(userId);
+      const newVal = await r.incrby(key, count);
+      const ttl = await r.ttl(key);
+      if (ttl < 0) {
+        const midnight = new Date();
+        midnight.setUTCHours(24, 0, 0, 0);
+        const secondsLeft = Math.ceil((midnight.getTime() - Date.now()) / 1000);
+        await r.expire(key, secondsLeft);
+      }
+      r.quit().catch(() => {});
+      const entry = ensureTodayMem(userId);
+      entry.calls = newVal;
+      usingFallback = false;
+      return newVal;
+    } catch (err) {
+      r.quit().catch(() => {});
+      if (!usingFallback) {
+        console.warn('[user-quota] Redis unavailable, falling back to in-memory counter');
+        usingFallback = true;
+      }
+    }
+  }
+  trackUserCalls(userId, count);
+  return ensureTodayMem(userId).calls;
 }
 
 export function getUserUsage(userId: string): { date: string; calls: number; limit: number; remaining: number } {
@@ -116,4 +181,5 @@ export async function loadFromDb(userId: string): Promise<void> {
 
 export function resetForTesting(): void {
   memCounters.clear();
+  usingFallback = false;
 }

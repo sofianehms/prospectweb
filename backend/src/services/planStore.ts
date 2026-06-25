@@ -54,6 +54,10 @@ export async function getUserPlan(userId: string): Promise<Plan> {
   return getPlan(planId);
 }
 
+export function isPaidPlan(plan: Plan): boolean {
+  return plan.monthlyPrice > 0;
+}
+
 export async function setUserPlan(userId: string, planId: string): Promise<void> {
   await getPool().query(
     'UPDATE users SET plan = $1 WHERE id = $2',

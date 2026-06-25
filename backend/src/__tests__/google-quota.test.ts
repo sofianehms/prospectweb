@@ -6,7 +6,7 @@ import {
   resetForTesting,
   QuotaExceededError,
 } from '../services/googleQuota';
-import { setupAuthEnv, testToken } from './helpers/auth';
+import { setupAuthEnv, testToken, adminToken } from './helpers/auth';
 
 process.env.GOOGLE_DAILY_LIMIT = '10';
 process.env.NODE_ENV = 'test';
@@ -89,7 +89,9 @@ describe('PW-02 — intégration HTTP 429', () => {
     const { default: request } = await import('supertest');
     const { app } = await import('../index');
 
-    const res = await request(app).get('/api/usage');
+    const res = await request(app)
+      .get('/api/usage')
+      .set('Authorization', `Bearer ${adminToken()}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('global');

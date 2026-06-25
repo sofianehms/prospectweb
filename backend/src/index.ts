@@ -12,7 +12,7 @@ import historyRouter from './routes/history';
 import plansRouter from './routes/plans';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
-import { requireAuth } from './middleware/requireAuth';
+import { requireAuth, requireAdmin } from './middleware/requireAuth';
 
 // Charge le .env racine du projet (un niveau au-dessus de /backend)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -31,7 +31,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRouter);
 
-app.get('/api/usage', (_req, res) => {
+app.get('/api/usage', requireAuth, requireAdmin, (_req, res) => {
   res.json({ global: getUsage(), users: getAllUsersUsage() });
 });
 

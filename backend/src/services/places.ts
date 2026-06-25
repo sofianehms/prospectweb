@@ -1,5 +1,6 @@
 import type { LatLng } from './geocode';
 import { checkQuota, trackCall } from './googleQuota';
+import Redis from 'ioredis';
 
 const NEARBY_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 
@@ -80,25 +81,69 @@ export class GoogleApiError extends Error {
 
 const BREAKER_THRESHOLD = 3;
 const BREAKER_RESET_MS = 60_000;
+const BREAKER_REDIS_KEY = 'breaker:google-places';
+
 let consecutiveFailures = 0;
 let breakerOpenUntil = 0;
 
-function checkBreaker(): void {
+function getRedis(): Redis | null {
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+  try {
+    return new Redis(url, { maxRetriesPerRequest: 1, lazyConnect: false });
+  } catch { return null; }
+}
+
+async function loadBreakerState(): Promise<void> {
+  const r = getRedis();
+  if (!r) return;
+  try {
+    const [failures, openUntil] = await Promise.all([
+      r.get(`${BREAKER_REDIS_KEY}:failures`),
+      r.get(`${BREAKER_REDIS_KEY}:openUntil`),
+    ]);
+    r.quit().catch(() => {});
+    consecutiveFailures = Number(failures) || 0;
+    breakerOpenUntil = Number(openUntil) || 0;
+  } catch {
+    r.quit().catch(() => {});
+  }
+}
+
+async function saveBreakerState(): Promise<void> {
+  const r = getRedis();
+  if (!r) return;
+  try {
+    const ttl = Math.ceil(BREAKER_RESET_MS / 1000) + 10;
+    await Promise.all([
+      r.set(`${BREAKER_REDIS_KEY}:failures`, String(consecutiveFailures), 'EX', ttl),
+      r.set(`${BREAKER_REDIS_KEY}:openUntil`, String(breakerOpenUntil), 'EX', ttl),
+    ]);
+    r.quit().catch(() => {});
+  } catch {
+    r.quit().catch(() => {});
+  }
+}
+
+async function checkBreaker(): Promise<void> {
+  await loadBreakerState();
   if (Date.now() < breakerOpenUntil) {
     throw new GoogleApiError(503, 'Circuit-breaker ouvert : Google Places temporairement désactivé.');
   }
 }
 
-function recordSuccess(): void {
+async function recordSuccess(): Promise<void> {
   consecutiveFailures = 0;
+  await saveBreakerState();
 }
 
-function recordFailure(): void {
+async function recordFailure(): Promise<void> {
   consecutiveFailures++;
   if (consecutiveFailures >= BREAKER_THRESHOLD) {
     breakerOpenUntil = Date.now() + BREAKER_RESET_MS;
     console.error(`[circuit-breaker] Google Places circuit OPEN after ${consecutiveFailures} failures, retry in ${BREAKER_RESET_MS / 1000}s`);
   }
+  await saveBreakerState();
 }
 
 function mapPlace(p: RawPlace, type: string): Place {
@@ -123,8 +168,8 @@ export interface PlaceDetails {
   ratingCount: number | null;
 }
 
-export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> {
-  checkBreaker();
+export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails & { apiCalls: number }> {
+  await checkBreaker();
   const apiKey = process.env.GOOGLE_PLACES_KEY!;
   checkQuota();
   const res = await fetch(`${DETAIL_URL}/${placeId}`, {
@@ -136,15 +181,16 @@ export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> 
   trackCall('places');
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    recordFailure();
+    await recordFailure();
     throw new GoogleApiError(res.status, body);
   }
-  recordSuccess();
+  await recordSuccess();
   const data = await res.json() as RawPlace;
   return {
     phone: data.nationalPhoneNumber ?? null,
     rating: data.rating ?? null,
     ratingCount: data.userRatingCount ?? null,
+    apiCalls: 1,
   };
 }
 
@@ -155,8 +201,8 @@ async function fetchByType(
   radiusMeters: number,
   type: string,
   apiKey: string,
-): Promise<Place[]> {
-  checkBreaker();
+): Promise<{ places: Place[]; apiCalls: number }> {
+  await checkBreaker();
   checkQuota();
   const res = await fetch(NEARBY_URL, {
     method: 'POST',
@@ -181,12 +227,12 @@ async function fetchByType(
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     console.error(`[google-places] HTTP ${res.status} for type="${type}": ${body}`);
-    recordFailure();
+    await recordFailure();
     throw new GoogleApiError(res.status, body);
   }
-  recordSuccess();
+  await recordSuccess();
   const data = await res.json() as { places?: RawPlace[] };
-  return (data.places ?? []).map(p => mapPlace(p, type));
+  return { places: (data.places ?? []).map(p => mapPlace(p, type)), apiCalls: 1 };
 }
 
 // Nearby Search is capped at 20 per request. To get more results for a specific
@@ -212,18 +258,19 @@ async function fetchByTypeMultiArea(
   radiusMeters: number,
   type: string,
   apiKey: string,
-): Promise<Place[]> {
+): Promise<{ places: Place[]; apiCalls: number }> {
   const centers = subCenters(center, radiusMeters);
   const seen    = new Set<string>();
   const results: Place[] = [];
   let noWebsiteCount = 0;
+  let totalApiCalls = 0;
 
   for (const c of centers) {
-    // First sub-center must succeed; subsequent ones are best-effort
-    const batch = results.length === 0
+    const result = results.length === 0
       ? await fetchByType(c, radiusMeters, type, apiKey)
-      : await fetchByType(c, radiusMeters, type, apiKey).catch(() => [] as Place[]);
-    for (const place of batch) {
+      : await fetchByType(c, radiusMeters, type, apiKey).catch(() => ({ places: [] as Place[], apiCalls: 0 }));
+    totalApiCalls += result.apiCalls;
+    for (const place of result.places) {
       if (!seen.has(place.id)) {
         seen.add(place.id);
         results.push(place);
@@ -233,7 +280,7 @@ async function fetchByTypeMultiArea(
     if (noWebsiteCount >= NO_WEBSITE_TARGET) break;
   }
 
-  return results;
+  return { places: results, apiCalls: totalApiCalls };
 }
 
 export interface SearchMeta {
@@ -246,10 +293,12 @@ export async function nearbySearch(
   center: LatLng,
   radiusMeters: number,
   types: string[],
-): Promise<{ places: Place[]; meta: SearchMeta }> {
+): Promise<{ places: Place[]; meta: SearchMeta; apiCalls: number }> {
   const apiKey      = process.env.GOOGLE_PLACES_KEY!;
   const useMulti    = types.length > 0;
   const targetTypes = useMulti ? types : COMMERCIAL_TYPES;
+
+  type FetchResult = { places: Place[]; apiCalls: number };
 
   const results = await Promise.allSettled(
     targetTypes.map(t =>
@@ -259,7 +308,7 @@ export async function nearbySearch(
     )
   );
 
-  const fulfilled = results.filter((r): r is PromiseFulfilledResult<Place[]> => r.status === 'fulfilled');
+  const fulfilled = results.filter((r): r is PromiseFulfilledResult<FetchResult> => r.status === 'fulfilled');
   const rejected  = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
   const cappedTypes: string[] = [];
@@ -270,8 +319,8 @@ export async function nearbySearch(
       failedTypes.push(targetTypes[i]);
       console.error('[google-places] batch failed:', (results[i] as PromiseRejectedResult).reason?.message);
     } else {
-      const batch = (results[i] as PromiseFulfilledResult<Place[]>).value;
-      if (batch.length >= RESULTS_CAP) {
+      const batch = (results[i] as PromiseFulfilledResult<FetchResult>).value;
+      if (batch.places.length >= RESULTS_CAP) {
         cappedTypes.push(targetTypes[i]);
       }
     }
@@ -284,14 +333,17 @@ export async function nearbySearch(
 
   const seen   = new Set<string>();
   const merged: Place[] = [];
+  let totalApiCalls = 0;
   for (const batch of fulfilled) {
-    for (const place of batch.value) {
+    totalApiCalls += batch.value.apiCalls;
+    for (const place of batch.value.places) {
       if (!seen.has(place.id)) { seen.add(place.id); merged.push(place); }
     }
   }
 
   return {
     places: merged,
+    apiCalls: totalApiCalls,
     meta: {
       partial: cappedTypes.length > 0 || failedTypes.length > 0,
       cappedTypes,
