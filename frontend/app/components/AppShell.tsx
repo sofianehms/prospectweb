@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Theme = 'light' | 'dark'
 
@@ -66,6 +66,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
   const [user, setUser] = useState<UserInfo | null>(null)
   const [plan, setPlan] = useState<PlanInfo | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const t = (document.documentElement.getAttribute('data-theme') ?? 'dark') as Theme
@@ -80,6 +82,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       setUser(u)
       setPlan(p)
     })
+  }, [])
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
   function toggleTheme() {
@@ -160,9 +170,110 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* User + theme */}
-        <div style={{ padding: '12px 10px', borderTop: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-[10px]" style={{ padding: 10, borderRadius: 9, background: 'var(--surface2)' }}>
+        {/* User profile button + popover menu */}
+        <div ref={menuRef} style={{ padding: '12px 10px', borderTop: '1px solid var(--border)', position: 'relative' }}>
+          {/* Popover menu */}
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', bottom: '100%', left: 10, right: 10, marginBottom: 8,
+              background: 'var(--surface)', border: '1px solid var(--border-b)',
+              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              overflow: 'hidden', zIndex: 50,
+            }}>
+              {/* Email */}
+              <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, color: 'var(--t4)', marginBottom: 2 }}>Connecté en tant que</div>
+                <div className="truncate" style={{ fontSize: 13, fontWeight: 600 }}>{user?.email ?? '…'}</div>
+              </div>
+
+              {/* Menu items */}
+              <div style={{ padding: '6px' }}>
+                {/* Theme toggle */}
+                <button
+                  onClick={toggleTheme}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8, border: 'none',
+                    background: 'transparent', cursor: 'pointer', color: 'var(--t2)',
+                    fontSize: 13, textAlign: 'left', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  {theme === 'dark' ? (
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.3"/><path d="M7.5 1.5v1.5M7.5 12v1.5M1.5 7.5H3M12 7.5h1.5M3.4 3.4l1 1M10.6 10.6l1 1M3.4 11.6l1-1M10.6 4.4l1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5A5.5 5.5 0 0013.5 7.5 7.5 7.5 0 117.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                  )}
+                  Passer en mode {theme === 'dark' ? 'clair' : 'sombre'}
+                </button>
+
+                {/* Paramètres */}
+                <Link
+                  href="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8,
+                    color: 'var(--t2)', fontSize: 13, transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3 3l1 1M11 11l1 1M3 12l1-1M11 4l1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                  Paramètres
+                </Link>
+              </div>
+
+              {/* Plan */}
+              <div style={{ padding: '6px', borderTop: '1px solid var(--border)' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '9px 10px', borderRadius: 8, background: 'var(--accent-d)',
+                }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>Plan {plan?.name ?? '…'}</div>
+                  </div>
+                  <Link
+                    href="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}
+                  >
+                    Gérer →
+                  </Link>
+                </div>
+              </div>
+
+              {/* Déconnexion */}
+              <div style={{ padding: '6px', borderTop: '1px solid var(--border)' }}>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8, border: 'none',
+                    background: 'transparent', cursor: 'pointer', color: 'var(--t3)',
+                    fontSize: 13, textAlign: 'left', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  Se déconnecter
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Profile trigger button */}
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className="flex items-center gap-[10px] w-full transition-all duration-200"
+            style={{
+              padding: 10, borderRadius: 9, background: menuOpen ? 'var(--accent-d)' : 'var(--surface2)',
+              border: menuOpen ? '1px solid var(--accent-border)' : '1px solid transparent',
+              cursor: 'pointer', textAlign: 'left',
+            }}
+          >
             <div className="flex items-center justify-center shrink-0" style={{ width: 30, height: 30, background: 'var(--accent-d)', borderRadius: '50%', fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
               {extractInitial(user)}
             </div>
@@ -170,26 +281,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="truncate" style={{ fontSize: 13, fontWeight: 600 }}>{extractName(user)}</div>
               <div style={{ fontSize: 11, color: 'var(--t3)' }}>Plan {plan?.name ?? '…'}</div>
             </div>
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center shrink-0 transition-all duration-200"
-              style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', color: 'var(--t3)' }}
-              aria-label="Changer de thème"
-            >
-              {theme === 'dark' ? (
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M6.5 1v1M6.5 11v1M1 6.5h1M11 6.5h1M3 3l.7.7M9.3 9.3l.7.7M3 10l.7-.7M9.3 3.7l.7-.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              ) : (
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1A5 5 0 0012 6.5 6.5 6.5 0 116.5 1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              )}
-            </button>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full mt-2 transition-all duration-200"
-            style={{ padding: '7px 10px', borderRadius: 7, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', color: 'var(--t4)', fontSize: 12 }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Déconnexion
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: 'var(--t4)', transform: menuOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }}>
+              <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </aside>

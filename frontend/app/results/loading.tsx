@@ -1,65 +1,50 @@
-import Link from 'next/link'
-import AppHeader from '@/app/components/AppHeader'
+import AppShell from '@/app/components/AppShell'
 
 function Pulse({ className }: { className: string }) {
-  return <div className={`animate-pulse bg-gray-200 dark:bg-slate-700 rounded ${className}`} />
+  return <div className={`animate-pulse rounded ${className}`} style={{ background: 'var(--surface2)' }} />
 }
 
 export default function ResultsLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <AppHeader>
-        <Link href="/prospects" className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400">
-          Mes prospects
-        </Link>
-      </AppHeader>
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-slate-500 mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6"/>
-          </svg>
-          Modifier la recherche
+    <AppShell>
+      <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Header */}
+        <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9 }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C4.02 1 2 3.02 2 5.5c0 3.5 4.5 6.5 4.5 6.5S11 9 11 5.5C11 3.02 8.98 1 6.5 1z" fill="var(--accent)" opacity="0.85"/><circle cx="6.5" cy="5.5" r="1.8" fill="var(--bg)"/></svg>
+            <Pulse className="h-4 w-24" />
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <Pulse className="h-8 w-24 rounded-lg" />
+            <Pulse className="h-8 w-24 rounded-lg" />
+          </div>
         </div>
 
-        {/* Summary cards skeleton */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-2 sm:px-4 py-4 sm:py-5 text-center">
-              <Pulse className="h-8 w-16 mx-auto mb-2" />
-              <Pulse className="h-3 w-20 mx-auto" />
-            </div>
-          ))}
-        </div>
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px' }}>
+          {/* Progress indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '40px 0' }}>
+            <svg className="animate-spin" style={{ color: 'var(--accent)' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            <span style={{ fontSize: 14, color: 'var(--t3)' }}>Recherche en cours, veuillez patienter…</span>
+          </div>
 
-        {/* Map skeleton */}
-        <Pulse className="w-full h-64 rounded-xl mb-6" />
-
-        {/* Progress indicator */}
-        <div className="flex items-center justify-center gap-3 py-8">
-          <svg className="animate-spin text-emerald-500" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-          </svg>
-          <span className="text-sm text-gray-500 dark:text-slate-400">Recherche en cours, veuillez patienter...</span>
-        </div>
-
-        {/* Results list skeleton */}
-        <div className="space-y-3">
-          {[0, 1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4">
-              <div className="flex items-start gap-3">
-                <Pulse className="w-10 h-10 rounded-lg flex-shrink-0" />
-                <div className="flex-1 space-y-2">
+          {/* Results list skeleton */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[0, 1, 2, 3, 4].map(i => (
+              <div key={i} style={{ padding: '18px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 13, display: 'flex', alignItems: 'center', gap: 16 }}>
+                <Pulse className="w-11 h-11 rounded-xl shrink-0" />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <Pulse className="h-4 w-48" />
                   <Pulse className="h-3 w-64" />
-                  <Pulse className="h-3 w-32" />
                 </div>
-                <Pulse className="h-6 w-20 rounded-full" />
+                <Pulse className="h-6 w-20 rounded-md" />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

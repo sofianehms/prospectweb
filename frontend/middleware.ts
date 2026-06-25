@@ -5,7 +5,13 @@ const PUBLIC_PATHS = ['/login', '/api/auth']
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  if (pathname === '/' || PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+  if (pathname === '/') {
+    const token = req.cookies.get('pw_token')?.value
+    if (token) return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.next()
+  }
+
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
     return NextResponse.next()
   }
 

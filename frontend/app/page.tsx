@@ -1,12 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 /* ══════════════════════════════════════════════════════
    NAV
    ══════════════════════════════════════════════════════ */
 function Nav() {
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    setLoggedIn(document.cookie.includes('pw_token='))
+  }, [])
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-200 h-16 px-6 md:px-16 flex items-center justify-between backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-transparent">
       <Link href="/" className="flex items-center gap-2.5 shrink-0">
@@ -21,8 +27,14 @@ function Nav() {
         <a href="#faq" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">FAQ</a>
       </div>
       <div className="flex items-center gap-2.5 shrink-0">
-        <Link href="/login" className="text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-colors">Se connecter</Link>
-        <Link href="/login" className="text-sm font-semibold text-[#09090B] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Essai gratuit →</Link>
+        {loggedIn ? (
+          <Link href="/dashboard" className="text-sm font-semibold text-[#09090B] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Mon espace →</Link>
+        ) : (
+          <>
+            <Link href="/login" className="text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-colors">Se connecter</Link>
+            <Link href="/login" className="text-sm font-semibold text-[#09090B] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Essai gratuit →</Link>
+          </>
+        )}
       </div>
     </nav>
   )
