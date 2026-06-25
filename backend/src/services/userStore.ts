@@ -4,6 +4,8 @@ import { getPool } from './db';
 export interface User {
   id: string;
   email: string;
+  firstName: string;
+  lastName: string;
   passwordHash: string;
   createdAt: string;
 }
@@ -11,12 +13,21 @@ export interface User {
 interface UserRow {
   id: string;
   email: string;
+  first_name: string;
+  last_name: string;
   password_hash: string;
   created_at: string;
 }
 
 function rowToUser(r: UserRow): User {
-  return { id: r.id, email: r.email, passwordHash: r.password_hash, createdAt: r.created_at };
+  return {
+    id: r.id,
+    email: r.email,
+    firstName: r.first_name,
+    lastName: r.last_name,
+    passwordHash: r.password_hash,
+    createdAt: r.created_at,
+  };
 }
 
 export async function findByEmail(email: string): Promise<User | undefined> {
@@ -27,7 +38,12 @@ export async function findByEmail(email: string): Promise<User | undefined> {
   return rows.length ? rowToUser(rows[0]) : undefined;
 }
 
-export async function createUser(email: string, password: string): Promise<User> {
+export async function createUser(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string,
+): Promise<User> {
   const existing = await findByEmail(email);
   if (existing) throw new Error('Un compte existe déjà avec cet e-mail.');
 
@@ -35,8 +51,8 @@ export async function createUser(email: string, password: string): Promise<User>
   const passwordHash = await bcrypt.hash(password, 10);
 
   const { rows } = await getPool().query<UserRow>(
-    'INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3) RETURNING *',
-    [id, email.toLowerCase(), passwordHash],
+    'INSERT INTO users (id, email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [id, email.toLowerCase(), passwordHash, firstName.trim(), lastName.trim()],
   );
   return rowToUser(rows[0]);
 }

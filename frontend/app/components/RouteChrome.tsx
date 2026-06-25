@@ -1,6 +1,16 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import ThemeToggle from './ThemeToggle'
 
+const APP_ROUTES = ['/dashboard', '/search', '/results', '/prospects', '/settings']
+
 export default function RouteChrome() {
+  const pathname = usePathname()
+  const isAppPage = APP_ROUTES.some(r => pathname.startsWith(r))
+
+  if (isAppPage) return null
+
   return (
     <>
       <ThemeToggle />

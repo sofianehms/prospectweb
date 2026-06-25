@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import { cookies } from 'next/headers'
 import RouteChrome from './components/RouteChrome'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
-
-type Theme = 'sable' | 'violet' | 'minuit' | 'cosmos'
-const DARK_THEMES: Theme[] = ['minuit', 'cosmos']
+const dmSans = DM_Sans({ subsets: ['latin'] })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
 
 export const metadata: Metadata = {
   title: 'Nosite — Trouvez vos prochains clients',
@@ -15,18 +13,18 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const store  = await cookies()
-  const theme  = (store.get('pw_theme')?.value ?? 'cosmos') as Theme
-  const isDark = DARK_THEMES.includes(theme)
+  const store = await cookies()
+  const theme = store.get('pw_theme')?.value ?? 'dark'
+  const isDark = theme === 'dark'
 
   return (
     <html
       lang="fr"
-      className={`${inter.className}${isDark ? ' dark' : ''}`}
+      className={`${dmSans.className} ${spaceGrotesk.variable}${isDark ? ' dark' : ''}`}
       data-theme={theme}
       suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors duration-200 pb-20">
+      <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
         {children}
         <RouteChrome />
       </body>

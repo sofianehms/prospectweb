@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import AppShell from '../components/AppShell'
 
 interface UserInfo { id: string; email: string }
 interface PlanInfo { id: string; name: string; dailyLimit: number; monthlyPrice: number; maxProspects: number }
@@ -37,86 +37,6 @@ function extractFirstName(email: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
-/* ─── Sidebar ─── */
-function Sidebar({ user, plan, prospectCount }: { user: UserInfo | null; plan: PlanInfo | null; prospectCount: number }) {
-  const pathname = usePathname()
-  const router = useRouter()
-
-  const navItems = [
-    { icon: '⊞', label: 'Dashboard', href: '/dashboard' },
-    { icon: '🔍', label: 'Recherche', href: '/search' },
-    { icon: '☰', label: 'Résultats', href: '/results', badge: null as number | null },
-    { icon: '👤', label: 'Prospects', href: '/prospects', badge: prospectCount || null },
-  ]
-
-  function handleLogout() {
-    document.cookie = 'pw_token=; path=/; max-age=0'
-    router.push('/login')
-    router.refresh()
-  }
-
-  return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      <div className="flex h-14 items-center gap-2 border-b border-gray-200 px-5 dark:border-slate-700">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }} aria-hidden="true">
-          <circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />
-        </svg>
-        <span className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-slate-100">Nosite</span>
-      </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(item => {
-          const active = pathname === item.href
-          return (
-            <Link key={item.href} href={item.href} className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${active ? 'bg-gray-100 font-medium text-gray-900 dark:bg-slate-700 dark:text-slate-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-100'}`}>
-              <span className="flex items-center gap-2.5">
-                <span className="w-4 text-center">{item.icon}</span>
-                {item.label}
-              </span>
-              {item.badge != null && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: 'var(--accent)' }}>{item.badge}</span>
-              )}
-            </Link>
-          )
-        })}
-        <div className="my-3 border-t border-gray-100 dark:border-slate-700" />
-        <Link href="/prospects" className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-100`}>
-          <span className="w-4 text-center">📋</span> CRM
-        </Link>
-      </nav>
-      <div className="border-t border-gray-200 p-4 dark:border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: 'var(--accent)' }}>
-            {user ? user.email.charAt(0).toUpperCase() : '?'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-gray-900 dark:text-slate-100">
-              {user ? extractFirstName(user.email) : '…'}
-            </p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500">
-              Plan {plan?.name ?? '…'}
-            </p>
-          </div>
-          <button onClick={handleLogout} title="Déconnexion" className="text-gray-400 transition hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          </button>
-        </div>
-      </div>
-    </aside>
-  )
-}
-
-/* ─── Stat Card ─── */
-function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">{label}</p>
-      <p className="text-3xl font-bold text-gray-900 dark:text-slate-100" style={typeof value === 'number' && value > 0 ? { color: 'var(--accent)' } : undefined}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">{sub}</p>}
-    </div>
-  )
-}
-
-/* ─── Pipeline CRM ─── */
 const CRM_LABELS: Record<string, string> = {
   to_contact: 'À contacter',
   contacted: 'Contacté',
@@ -126,35 +46,9 @@ const CRM_LABELS: Record<string, string> = {
 }
 const CRM_ORDER = ['to_contact', 'contacted', 'discussing', 'won', 'lost'] as const
 
-function PipelineCrm({ prospects }: { prospects: Prospect[] }) {
-  const counts: Record<string, number> = {}
-  for (const s of CRM_ORDER) counts[s] = 0
-  for (const p of prospects) {
-    if (counts[p.crmStatus] !== undefined) counts[p.crmStatus]++
-  }
-
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900 dark:text-slate-100">Pipeline CRM</h3>
-        <Link href="/prospects" className="text-xs font-medium transition hover:opacity-80" style={{ color: 'var(--accent)' }}>Voir tout &rarr;</Link>
-      </div>
-      <div className="grid grid-cols-5 gap-2">
-        {CRM_ORDER.map((status, i) => (
-          <div key={status} className={`rounded-lg p-3 text-center ${i >= 2 && counts[status] > 0 ? '' : 'bg-gray-50 dark:bg-slate-700/50'}`} style={i >= 2 && counts[status] > 0 ? { backgroundColor: 'color-mix(in srgb, var(--accent) 12%, transparent)' } : undefined}>
-            <p className="text-xl font-bold text-gray-900 dark:text-slate-100">{counts[status]}</p>
-            <p className="mt-1 text-[10px] text-gray-400 dark:text-slate-500">{CRM_LABELS[status]}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ─── Page ─── */
 export default function DashboardPage() {
   const [user, setUser] = useState<UserInfo | null>(null)
-  const [plan, setPlan] = useState<PlanInfo | null>(null)
+  const [, setPlan] = useState<PlanInfo | null>(null)
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [history, setHistory] = useState<SearchRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -185,100 +79,277 @@ export default function DashboardPage() {
 
   const firstName = user ? extractFirstName(user.email) : '…'
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar user={user} plan={plan} prospectCount={prospects.length} />
+  // CRM counts
+  const crmCounts: Record<string, number> = {}
+  for (const s of CRM_ORDER) crmCounts[s] = 0
+  for (const p of prospects) {
+    if (crmCounts[p.crmStatus] !== undefined) crmCounts[p.crmStatus]++
+  }
 
-      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-slate-900">
-        {/* Top bar */}
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-5 dark:border-slate-700 dark:bg-slate-800">
+  const contactEmojis = ['📞', '✉️', '💬']
+
+  return (
+    <AppShell>
+      <div className="anim-fade-in">
+        {/* Header */}
+        <div style={{
+          padding: '28px 36px 20px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+            <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>
               Bonjour, {loading ? '…' : firstName} 👋
             </h1>
-            <p className="mt-1 text-sm text-gray-400 dark:text-slate-500">
-              {formatDate(today)}
-              {history.length > 0 && ` · ${prospects.length} opportunité${prospects.length !== 1 ? 's' : ''} en base`}
+            <p style={{ fontSize: 14, color: 'var(--t3)' }}>
+              {formatDate(today)} · {prospects.length} opportunit&eacute;{prospects.length !== 1 ? 's' : ''} en base
             </p>
           </div>
-          <Link href="/search" className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90" style={{ backgroundColor: 'var(--accent)' }}>
-            🔍 Nouvelle recherche
+          <Link
+            href="/search"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--accent)',
+              color: '#09090B',
+              padding: '10px 20px',
+              fontSize: 14,
+              fontWeight: 700,
+              borderRadius: 9,
+              textDecoration: 'none',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M14 14l-2.5-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            Nouvelle recherche
           </Link>
-        </header>
+        </div>
 
-        <main className="p-8">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <p className="text-gray-400 dark:text-slate-500">Chargement…</p>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+            <p style={{ color: 'var(--t3)', fontSize: 14 }}>Chargement…</p>
+          </div>
+        ) : (
+          <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {/* KPIs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              {[
+                { label: 'Opportunités', value: toContact.length, sub: `sur ${prospects.length} prospects`, accent: true },
+                { label: 'Prospects actifs', value: prospects.length, sub: 'en base', accent: false },
+                { label: 'Signés ce mois', value: wonThisMonth.length, sub: `${won.length} au total`, accent: true },
+                { label: 'Recherches', value: history.length, sub: 'effectuées', accent: false },
+              ].map((card) => (
+                <div key={card.label} style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 14,
+                  padding: 24,
+                }}>
+                  <p style={{
+                    textTransform: 'uppercase',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'var(--t3)',
+                    letterSpacing: '0.08em',
+                    marginBottom: 8,
+                  }}>
+                    {card.label}
+                  </p>
+                  <p className="font-display" style={{
+                    fontSize: 36,
+                    fontWeight: 700,
+                    letterSpacing: '-0.04em',
+                    lineHeight: 1,
+                    color: card.accent && card.value > 0 ? 'var(--accent)' : 'var(--t1)',
+                  }}>
+                    {card.value}
+                  </p>
+                  <p style={{ fontSize: 13, color: 'var(--t3)', marginTop: 6 }}>
+                    {card.sub}
+                  </p>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <StatCard label="Opportunités" value={toContact.length} sub={prospects.length > 0 ? `sur ${prospects.length} prospects` : undefined} />
-                <StatCard label="Prospects actifs" value={prospects.length} />
-                <StatCard label="Signés ce mois" value={wonThisMonth.length} sub={won.length > 0 ? `${won.length} au total` : undefined} />
-                <StatCard label="Recherches" value={history.length} />
-              </div>
 
-              {/* Middle row */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* À contacter */}
-                <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-slate-100">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
-                      À contacter
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{toContact.length} sans site</span>
-                    </h3>
+            {/* Two column grid: À contacter + Recherches récentes */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+              {/* À contacter */}
+              <div style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  padding: '18px 22px',
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--accent)',
+                    }} />
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>À contacter</span>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: 20,
+                      background: 'var(--accent-d)',
+                      color: 'var(--accent)',
+                    }}>
+                      {toContact.length} sans site
+                    </span>
                   </div>
+                </div>
+                <div style={{ padding: '12px 14px' }}>
                   {toContact.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-gray-400 dark:text-slate-500">Aucun prospect à contacter pour le moment.</p>
+                    <p style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, color: 'var(--t3)' }}>
+                      Aucun prospect à contacter pour le moment.
+                    </p>
                   ) : (
-                    <div className="space-y-3">
-                      {toContact.slice(0, 5).map(p => (
-                        <div key={p.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-slate-700/50">
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium text-gray-900 dark:text-slate-100">{p.name}</p>
-                            <p className="truncate text-xs text-gray-400 dark:text-slate-500">
-                              {p.ratingCount ? `${p.ratingCount} avis` : p.type}{p.websiteStatus === 'none' ? ', zéro site web' : `, ${p.websiteStatus}`}
-                            </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {toContact.slice(0, 3).map((p, i) => (
+                        <div key={p.id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 14px',
+                          borderRadius: 10,
+                          background: 'var(--surface2)',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+                            <span style={{ fontSize: 18 }}>{contactEmojis[i % contactEmojis.length]}</span>
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {p.name}
+                              </p>
+                              <p style={{ fontSize: 12, color: 'var(--t3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {p.ratingCount ? `${p.ratingCount} avis` : p.type}{p.websiteStatus === 'none' ? ', zéro site web' : `, ${p.websiteStatus}`}
+                              </p>
+                            </div>
                           </div>
                           {p.phone ? (
-                            <a href={`tel:${p.phone}`} className="shrink-0 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30">Appeler</a>
+                            <a href={`tel:${p.phone}`} style={{
+                              flexShrink: 0,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: '5px 14px',
+                              borderRadius: 7,
+                              background: 'var(--accent-d)',
+                              color: 'var(--accent)',
+                              textDecoration: 'none',
+                            }}>
+                              Appeler
+                            </a>
                           ) : (
-                            <span className="shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-400 dark:border-slate-600 dark:text-slate-500">Pas de tél.</span>
+                            <span style={{
+                              flexShrink: 0,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              padding: '5px 14px',
+                              borderRadius: 7,
+                              border: '1px solid var(--border)',
+                              color: 'var(--t3)',
+                            }}>
+                              Email
+                            </span>
                           )}
                         </div>
                       ))}
-                      {toContact.length > 5 && (
-                        <Link href="/prospects" className="block text-center text-xs font-medium transition hover:opacity-80" style={{ color: 'var(--accent)' }}>
-                          + {toContact.length - 5} autres &rarr;
+                      {toContact.length > 3 && (
+                        <Link href="/prospects" style={{
+                          display: 'block',
+                          textAlign: 'center',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: 'var(--accent)',
+                          padding: '8px 0 4px',
+                          textDecoration: 'none',
+                        }}>
+                          + {toContact.length - 3} autres &rarr;
                         </Link>
                       )}
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Recherches récentes */}
-                <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 dark:text-slate-100">Recherches récentes</h3>
-                    <Link href="/search" className="text-xs font-medium transition hover:opacity-80" style={{ color: 'var(--accent)' }}>+ Nouvelle</Link>
-                  </div>
+              {/* Recherches récentes */}
+              <div style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  padding: '18px 22px',
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <span style={{ fontSize: 15, fontWeight: 600 }}>Recherches récentes</span>
+                  <Link href="/search" style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'var(--accent)',
+                    textDecoration: 'none',
+                  }}>
+                    + Nouvelle
+                  </Link>
+                </div>
+                <div style={{ padding: '12px 14px' }}>
                   {history.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-gray-400 dark:text-slate-500">Aucune recherche pour le moment.</p>
+                    <p style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, color: 'var(--t3)' }}>
+                      Aucune recherche pour le moment.
+                    </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {history.slice(0, 5).map(h => (
-                        <div key={h.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-slate-700/50">
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-gray-900 dark:text-slate-100">
+                        <div key={h.id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 14px',
+                          borderRadius: 10,
+                          background: 'var(--surface2)',
+                        }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <p style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}>
                               {h.address} &middot; {h.radius / 1000 >= 1 ? `${h.radius / 1000} km` : `${h.radius} m`} &middot; {h.types.split(',').map(t => t.trim()).slice(0, 2).join(', ')}
                             </p>
-                            <p className="text-xs text-gray-400 dark:text-slate-500">{timeAgo(h.createdAt)}</p>
+                            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>
+                              {timeAgo(h.createdAt)}
+                            </p>
                           </div>
-                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                          <span style={{
+                            flexShrink: 0,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 10px',
+                            borderRadius: 20,
+                            background: 'var(--accent-d)',
+                            color: 'var(--accent)',
+                            marginLeft: 12,
+                          }}>
                             {h.resultCount} opp.
                           </span>
                         </div>
@@ -287,13 +358,61 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-
-              {/* Pipeline CRM */}
-              <PipelineCrm prospects={prospects} />
             </div>
-          )}
-        </main>
+
+            {/* Pipeline CRM */}
+            <div style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                padding: '18px 22px',
+                borderBottom: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 600 }}>Pipeline CRM</span>
+                <Link href="/prospects" style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--accent)',
+                  textDecoration: 'none',
+                }}>
+                  Voir tout &rarr;
+                </Link>
+              </div>
+              <div style={{ padding: '20px 22px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+                {CRM_ORDER.map((status) => {
+                  const isActive = crmCounts[status] > 0 && (status === 'won' || status === 'discussing')
+                  return (
+                    <div key={status} style={{
+                      background: isActive ? 'var(--accent-d)' : 'var(--surface2)',
+                      borderRadius: 10,
+                      padding: '18px 12px',
+                      textAlign: 'center',
+                    }}>
+                      <p className="font-display" style={{
+                        fontSize: 22,
+                        fontWeight: 700,
+                        letterSpacing: '-0.04em',
+                        color: isActive ? 'var(--accent)' : 'var(--t1)',
+                      }}>
+                        {crmCounts[status]}
+                      </p>
+                      <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4, fontWeight: 500 }}>
+                        {CRM_LABELS[status]}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </AppShell>
   )
 }

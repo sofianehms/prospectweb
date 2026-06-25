@@ -12,8 +12,12 @@ function jwtSecret(): string {
   return secret;
 }
 
+function userPayload(user: { id: string; email: string; firstName: string; lastName: string }) {
+  return { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName };
+}
+
 router.post('/register', async (req: Request, res: Response) => {
-  const { email, password } = req.body ?? {};
+  const { email, password, firstName, lastName } = req.body ?? {};
 
   if (!email || typeof email !== 'string' || !email.includes('@')) {
     res.status(400).json({ error: 'E-mail invalide.' });
@@ -23,11 +27,19 @@ router.post('/register', async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
     return;
   }
+  if (!firstName || typeof firstName !== 'string' || !firstName.trim()) {
+    res.status(400).json({ error: 'Le prénom est requis.' });
+    return;
+  }
+  if (!lastName || typeof lastName !== 'string' || !lastName.trim()) {
+    res.status(400).json({ error: 'Le nom est requis.' });
+    return;
+  }
 
   try {
-    const user = await createUser(email, password);
+    const user = await createUser(email, password, firstName, lastName);
     const token = jwt.sign({ sub: user.id, email: user.email }, jwtSecret(), { expiresIn: '7d' });
-    res.status(201).json({ token, user: { id: user.id, email: user.email } });
+    res.status(201).json({ token, user: userPayload(user) });
   } catch (err) {
     res.status(409).json({ error: (err as Error).message });
   }
@@ -48,10 +60,10 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 
   const token = jwt.sign({ sub: user.id, email: user.email }, jwtSecret(), { expiresIn: '7d' });
-  res.json({ token, user: { id: user.id, email: user.email } });
+  res.json({ token, user: userPayload(user) });
 });
 
-router.get('/me', (req: Request, res: Response) => {
+router.get('/me', async (req: Request, res: Response) => {
   const header = req.header('Authorization');
   if (!header?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Non authentifié.' });
@@ -59,7 +71,12 @@ router.get('/me', (req: Request, res: Response) => {
   }
   try {
     const payload = jwt.verify(header.slice(7), jwtSecret()) as { sub: string; email: string };
-    res.json({ id: payload.sub, email: payload.email });
+    const user = await findByEmail(payload.email);
+    if (!user) {
+      res.status(401).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+    res.json(userPayload(user));
   } catch {
     res.status(401).json({ error: 'Token invalide ou expiré.' });
   }
