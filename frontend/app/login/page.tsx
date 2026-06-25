@@ -46,7 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-slate-900">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-slate-100 mb-1">
-          ProspectWeb
+          Nosite
         </h1>
         <p className="text-sm text-center text-gray-500 dark:text-slate-400 mb-8">
           {mode === 'login' ? 'Connectez-vous pour continuer' : 'Créez votre compte'}

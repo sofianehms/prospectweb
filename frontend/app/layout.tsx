@@ -10,7 +10,7 @@ type Theme = 'sable' | 'violet' | 'minuit' | 'cosmos'
 const DARK_THEMES: Theme[] = ['minuit', 'cosmos']
 
 export const metadata: Metadata = {
-  title: 'ProspectWeb — Trouvez vos prochains clients',
+  title: 'Nosite — Trouvez vos prochains clients',
   description: 'Repérez les commerces sans site web autour de vous, prêts à être prospectés.',
 }
 

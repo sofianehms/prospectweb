@@ -2,7 +2,7 @@ import { checkQuota, trackCall } from './googleQuota';
 
 const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const USER_AGENT = 'ProspectWeb/1.0 (contact: sofiane.hoummass@icloud.com)';
+const USER_AGENT = 'Nosite/1.0 (contact: sofiane.hoummass@icloud.com)';
 
 export interface LatLng {
   lat: number;

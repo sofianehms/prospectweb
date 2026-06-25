@@ -1,7 +1,7 @@
 import { getCached, setCached, cacheKey } from './cache';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const USER_AGENT = 'ProspectWeb/1.0 (contact: sofiane.hoummass@icloud.com)';
+const USER_AGENT = 'Nosite/1.0 (contact: sofiane.hoummass@icloud.com)';
 const MIN_INTERVAL_MS = 1100;
 
 let lastCallAt = 0;

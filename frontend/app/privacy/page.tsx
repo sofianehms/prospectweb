@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100 mb-2">1. Responsable du traitement</h2>
-            <p>ProspectWeb est un outil de prospection commerciale B2B. Le responsable du traitement est l&apos;exploitant de l&apos;instance d&eacute;ploy&eacute;e.</p>
+            <p>Nosite est un outil de prospection commerciale B2B. Le responsable du traitement est l&apos;exploitant de l&apos;instance d&eacute;ploy&eacute;e.</p>
           </section>
 
           <section>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-base font-semibold text-gray-900 dark:text-slate-100 mb-2">7. Cookies</h2>
-            <p>ProspectWeb utilise un unique cookie technique (<code className="text-xs bg-gray-100 dark:bg-slate-700 px-1 py-0.5 rounded">pw_token</code>) pour maintenir la session d&apos;authentification. Aucun cookie publicitaire ni de tracking n&apos;est utilis&eacute;.</p>
+            <p>Nosite utilise un unique cookie technique (<code className="text-xs bg-gray-100 dark:bg-slate-700 px-1 py-0.5 rounded">pw_token</code>) pour maintenir la session d&apos;authentification. Aucun cookie publicitaire ni de tracking n&apos;est utilis&eacute;.</p>
           </section>
 
           <section>

@@ -50,7 +50,7 @@ describe('PW-12 -- Nominatim proxy /api/autocomplete', () => {
     const [url, opts] = mockFetch.mock.calls[0];
     expect(url).toContain('nominatim.openstreetmap.org');
     expect(url).toContain('q=Paris');
-    expect(opts.headers['User-Agent']).toMatch(/ProspectWeb/);
+    expect(opts.headers['User-Agent']).toMatch(/Nosite/);
     expect(opts.headers['Accept-Language']).toBe('fr');
   });
 

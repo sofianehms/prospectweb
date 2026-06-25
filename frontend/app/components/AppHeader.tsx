@@ -27,7 +27,7 @@ export default function AppHeader({
             <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
             <path d="M2 12h20"/>
           </svg>
-          <span className="font-semibold text-gray-900 dark:text-slate-100 text-[15px] tracking-tight">ProspectWeb</span>
+          <span className="font-semibold text-gray-900 dark:text-slate-100 text-[15px] tracking-tight">Nosite</span>
         </Link>
         {children && (
           <div className="flex items-center gap-3">{children}</div>
