@@ -107,7 +107,7 @@ export default function ProspectsClient() {
           </p>
           {prospects.length === 0 && (
             <Link
-              href="/"
+              href="/search"
               className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

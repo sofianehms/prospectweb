@@ -33,7 +33,7 @@ export default function LoginPage() {
       }
 
       document.cookie = `pw_token=${data.token}; path=/; max-age=${7 * 86400}; SameSite=Lax`
-      router.push('/')
+      router.push('/search')
       router.refresh()
     } catch {
       setError('Impossible de contacter le serveur.')

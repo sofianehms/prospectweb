@@ -34,7 +34,7 @@ async function fetchResults(sp: Record<string, string>): Promise<SearchResult> {
 
 export default async function ResultsPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const sp = await searchParams
-  if (!sp.radius || (!sp.address && (!sp.lat || !sp.lng))) redirect('/')
+  if (!sp.radius || (!sp.address && (!sp.lat || !sp.lng))) redirect('/search')
 
   let data: SearchResult
   let fetchError = ''
@@ -60,7 +60,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 transition mb-6">
+        <Link href="/search" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 transition mb-6">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
@@ -73,7 +73,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
               {fetchError.includes('indisponible') ? 'Service temporairement indisponible' : 'Erreur lors de la recherche'}
             </p>
             <p className="text-sm text-red-600 dark:text-red-300">{fetchError}</p>
-            <Link href="/" className="inline-block text-sm text-emerald-600 underline mt-1">Modifier la recherche et réessayer</Link>
+            <Link href="/search" className="inline-block text-sm text-emerald-600 underline mt-1">Modifier la recherche et réessayer</Link>
           </div>
         ) : (
           <>

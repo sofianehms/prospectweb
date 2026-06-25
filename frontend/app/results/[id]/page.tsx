@@ -73,7 +73,7 @@ export default function DetailPage() {
 
         {notFound && (
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-10 text-center text-gray-400 dark:text-slate-500 text-sm">
-            Établissement introuvable ou lien expiré. <Link href="/" className="text-emerald-600 underline">Lancer une recherche</Link>
+            Établissement introuvable ou lien expiré. <Link href="/search" className="text-emerald-600 underline">Lancer une recherche</Link>
           </div>
         )}
 
