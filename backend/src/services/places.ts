@@ -168,7 +168,7 @@ export interface PlaceDetails {
   ratingCount: number | null;
 }
 
-export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> {
+export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails & { apiCalls: number }> {
   await checkBreaker();
   const apiKey = process.env.GOOGLE_PLACES_KEY!;
   checkQuota();
@@ -190,6 +190,7 @@ export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> 
     phone: data.nationalPhoneNumber ?? null,
     rating: data.rating ?? null,
     ratingCount: data.userRatingCount ?? null,
+    apiCalls: 1,
   };
 }
 
@@ -200,7 +201,7 @@ async function fetchByType(
   radiusMeters: number,
   type: string,
   apiKey: string,
-): Promise<Place[]> {
+): Promise<{ places: Place[]; apiCalls: number }> {
   await checkBreaker();
   checkQuota();
   const res = await fetch(NEARBY_URL, {
@@ -231,7 +232,7 @@ async function fetchByType(
   }
   await recordSuccess();
   const data = await res.json() as { places?: RawPlace[] };
-  return (data.places ?? []).map(p => mapPlace(p, type));
+  return { places: (data.places ?? []).map(p => mapPlace(p, type)), apiCalls: 1 };
 }
 
 // Nearby Search is capped at 20 per request. To get more results for a specific
@@ -257,18 +258,19 @@ async function fetchByTypeMultiArea(
   radiusMeters: number,
   type: string,
   apiKey: string,
-): Promise<Place[]> {
+): Promise<{ places: Place[]; apiCalls: number }> {
   const centers = subCenters(center, radiusMeters);
   const seen    = new Set<string>();
   const results: Place[] = [];
   let noWebsiteCount = 0;
+  let totalApiCalls = 0;
 
   for (const c of centers) {
-    // First sub-center must succeed; subsequent ones are best-effort
-    const batch = results.length === 0
+    const result = results.length === 0
       ? await fetchByType(c, radiusMeters, type, apiKey)
-      : await fetchByType(c, radiusMeters, type, apiKey).catch(() => [] as Place[]);
-    for (const place of batch) {
+      : await fetchByType(c, radiusMeters, type, apiKey).catch(() => ({ places: [] as Place[], apiCalls: 0 }));
+    totalApiCalls += result.apiCalls;
+    for (const place of result.places) {
       if (!seen.has(place.id)) {
         seen.add(place.id);
         results.push(place);
@@ -278,7 +280,7 @@ async function fetchByTypeMultiArea(
     if (noWebsiteCount >= NO_WEBSITE_TARGET) break;
   }
 
-  return results;
+  return { places: results, apiCalls: totalApiCalls };
 }
 
 export interface SearchMeta {
@@ -291,10 +293,12 @@ export async function nearbySearch(
   center: LatLng,
   radiusMeters: number,
   types: string[],
-): Promise<{ places: Place[]; meta: SearchMeta }> {
+): Promise<{ places: Place[]; meta: SearchMeta; apiCalls: number }> {
   const apiKey      = process.env.GOOGLE_PLACES_KEY!;
   const useMulti    = types.length > 0;
   const targetTypes = useMulti ? types : COMMERCIAL_TYPES;
+
+  type FetchResult = { places: Place[]; apiCalls: number };
 
   const results = await Promise.allSettled(
     targetTypes.map(t =>
@@ -304,7 +308,7 @@ export async function nearbySearch(
     )
   );
 
-  const fulfilled = results.filter((r): r is PromiseFulfilledResult<Place[]> => r.status === 'fulfilled');
+  const fulfilled = results.filter((r): r is PromiseFulfilledResult<FetchResult> => r.status === 'fulfilled');
   const rejected  = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
   const cappedTypes: string[] = [];
@@ -315,8 +319,8 @@ export async function nearbySearch(
       failedTypes.push(targetTypes[i]);
       console.error('[google-places] batch failed:', (results[i] as PromiseRejectedResult).reason?.message);
     } else {
-      const batch = (results[i] as PromiseFulfilledResult<Place[]>).value;
-      if (batch.length >= RESULTS_CAP) {
+      const batch = (results[i] as PromiseFulfilledResult<FetchResult>).value;
+      if (batch.places.length >= RESULTS_CAP) {
         cappedTypes.push(targetTypes[i]);
       }
     }
@@ -329,14 +333,17 @@ export async function nearbySearch(
 
   const seen   = new Set<string>();
   const merged: Place[] = [];
+  let totalApiCalls = 0;
   for (const batch of fulfilled) {
-    for (const place of batch.value) {
+    totalApiCalls += batch.value.apiCalls;
+    for (const place of batch.value.places) {
       if (!seen.has(place.id)) { seen.add(place.id); merged.push(place); }
     }
   }
 
   return {
     places: merged,
+    apiCalls: totalApiCalls,
     meta: {
       partial: cappedTypes.length > 0 || failedTypes.length > 0,
       cappedTypes,

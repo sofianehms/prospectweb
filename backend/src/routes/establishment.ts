@@ -4,7 +4,6 @@ import { requireInternalSecret } from '../middleware/auth';
 import { requireAuth } from '../middleware/requireAuth';
 import { fetchPlaceDetails, GoogleApiError } from '../services/places';
 import { checkUserQuota, trackUserCalls } from '../services/userQuota';
-import { getUsage } from '../services/googleQuota';
 
 const router = Router();
 router.use(requireInternalSecret);
@@ -35,10 +34,8 @@ router.get('/:id/details', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.sub;
     checkUserQuota(userId);
-    const before = getUsage().total;
-    const details = await fetchPlaceDetails(id);
-    const after = getUsage().total;
-    if (after - before > 0) trackUserCalls(userId, after - before);
+    const { apiCalls, ...details } = await fetchPlaceDetails(id);
+    if (apiCalls > 0) trackUserCalls(userId, apiCalls);
 
     await setCached(cacheKey, details);
     res.json(details);
