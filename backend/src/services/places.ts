@@ -1,5 +1,6 @@
 import type { LatLng } from './geocode';
 import { checkQuota, trackCall } from './googleQuota';
+import Redis from 'ioredis';
 
 const NEARBY_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 
@@ -80,25 +81,69 @@ export class GoogleApiError extends Error {
 
 const BREAKER_THRESHOLD = 3;
 const BREAKER_RESET_MS = 60_000;
+const BREAKER_REDIS_KEY = 'breaker:google-places';
+
 let consecutiveFailures = 0;
 let breakerOpenUntil = 0;
 
-function checkBreaker(): void {
+function getRedis(): Redis | null {
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+  try {
+    return new Redis(url, { maxRetriesPerRequest: 1, lazyConnect: false });
+  } catch { return null; }
+}
+
+async function loadBreakerState(): Promise<void> {
+  const r = getRedis();
+  if (!r) return;
+  try {
+    const [failures, openUntil] = await Promise.all([
+      r.get(`${BREAKER_REDIS_KEY}:failures`),
+      r.get(`${BREAKER_REDIS_KEY}:openUntil`),
+    ]);
+    r.quit().catch(() => {});
+    consecutiveFailures = Number(failures) || 0;
+    breakerOpenUntil = Number(openUntil) || 0;
+  } catch {
+    r.quit().catch(() => {});
+  }
+}
+
+async function saveBreakerState(): Promise<void> {
+  const r = getRedis();
+  if (!r) return;
+  try {
+    const ttl = Math.ceil(BREAKER_RESET_MS / 1000) + 10;
+    await Promise.all([
+      r.set(`${BREAKER_REDIS_KEY}:failures`, String(consecutiveFailures), 'EX', ttl),
+      r.set(`${BREAKER_REDIS_KEY}:openUntil`, String(breakerOpenUntil), 'EX', ttl),
+    ]);
+    r.quit().catch(() => {});
+  } catch {
+    r.quit().catch(() => {});
+  }
+}
+
+async function checkBreaker(): Promise<void> {
+  await loadBreakerState();
   if (Date.now() < breakerOpenUntil) {
     throw new GoogleApiError(503, 'Circuit-breaker ouvert : Google Places temporairement désactivé.');
   }
 }
 
-function recordSuccess(): void {
+async function recordSuccess(): Promise<void> {
   consecutiveFailures = 0;
+  await saveBreakerState();
 }
 
-function recordFailure(): void {
+async function recordFailure(): Promise<void> {
   consecutiveFailures++;
   if (consecutiveFailures >= BREAKER_THRESHOLD) {
     breakerOpenUntil = Date.now() + BREAKER_RESET_MS;
     console.error(`[circuit-breaker] Google Places circuit OPEN after ${consecutiveFailures} failures, retry in ${BREAKER_RESET_MS / 1000}s`);
   }
+  await saveBreakerState();
 }
 
 function mapPlace(p: RawPlace, type: string): Place {
@@ -124,7 +169,7 @@ export interface PlaceDetails {
 }
 
 export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> {
-  checkBreaker();
+  await checkBreaker();
   const apiKey = process.env.GOOGLE_PLACES_KEY!;
   checkQuota();
   const res = await fetch(`${DETAIL_URL}/${placeId}`, {
@@ -136,10 +181,10 @@ export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails> 
   trackCall('places');
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    recordFailure();
+    await recordFailure();
     throw new GoogleApiError(res.status, body);
   }
-  recordSuccess();
+  await recordSuccess();
   const data = await res.json() as RawPlace;
   return {
     phone: data.nationalPhoneNumber ?? null,
@@ -156,7 +201,7 @@ async function fetchByType(
   type: string,
   apiKey: string,
 ): Promise<Place[]> {
-  checkBreaker();
+  await checkBreaker();
   checkQuota();
   const res = await fetch(NEARBY_URL, {
     method: 'POST',
@@ -181,10 +226,10 @@ async function fetchByType(
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     console.error(`[google-places] HTTP ${res.status} for type="${type}": ${body}`);
-    recordFailure();
+    await recordFailure();
     throw new GoogleApiError(res.status, body);
   }
-  recordSuccess();
+  await recordSuccess();
   const data = await res.json() as { places?: RawPlace[] };
   return (data.places ?? []).map(p => mapPlace(p, type));
 }
