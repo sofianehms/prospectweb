@@ -18,3 +18,5 @@ node_modules/
 *.log
 
 .claude
+
+.images_concu
