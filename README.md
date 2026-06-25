@@ -2,8 +2,8 @@
 
 Outil de prospection locale pour createurs de sites web. Identifie les commerces, restaurants et artisans autour d'une adresse qui n'ont pas de site web ou dont le site est obsolete — vos futurs clients.
 
-**Production :** [Nosite.vercel.app](https://Nosite.vercel.app)
-**Depot :** [github.com/sofianehms/Nosite](https://github.com/sofianehms/Nosite)
+**Production :** [nosite.fr](https://www.nosite.fr)
+**Depot :** [github.com/sofianehms/prospectweb](https://github.com/sofianehms/prospectweb)
 
 ---
 
@@ -75,8 +75,8 @@ Outil de prospection locale pour createurs de sites web. Identifie les commerces
 ### 1. Cloner et configurer
 
 ```bash
-git clone https://github.com/sofianehms/Nosite.git
-cd Nosite
+git clone https://github.com/sofianehms/prospectweb.git
+cd nosite
 cp .env.example .env
 ```
 
