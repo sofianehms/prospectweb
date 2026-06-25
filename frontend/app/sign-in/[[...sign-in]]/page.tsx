@@ -24,7 +24,7 @@ export default function SignInPage() {
       </div>
 
       <div className="flex-1 flex items-center justify-center px-5 py-6 relative z-10">
-        <SignIn />
+        <SignIn fallbackRedirectUrl="/dashboard" />
       </div>
 
       <div className="relative z-10 px-6 md:px-10 py-4 text-center shrink-0">
