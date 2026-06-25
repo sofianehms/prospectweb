@@ -91,6 +91,10 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      <footer className="border-t border-gray-200 bg-white py-6 text-center text-xs text-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500">
+        Données issues de Google Maps et OpenStreetMap
+      </footer>
     </div>
   )
 }
