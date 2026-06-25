@@ -1,14 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useClerk } from '@clerk/nextjs'
 
 export default function LogoutButton() {
-  const router = useRouter()
+  const { signOut } = useClerk()
 
   function handleLogout() {
-    document.cookie = 'pw_token=; path=/; max-age=0'
-    router.push('/login')
-    router.refresh()
+    signOut({ redirectUrl: '/sign-in' })
   }
 
   return (

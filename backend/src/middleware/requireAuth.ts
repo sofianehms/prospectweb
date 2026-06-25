@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@clerk/backend';
 
 export interface AuthPayload {
   sub: string;
@@ -15,27 +15,48 @@ declare global {
   }
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const header = req.header('Authorization');
   if (!header?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Authentification requise.' });
     return;
   }
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    console.error('JWT_SECRET non configuré');
-    res.status(503).json({ error: 'Service mal configuré.' });
-    return;
+  const token = header.slice(7);
+
+  // Try Clerk session token verification
+  if (process.env.CLERK_SECRET_KEY) {
+    try {
+      const payload = await verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY,
+      });
+      req.user = {
+        sub: payload.sub,
+        email: (payload as Record<string, unknown>).email as string ?? '',
+        role: (payload as Record<string, unknown>).role as string | undefined,
+      };
+      next();
+      return;
+    } catch {
+      // Clerk verification failed — try legacy JWT as fallback
+    }
   }
 
+  // Legacy JWT fallback (for migration period)
   try {
-    const payload = jwt.verify(header.slice(7), secret) as AuthPayload;
-    req.user = payload;
-    next();
+    const jwt = await import('jsonwebtoken');
+    const secret = process.env.JWT_SECRET;
+    if (secret) {
+      const payload = jwt.default.verify(token, secret) as AuthPayload;
+      req.user = payload;
+      next();
+      return;
+    }
   } catch {
-    res.status(401).json({ error: 'Token invalide ou expiré.' });
+    // Both verifications failed
   }
+
+  res.status(401).json({ error: 'Token invalide ou expiré.' });
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {

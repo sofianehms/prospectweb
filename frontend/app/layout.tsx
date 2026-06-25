@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import { cookies } from 'next/headers'
+import { ClerkProvider } from '@clerk/nextjs'
+import { frFR } from '@clerk/localizations'
 import RouteChrome from './components/RouteChrome'
 import './globals.css'
 
@@ -25,8 +27,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
-        {children}
-        <RouteChrome />
+        <ClerkProvider localization={frFR}>
+          {children}
+          <RouteChrome />
+        </ClerkProvider>
       </body>
     </html>
   )

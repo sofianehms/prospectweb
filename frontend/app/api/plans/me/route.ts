@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { backendHeaders } from '@/app/lib/auth'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:4000'
-const SECRET = process.env.BACKEND_SECRET ?? ''
 
 export async function GET() {
-  const store = await cookies()
-  const token = store.get('pw_token')?.value ?? ''
-
   const res = await fetch(`${BACKEND}/api/plans/me`, {
-    headers: {
-      'x-internal-secret': SECRET,
-      'Authorization': `Bearer ${token}`,
-    },
+    headers: await backendHeaders(),
     cache: 'no-store',
   })
 
