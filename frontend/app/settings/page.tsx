@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { UserProfile } from '@clerk/nextjs'
 import AppShell from '../components/AppShell'
 
@@ -151,6 +152,26 @@ export default function SettingsPage() {
               </button>
             )}
           </div>
+
+          {/* Billing link */}
+          {isPaid && (
+            <Link
+              href="/account/billing"
+              style={{
+                display: 'block',
+                padding: '14px 20px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--accent)',
+                textDecoration: 'none',
+              }}
+            >
+              Voir mes factures et l'historique de facturation
+            </Link>
+          )}
 
           {/* Upgrade options */}
           {upgradePlans.length > 0 && (

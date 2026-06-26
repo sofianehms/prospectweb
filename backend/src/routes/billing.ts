@@ -4,6 +4,8 @@ import { requireInternalSecret } from '../middleware/auth';
 import {
   createCheckoutSession,
   createBillingPortalSession,
+  getSubscriptionDetails,
+  listInvoices,
 } from '../services/stripeService';
 import { isPaidPlan, getPlan } from '../services/planStore';
 
@@ -52,6 +54,26 @@ router.post('/portal', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('[billing] Portal error:', err.message);
     res.status(500).json({ error: 'Impossible d\'ouvrir le portail de facturation.' });
+  }
+});
+
+router.get('/subscription', async (req: Request, res: Response) => {
+  try {
+    const details = await getSubscriptionDetails(req.user!.sub);
+    res.json(details ?? { status: 'none', currentPeriodEnd: null, cancelAtPeriodEnd: false });
+  } catch (err: any) {
+    console.error('[billing] Subscription details error:', err.message);
+    res.status(500).json({ error: 'Impossible de charger les détails de l\'abonnement.' });
+  }
+});
+
+router.get('/invoices', async (req: Request, res: Response) => {
+  try {
+    const invoices = await listInvoices(req.user!.sub);
+    res.json(invoices);
+  } catch (err: any) {
+    console.error('[billing] Invoices error:', err.message);
+    res.status(500).json({ error: 'Impossible de charger les factures.' });
   }
 });
 

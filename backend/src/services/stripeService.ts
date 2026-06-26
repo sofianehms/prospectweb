@@ -136,6 +136,67 @@ export async function syncSubscription(
   console.log(`[stripe] syncSubscription: user=${userId} plan=${effectivePlan}`);
 }
 
+export async function getSubscriptionDetails(userId: string): Promise<{
+  status: string;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+} | null> {
+  const { rows } = await getPool().query<{ stripe_subscription_id: string | null }>(
+    'SELECT stripe_subscription_id FROM users WHERE id = $1',
+    [userId],
+  );
+  const subId = rows[0]?.stripe_subscription_id;
+  if (!subId) return null;
+
+  try {
+    const sub = await getStripe().subscriptions.retrieve(subId) as any;
+    const periodEnd = sub.current_period_end ?? sub.currentPeriodEnd;
+    const cancelAt = sub.cancel_at_period_end ?? sub.cancelAtPeriodEnd ?? false;
+    return {
+      status: sub.status,
+      currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      cancelAtPeriodEnd: cancelAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function listInvoices(userId: string): Promise<Array<{
+  id: string;
+  date: string;
+  amount: number;
+  currency: string;
+  status: string;
+  invoiceUrl: string | null;
+  invoicePdf: string | null;
+}>> {
+  const { rows } = await getPool().query<{ stripe_customer_id: string | null }>(
+    'SELECT stripe_customer_id FROM users WHERE id = $1',
+    [userId],
+  );
+  const customerId = rows[0]?.stripe_customer_id;
+  if (!customerId) return [];
+
+  try {
+    const invoices = await getStripe().invoices.list({
+      customer: customerId,
+      limit: 24,
+    });
+    return invoices.data.map(inv => ({
+      id: inv.id,
+      date: new Date((inv.created ?? 0) * 1000).toISOString(),
+      amount: inv.amount_paid ?? 0,
+      currency: inv.currency ?? 'eur',
+      status: inv.status ?? 'unknown',
+      invoiceUrl: inv.hosted_invoice_url ?? null,
+      invoicePdf: inv.invoice_pdf ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function handleSubscriptionDeleted(userId: string): Promise<void> {
   const { rowCount } = await getPool().query(
     `UPDATE users
