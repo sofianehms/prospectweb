@@ -110,7 +110,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
   function toggleStatus(f: StatusFilter) {
     setStatusFilters(prev => {
       const next = new Set(prev)
-      next.has(f) ? next.delete(f) : next.add(f)
+      if (next.has(f)) { next.delete(f) } else { next.add(f) }
       return next
     })
     setVisible(PAGE_SIZE)
@@ -127,7 +127,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
   }
 
   function toggle(e: Establishment) {
-    isAdded(e.id) ? remove(e.id) : add(e)
+    if (isAdded(e.id)) { remove(e.id) } else { add(e) }
   }
 
   const isAllActive = statusFilters.size === 0

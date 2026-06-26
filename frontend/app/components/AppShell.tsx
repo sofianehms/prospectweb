@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
 import { useEffect, useRef, useState } from 'react'
 
@@ -63,7 +63,6 @@ function extractInitial(user: UserInfo | null): string {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
   const { signOut } = useClerk()
   const [theme, setTheme] = useState<Theme>('dark')
   const [user, setUser] = useState<UserInfo | null>(null)

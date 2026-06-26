@@ -49,7 +49,7 @@ export default function SettingsPage() {
       })
       const data = await res.json()
       if (data.url) {
-        window.location.href = data.url
+        globalThis.location.assign(data.url)
       } else {
         setMessage({ type: 'error', text: data.error ?? 'Erreur lors de la création du paiement.' })
       }
@@ -69,9 +69,9 @@ export default function SettingsPage() {
       })
       const data = await res.json()
       if (data.url) {
-        window.location.href = data.url
+        globalThis.location.assign(data.url)
       } else {
-        setMessage({ type: 'error', text: data.error ?? 'Erreur lors de l\'ouverture du portail.' })
+        setMessage({ type: 'error', text: data.error ?? "Erreur lors de l\'ouverture du portail." })
       }
     } catch {
       setMessage({ type: 'error', text: 'Erreur réseau.' })
@@ -127,7 +127,7 @@ export default function SettingsPage() {
               </div>
               {usage && (
                 <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>
-                  Quota : {usage.calls}/{usage.limit} appels aujourd'hui — {usage.remaining} restants
+                  Quota : {usage.calls}/{usage.limit} appels aujourd&apos;hui — {usage.remaining} restants
                 </div>
               )}
             </div>

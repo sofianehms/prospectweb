@@ -54,7 +54,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
       setCrmLocal(saved.crmStatus)
       setNotesLocal(saved.notes)
     }
-  }, [saved?.crmStatus, saved?.notes])
+  }, [saved])
 
   const handleCrmChange = useCallback((status: CrmStatus) => {
     setCrmLocal(status)
