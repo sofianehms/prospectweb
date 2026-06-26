@@ -121,4 +121,26 @@ export async function initDb(): Promise<void> {
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'none'`);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS stripe_events (
+      event_id    TEXT PRIMARY KEY,
+      event_type  TEXT NOT NULL,
+      processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS stripe_payment_log (
+      id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id     TEXT,
+      event_type  TEXT NOT NULL,
+      invoice_id  TEXT,
+      amount      INTEGER,
+      currency    TEXT,
+      status      TEXT NOT NULL,
+      failure_message TEXT,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 }
