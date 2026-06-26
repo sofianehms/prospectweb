@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { track, events } from '@/app/lib/analytics'
 
 const CATEGORIES = [
   { value: 'restaurant',         label: 'Restaurant' },
@@ -111,6 +112,7 @@ export default function SearchForm() {
     if (activeFilters.length > 0) params.set('filters', activeFilters.join(','))
     if (coords) { params.set('lat', String(coords.lat)); params.set('lng', String(coords.lng)) }
     else params.set('address', address.trim())
+    track(events.SEARCH, { types: categories, radius, filters: activeFilters })
     router.push(`/results?${params.toString()}`)
   }
 

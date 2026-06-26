@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Establishment, WebsiteStatus } from '@/app/types/establishment'
 import { useProspects, type CrmStatus } from '@/app/hooks/useProspects'
+import { track, events } from '@/app/lib/analytics'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Tab = 'infos' | 'script' | 'notes'
@@ -47,6 +48,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
   useEffect(() => {
     if (!isAdded(e.id)) add(e)
+    track(events.PROSPECT_VIEW, { type: e.type, websiteStatus: e.websiteStatus })
   }, [e, add, isAdded])
 
   useEffect(() => {
@@ -59,7 +61,8 @@ export default function DetailClient({ e }: { e: Establishment }) {
   const handleCrmChange = useCallback((status: CrmStatus) => {
     setCrmLocal(status)
     setStatus(e.id, status)
-  }, [e.id, setStatus])
+    track(events.PROSPECT_STATUS_CHANGE, { status, type: e.type })
+  }, [e.id, e.type, setStatus])
 
   const handleNotesChange = useCallback((value: string) => {
     setNotesLocal(value)

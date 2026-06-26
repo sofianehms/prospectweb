@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useProspects, type CrmStatus, type SavedProspect } from '@/app/hooks/useProspects'
+import { track, events } from '@/app/lib/analytics'
 
 // ── Statuts ───────────────────────────────────────────────────────────────────
 const STATUS_META: Record<CrmStatus, { label: string; className: string }> = {
@@ -65,7 +66,7 @@ export default function ProspectsClient() {
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{prospects.length} contact{prospects.length !== 1 ? 's' : ''} enregistré{prospects.length !== 1 ? 's' : ''}</p>
         </div>
         <button
-          onClick={exportCsv}
+          onClick={() => { track(events.EXPORT_CSV, { count: prospects.length }); exportCsv() }}
           disabled={prospects.length === 0}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-gray-400 dark:hover:border-slate-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >

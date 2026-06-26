@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AppShell from '../components/AppShell'
+import { track, events } from '@/app/lib/analytics'
 
 interface PlanInfo {
   id: string
@@ -49,6 +50,7 @@ export default function PricingPage() {
 
   async function handleCheckout(planId: string) {
     setLoading(planId)
+    track(events.PLAN_UPGRADE_CLICK, { planId })
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',

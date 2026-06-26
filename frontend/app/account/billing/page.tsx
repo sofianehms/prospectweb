@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import AppShell from '../../components/AppShell'
+import { track, events } from '@/app/lib/analytics'
 
 interface PlanInfo {
   id: string
@@ -74,6 +75,7 @@ export default function BillingPage() {
 
   async function handlePortal() {
     setPortalLoading(true)
+    track(events.BILLING_PORTAL, { plan: plan?.id })
     try {
       const res = await fetch('/api/billing/portal', {
         method: 'POST',

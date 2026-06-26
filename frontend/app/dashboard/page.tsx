@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import AppShell from '../components/AppShell'
+import { identify } from '@/app/lib/analytics'
 
 interface UserInfo { id: string; email: string }
 interface PlanInfo { id: string; name: string; dailyLimit: number; monthlyPrice: number; maxProspects: number }
@@ -72,6 +73,7 @@ export default function DashboardPage() {
       setHistory(Array.isArray(h) ? h : [])
       setUsage(usg)
       setUsageHistory(Array.isArray(uh) ? uh : [])
+      if (u?.id) identify(u.id, p?.name)
     }).finally(() => setLoading(false))
   }, [])
 
