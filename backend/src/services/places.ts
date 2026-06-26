@@ -125,6 +125,20 @@ async function saveBreakerState(): Promise<void> {
   }
 }
 
+export async function getBreakerStatus(): Promise<{
+  isOpen: boolean;
+  consecutiveFailures: number;
+  openUntil: string | null;
+}> {
+  await loadBreakerState();
+  const isOpen = Date.now() < breakerOpenUntil;
+  return {
+    isOpen,
+    consecutiveFailures,
+    openUntil: isOpen ? new Date(breakerOpenUntil).toISOString() : null,
+  };
+}
+
 async function checkBreaker(): Promise<void> {
   await loadBreakerState();
   if (Date.now() < breakerOpenUntil) {

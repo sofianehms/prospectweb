@@ -71,6 +71,34 @@ app.get('/api/usage', requireAuth, requireAdmin, async (_req, res) => {
   res.json({ global: getUsage(), users: getAllUsersUsage(), period: { from: startOfMonth, to: today, users: periodUsers } });
 });
 
+app.get('/api/ops', requireAuth, requireAdmin, async (_req, res) => {
+  const { getBreakerStatus } = await import('./services/places');
+  const { getUsageFromStore } = await import('./services/googleQuota');
+  const now = new Date();
+  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const today = now.toISOString().slice(0, 10);
+  const [breaker, googleQuota, periodUsers] = await Promise.all([
+    getBreakerStatus(),
+    getUsageFromStore(),
+    getAllUsersUsagePeriod(startOfMonth, today),
+  ]);
+  const planBreakdown: Record<string, { users: number; totalCalls: number }> = {};
+  for (const u of periodUsers) {
+    const plan = u.plan || 'free';
+    if (!planBreakdown[plan]) planBreakdown[plan] = { users: 0, totalCalls: 0 };
+    planBreakdown[plan].users++;
+    planBreakdown[plan].totalCalls += u.totalCalls;
+  }
+  res.json({
+    timestamp: new Date().toISOString(),
+    circuitBreaker: breaker,
+    googleQuota,
+    usageByPlan: planBreakdown,
+    period: { from: startOfMonth, to: today },
+    activeUsers: periodUsers.length,
+  });
+});
+
 app.get('/api/usage/me', requireAuth, async (req, res) => {
   if (process.env.DATABASE_URL) {
     try {
