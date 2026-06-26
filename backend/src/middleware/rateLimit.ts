@@ -1,4 +1,4 @@
-import rateLimit, { Store } from 'express-rate-limit';
+import rateLimit, { Store, ipKeyGenerator } from 'express-rate-limit';
 import { Request } from 'express';
 import Redis from 'ioredis';
 import RedisStore from 'rate-limit-redis';
@@ -24,7 +24,7 @@ export const searchRateLimiter = rateLimit({
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req: Request) => req.user?.sub ?? req.ip ?? 'unknown',
+  keyGenerator: (req: Request) => req.user?.sub ?? ipKeyGenerator(req.ip ?? 'unknown'),
   message: { error: 'Trop de requêtes. Réessayez dans une minute.' },
   store: createRedisStore('rl:search:'),
 });

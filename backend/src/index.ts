@@ -10,6 +10,8 @@ import prospectsRouter from './routes/prospects';
 import establishmentRouter from './routes/establishment';
 import historyRouter from './routes/history';
 import plansRouter from './routes/plans';
+import billingRouter from './routes/billing';
+import { stripeWebhookHandler } from './routes/stripeWebhook';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth, requireAdmin } from './middleware/requireAuth';
@@ -23,6 +25,9 @@ const PORT = process.env.PORT || 4000;
 
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
+
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
@@ -44,6 +49,7 @@ app.use('/api/prospects', prospectsRouter);
 app.use('/api/establishment', establishmentRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/plans', plansRouter);
+app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
 
 if (process.env.NODE_ENV !== 'test') {

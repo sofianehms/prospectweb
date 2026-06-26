@@ -117,4 +117,8 @@ export async function initDb(): Promise<void> {
 
   await db.query(`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`);
   await db.query(`ALTER TABLE users ALTER COLUMN password_hash SET DEFAULT ''`);
+
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`);
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`);
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'none'`);
 }
