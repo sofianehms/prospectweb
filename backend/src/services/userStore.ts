@@ -13,12 +13,26 @@ export async function ensureClerkUser(
   clerkId: string,
   email: string,
 ): Promise<void> {
+  const { rows } = await getPool().query<{ id: string }>(
+    'SELECT id FROM users WHERE id = $1',
+    [clerkId],
+  );
+  const isNew = rows.length === 0;
+
   await getPool().query(
     `INSERT INTO users (id, email, password_hash, first_name, last_name)
      VALUES ($1, $2, '', '', '')
      ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email`,
     [clerkId, email.toLowerCase()],
   );
+
+  if (isNew) {
+    try {
+      const { sendWelcomeEmail } = await import('./emailService');
+      const name = email.split('@')[0].split(/[._-]/)[0];
+      sendWelcomeEmail(email.toLowerCase(), name.charAt(0).toUpperCase() + name.slice(1)).catch(() => {});
+    } catch { /* email service optional */ }
+  }
 }
 
 interface UserRow {

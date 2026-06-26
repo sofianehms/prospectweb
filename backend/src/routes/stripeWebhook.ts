@@ -3,8 +3,28 @@ import {
   getStripe,
   syncSubscription,
   handleSubscriptionDeleted,
+  planIdFromPriceId,
 } from '../services/stripeService';
+import {
+  sendPaymentConfirmationEmail,
+  sendInvoiceEmail,
+  sendPaymentFailedEmail,
+  sendPlanExpirationEmail,
+} from '../services/emailService';
 import type Stripe from 'stripe';
+
+function formatAmount(cents: number, currency: string): string {
+  return (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: currency.toUpperCase() });
+}
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  const db = getDb();
+  if (!db) return null;
+  try {
+    const { rows } = await db.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
+    return rows[0]?.email ?? null;
+  } catch { return null; }
+}
 
 function getDb() {
   try {
@@ -86,6 +106,14 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
         const priceId = sub.items.data[0]?.price.id ?? '';
         await syncSubscription(userId, customerId, sub.id, sub.status, priceId);
         console.log(`[stripe webhook] ${event.type}: user=${userId} status=${sub.status}`);
+
+        if (event.type === 'customer.subscription.created' && sub.status === 'active') {
+          const email = await getUserEmail(userId);
+          const pName = planIdFromPriceId(priceId) ?? 'Pro';
+          if (email) {
+            sendPaymentConfirmationEmail(email, pName.charAt(0).toUpperCase() + pName.slice(1), '').catch(() => {});
+          }
+        }
         break;
       }
 
@@ -96,8 +124,14 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
           console.error(`[stripe webhook] subscription.deleted sans metadata.userId (sub ${sub.id})`);
           break;
         }
+        const prevPlanName = 'votre plan';
         await handleSubscriptionDeleted(userId);
         console.log(`[stripe webhook] subscription.deleted: user=${userId}`);
+
+        const delEmail = await getUserEmail(userId);
+        if (delEmail) {
+          sendPlanExpirationEmail(delEmail, prevPlanName).catch(() => {});
+        }
         break;
       }
 
@@ -114,6 +148,17 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
           null,
         );
         console.log(`[stripe webhook] invoice.paid: invoice=${invoice.id} amount=${invoice.amount_paid} ${invoice.currency}`);
+
+        if (userId) {
+          const paidEmail = await getUserEmail(userId);
+          if (paidEmail) {
+            sendInvoiceEmail(
+              paidEmail,
+              formatAmount(invoice.amount_paid, invoice.currency),
+              invoice.hosted_invoice_url ?? null,
+            ).catch(() => {});
+          }
+        }
         break;
       }
 
@@ -132,6 +177,17 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
           failureMessage,
         );
         console.warn(`[stripe webhook] PAYMENT FAILED: invoice=${invoice.id} user=${userId ?? 'unknown'} amount=${invoice.amount_due} reason=${failureMessage}`);
+
+        if (userId) {
+          const failEmail = await getUserEmail(userId);
+          if (failEmail) {
+            sendPaymentFailedEmail(
+              failEmail,
+              formatAmount(invoice.amount_due, invoice.currency),
+              failureMessage,
+            ).catch(() => {});
+          }
+        }
         break;
       }
     }

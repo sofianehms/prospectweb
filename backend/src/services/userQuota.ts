@@ -114,6 +114,10 @@ export function trackUserCalls(userId: string, count: number = 1): void {
     console.warn(`[user-quota] WARNING: user=${userId} a atteint 80% de son quota (${entry.calls}/${limit})`);
   }
 
+  if (entry.calls >= limit && entry.calls - count < limit) {
+    notifyQuotaReached(userId, entry.calls, limit);
+  }
+
   const db = getDb();
   if (db) {
     db.query(
@@ -188,6 +192,18 @@ export async function loadFromDb(userId: string): Promise<void> {
       memCounters.set(userId, { date: todayKey(), calls: rows[0].calls });
     }
   } catch { /* fallback to in-memory */ }
+}
+
+function notifyQuotaReached(userId: string, usage: number, limit: number): void {
+  const db = getDb();
+  if (!db) return;
+  db.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId])
+    .then(async ({ rows }) => {
+      if (!rows[0]?.email) return;
+      const { sendQuotaReachedEmail } = await import('./emailService');
+      sendQuotaReachedEmail(rows[0].email, usage, limit).catch(() => {});
+    })
+    .catch(() => {});
 }
 
 export function resetForTesting(): void {
