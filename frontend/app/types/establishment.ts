@@ -1,4 +1,4 @@
-export type WebsiteStatus = 'none' | 'unreachable' | 'outdated' | 'active'
+export type WebsiteStatus = 'none' | 'unreachable' | 'outdated' | 'active' | 'blocked'
 
 export interface Establishment {
   id:          string
@@ -32,6 +32,7 @@ export interface SearchResult {
     unreachable: number
     outdated:    number
     active:      number
+    blocked:     number
   }
   meta?: SearchMeta
   establishments: Establishment[]

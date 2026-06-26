@@ -37,7 +37,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
     data = await fetchResults(sp)
   } catch (err) {
     fetchError = (err as Error).message
-    data = { center: { lat: 0, lng: 0 }, radius: 0, summary: { total: 0, none: 0, unreachable: 0, outdated: 0, active: 0 }, establishments: [] }
+    data = { center: { lat: 0, lng: 0 }, radius: 0, summary: { total: 0, none: 0, unreachable: 0, outdated: 0, active: 0, blocked: 0 }, establishments: [] }
   }
 
   return (

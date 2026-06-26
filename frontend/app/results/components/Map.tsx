@@ -10,6 +10,7 @@ const STATUS_COLOR: Record<WebsiteStatus, string> = {
   unreachable: '#9ca3af', // gray
   outdated:    '#f59e0b', // amber
   active:      '#22c55e', // green
+  blocked:     '#a855f7', // purple
 }
 
 const STATUS_LABEL: Record<WebsiteStatus, string> = {
@@ -17,6 +18,7 @@ const STATUS_LABEL: Record<WebsiteStatus, string> = {
   unreachable: 'Site injoignable',
   outdated:    'Site obsolète',
   active:      'Site actif',
+  blocked:     'Bloqué anti-bot',
 }
 
 function getZoom(radiusMeters: number): number {
@@ -33,6 +35,7 @@ const STATUS_SYMBOL: Record<WebsiteStatus, string> = {
   unreachable: '?',
   outdated:    '~',
   active:      '✓',
+  blocked:     '⛔',
 }
 
 function dotIcon(color: string, status: WebsiteStatus) {

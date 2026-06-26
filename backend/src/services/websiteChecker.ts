@@ -90,6 +90,7 @@ export interface ConfidenceSignal {
 
 export interface WebsiteStatus {
   reachable:          boolean;
+  blocked:            boolean;
   statusCode:         number | null;
   hasRecentContent:   boolean;
   lastModified:       string | null;
@@ -137,16 +138,18 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
     const responseTimeMs = Date.now() - start;
     const lastModified   = res.headers.get('last-modified');
     const html           = await readFirstBytes(res, MAX_BODY_BYTES);
+    const blocked        = isAntiBot(res.status, html);
     const { score, signals } = computeConfidence(html, lastModified);
 
     return {
       reachable:  res.status < 500,
+      blocked,
       statusCode: res.status,
-      hasRecentContent: score >= 30,
+      hasRecentContent: blocked ? false : score >= 30,
       lastModified,
       responseTimeMs,
       error: null,
-      confidenceScore: score,
+      confidenceScore: blocked ? 0 : score,
       confidenceSignals: signals,
     };
   } catch (err: unknown) {
@@ -157,6 +160,7 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
     const msg = err instanceof Error ? err.message : String(err);
     return {
       reachable:        false,
+      blocked:          false,
       statusCode:       null,
       hasRecentContent: false,
       lastModified:     null,
@@ -174,6 +178,7 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
 function errorResult(start: number, error: string): WebsiteStatus {
   return {
     reachable: false,
+    blocked: false,
     statusCode: null,
     hasRecentContent: false,
     lastModified: null,
@@ -250,6 +255,12 @@ function isDateRecent(raw: string | null | undefined): boolean {
   if (isNaN(date.getTime())) return false;
   const ageDays = (Date.now() - date.getTime()) / 86_400_000;
   return ageDays < 730;
+}
+
+function isAntiBot(status: number, html: string): boolean {
+  if (status === 403 || status === 429) return true;
+  const lower = html.toLowerCase();
+  return /cloudflare|captcha|challenge-platform|cf-chl|hcaptcha|recaptcha|attention required|access denied|bot.detection/i.test(lower);
 }
 
 function normalizeUrl(url: string): string {

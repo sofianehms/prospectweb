@@ -7,8 +7,9 @@ import { checkUserQuota, trackUserCalls } from '../services/userQuota';
 import { checkWebsite } from '../services/websiteChecker';
 import type { SiteStatus } from './search';
 
-function resolveSiteStatus(website: string | null, reachable: boolean, hasRecentContent: boolean): SiteStatus {
+function resolveSiteStatus(website: string | null, reachable: boolean, hasRecentContent: boolean, blocked: boolean): SiteStatus {
   if (!website)          return 'none';
+  if (blocked)           return 'blocked';
   if (!reachable)        return 'unreachable';
   if (!hasRecentContent) return 'outdated';
   return 'active';
@@ -42,7 +43,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     const wsResult = place.website ? await checkWebsite(place.website) : null;
     const establishment = {
       ...place,
-      websiteStatus: resolveSiteStatus(place.website, wsResult?.reachable ?? false, wsResult?.hasRecentContent ?? false),
+      websiteStatus: resolveSiteStatus(place.website, wsResult?.reachable ?? false, wsResult?.hasRecentContent ?? false, wsResult?.blocked ?? false),
       confidenceScore: wsResult?.confidenceScore ?? 0,
     };
 

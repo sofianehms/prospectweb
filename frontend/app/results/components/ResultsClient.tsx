@@ -6,7 +6,7 @@ import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/est
 import { distanceTo, formatDistance } from '@/app/types/establishment'
 import { useProspects } from '@/app/hooks/useProspects'
 
-type StatusFilter = 'none' | 'unreachable' | 'outdated' | 'active' | 'not_added'
+type StatusFilter = 'none' | 'unreachable' | 'outdated' | 'active' | 'blocked' | 'not_added'
 type SortBy = 'relevance' | 'distance' | 'rating' | 'reviews' | 'alpha'
 
 const SORT_OPTIONS: { id: SortBy; label: string }[] = [
@@ -17,13 +17,14 @@ const SORT_OPTIONS: { id: SortBy; label: string }[] = [
   { id: 'alpha',     label: 'Alphabétique'},
 ]
 
-const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, unreachable: 1, outdated: 2, active: 3 }
+const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, unreachable: 1, outdated: 2, blocked: 3, active: 4 }
 
 const BADGE: Record<WebsiteStatus, { label: string; className: string }> = {
   none:        { label: 'Pas de site',      className: 'bg-red-50 text-red-500' },
   unreachable: { label: 'Site injoignable', className: 'bg-gray-50 text-gray-500' },
   outdated:    { label: 'Site obsolète',    className: 'bg-orange-50 text-orange-500' },
   active:      { label: 'Site actif',       className: 'bg-green-50 text-green-600' },
+  blocked:     { label: 'Bloqué anti-bot',  className: 'bg-purple-50 text-purple-500' },
 }
 
 import { typeLabel } from '@/app/lib/typeConfig'
@@ -103,6 +104,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
     { id: 'none',        label: 'Sans site',       count: data.summary.none },
     { id: 'unreachable', label: 'Injoignable',     count: data.summary.unreachable },
     { id: 'outdated',    label: 'Site obsolète',    count: data.summary.outdated },
+    { id: 'blocked',     label: 'Bloqué anti-bot',  count: data.summary.blocked ?? 0 },
     { id: 'active',      label: 'Site actif',       count: data.summary.active },
     { id: 'not_added',   label: 'Pas ajouté',       count: data.establishments.length - addedCount },
   ]

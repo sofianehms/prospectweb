@@ -16,7 +16,7 @@ router.use(requireInternalSecret);
 router.use(requireAuth);
 router.use(searchRateLimiter);
 
-export type SiteStatus = 'none' | 'unreachable' | 'outdated' | 'active';
+export type SiteStatus = 'none' | 'unreachable' | 'outdated' | 'active' | 'blocked';
 
 export interface Establishment extends Place {
   websiteStatus: SiteStatus;
@@ -28,8 +28,10 @@ function resolveSiteStatus(
   website: string | null,
   reachable: boolean,
   hasRecentContent: boolean,
+  blocked: boolean,
 ): SiteStatus {
   if (!website)          return 'none';
+  if (blocked)           return 'blocked';
   if (!reachable)        return 'unreachable';
   if (!hasRecentContent) return 'outdated';
   return 'active';
@@ -127,7 +129,7 @@ router.get('/', async (req: Request, res: Response) => {
         const result = await checkWebsite(p.website);
         return {
           ...p,
-          websiteStatus: resolveSiteStatus(p.website, result.reachable, result.hasRecentContent),
+          websiteStatus: resolveSiteStatus(p.website, result.reachable, result.hasRecentContent, result.blocked),
           confidenceScore: result.confidenceScore,
         };
       })
@@ -139,6 +141,7 @@ router.get('/', async (req: Request, res: Response) => {
       unreachable: establishments.filter(e => e.websiteStatus === 'unreachable').length,
       outdated:    establishments.filter(e => e.websiteStatus === 'outdated').length,
       active:      establishments.filter(e => e.websiteStatus === 'active').length,
+      blocked:     establishments.filter(e => e.websiteStatus === 'blocked').length,
     };
 
     let knownIds = new Set<string>();

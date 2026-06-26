@@ -21,6 +21,7 @@ const BADGE_STYLE: Record<WebsiteStatus, { label: string; className: string }> =
   unreachable: { label: 'Site injoignable',  className: 'bg-gray-50 text-gray-500 border border-gray-200' },
   outdated:    { label: 'Site obsolète',     className: 'bg-orange-50 text-orange-500 border border-orange-100' },
   active:      { label: 'Site actif',        className: 'bg-green-50 text-green-600 border border-green-100' },
+  blocked:     { label: 'Bloqué anti-bot',   className: 'bg-purple-50 text-purple-500 border border-purple-100' },
 }
 
 import { typeLabel as getTypeLabel, typeIcon, typeColor } from '@/app/lib/typeConfig'
@@ -169,6 +170,9 @@ export default function DetailClient({ e }: { e: Establishment }) {
               )}
               {e.websiteStatus === 'outdated' && (
                 <Row icon="🌐">Site web présent mais obsolète (confiance {e.confidenceScore}%) — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
+              )}
+              {e.websiteStatus === 'blocked' && (
+                <Row icon="🌐">Site protégé par anti-bot (403/captcha) — statut réel indéterminé — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
               )}
               {e.websiteStatus === 'active' && (
                 <Row icon="🌐">Site web actif (confiance {e.confidenceScore}%) — <a href={e.website!} target="_blank" rel="noopener" className="text-emerald-600 underline">{e.website}</a></Row>
