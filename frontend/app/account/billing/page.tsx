@@ -128,16 +128,12 @@ export default function BillingPage() {
                   <button
                     onClick={handlePortal}
                     disabled={portalLoading}
+                    className="btn-accent"
                     style={{
                       padding: '8px 14px',
-                      background: 'var(--accent)',
-                      border: 'none',
                       borderRadius: 8,
-                      cursor: portalLoading ? 'wait' : 'pointer',
                       fontSize: 13,
-                      fontWeight: 700,
-                      color: 'var(--on-accent)',
-                      opacity: portalLoading ? 0.6 : 1,
+                      cursor: portalLoading ? 'wait' : undefined,
                     }}
                   >
                     {portalLoading ? 'Chargement...' : "Gerer l'abonnement"}

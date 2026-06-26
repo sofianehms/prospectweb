@@ -42,6 +42,7 @@ export default function PricingPage() {
   const [plans, setPlans] = useState<PlanInfo[]>([])
   const [currentPlan, setCurrentPlan] = useState<PlanInfo | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/plans').then(r => r.ok ? r.json() : []).then(setPlans)
@@ -50,6 +51,7 @@ export default function PricingPage() {
 
   async function handleCheckout(planId: string) {
     setLoading(planId)
+    setError(null)
     track(events.PLAN_UPGRADE_CLICK, { planId })
     try {
       const res = await fetch('/api/billing/checkout', {
@@ -60,8 +62,12 @@ export default function PricingPage() {
       const data = await res.json()
       if (data.url) {
         globalThis.location.assign(data.url)
+      } else {
+        setError(data.error ?? 'Erreur lors de la creation du paiement.')
       }
-    } catch { /* ignore */ } finally {
+    } catch {
+      setError('Erreur réseau. Veuillez réessayer.')
+    } finally {
       setLoading(null)
     }
   }
@@ -84,6 +90,20 @@ export default function PricingPage() {
             Commencez gratuitement. Passez au plan suivant quand vous etes pret.
           </p>
         </div>
+
+        {error && (
+          <div style={{
+            padding: '12px 16px',
+            marginBottom: 16,
+            borderRadius: 8,
+            fontSize: 13,
+            background: 'var(--error-d)',
+            color: 'var(--error)',
+            border: '1px solid var(--error-border)',
+          }}>
+            {error}
+          </div>
+        )}
 
         <div style={{
           display: 'grid',
@@ -181,17 +201,16 @@ export default function PricingPage() {
                   <button
                     onClick={() => handleCheckout(plan.id)}
                     disabled={loading === plan.id}
+                    className="btn-accent"
                     style={{
                       padding: '12px 0',
+                      width: '100%',
                       textAlign: 'center',
                       borderRadius: 9,
                       fontSize: 14,
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: loading === plan.id ? 'wait' : 'pointer',
-                      opacity: loading === plan.id ? 0.6 : 1,
-                      background: isPro ? 'var(--on-accent)' : 'var(--accent)',
-                      color: isPro ? 'var(--accent)' : 'var(--on-accent)',
+                      cursor: loading === plan.id ? 'wait' : undefined,
+                      background: isPro ? 'var(--on-accent)' : undefined,
+                      color: isPro ? 'var(--accent)' : undefined,
                       marginBottom: 24,
                     }}
                   >

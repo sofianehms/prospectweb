@@ -142,7 +142,7 @@ export default function ProspectsClient() {
                   <select
                     value={p.crmStatus}
                     onChange={e => setStatus(p.id, e.target.value as CrmStatus)}
-                    className={`max-w-[120px] sm:max-w-none px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border focus:outline-none transition ${meta.className}`}
+                    className={`max-w-[120px] sm:max-w-none px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition ${meta.className}`}
                   >
                     <option value="to_contact">À contacter</option>
                     <option value="contacted">Contacté</option>

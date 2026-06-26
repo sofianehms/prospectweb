@@ -119,15 +119,13 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/search"
+            className="btn-accent"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              background: 'var(--accent)',
-              color: 'var(--on-accent)',
               padding: '10px 20px',
               fontSize: 14,
-              fontWeight: 700,
               borderRadius: 9,
               textDecoration: 'none',
             }}

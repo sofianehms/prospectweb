@@ -136,16 +136,12 @@ export default function SettingsPage() {
               <button
                 onClick={handlePortal}
                 disabled={loading === 'portal'}
+                className="btn-accent"
                 style={{
                   padding: '8px 14px',
-                  background: 'var(--accent)',
-                  border: 'none',
                   borderRadius: 8,
-                  cursor: loading === 'portal' ? 'wait' : 'pointer',
                   fontSize: 13,
-                  fontWeight: 700,
-                  color: 'var(--on-accent)',
-                  opacity: loading === 'portal' ? 0.6 : 1,
+                  cursor: loading === 'portal' ? 'wait' : undefined,
                 }}
               >
                 {loading === 'portal' ? 'Chargement...' : 'Gérer l\'abonnement'}
@@ -197,17 +193,13 @@ export default function SettingsPage() {
                   <button
                     onClick={() => handleCheckout(p.id)}
                     disabled={loading === p.id}
+                    className="btn-accent"
                     style={{
                       marginTop: 4,
                       padding: '8px 14px',
-                      background: 'var(--accent)',
-                      border: 'none',
                       borderRadius: 8,
-                      cursor: loading === p.id ? 'wait' : 'pointer',
                       fontSize: 13,
-                      fontWeight: 700,
-                      color: 'var(--on-accent)',
-                      opacity: loading === p.id ? 0.6 : 1,
+                      cursor: loading === p.id ? 'wait' : undefined,
                     }}
                   >
                     {loading === p.id ? 'Chargement...' : 'Souscrire'}

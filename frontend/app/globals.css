@@ -102,6 +102,16 @@ body { transition: background-color .2s, color .2s; }
 a { text-decoration: none; color: inherit; }
 ::selection { background: var(--accent-d); }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline-offset: 0;
+}
+[data-no-focus-ring]:focus-visible { outline: none; }
+
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
@@ -158,6 +168,18 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-primary:active:not(:disabled) { transform: translateY(0); }
 .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+}
+.btn-accent:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+.btn-accent:active:not(:disabled) { transform: translateY(0); }
+.btn-accent:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
 /* ── Slider ── */
 input[type="range"] {

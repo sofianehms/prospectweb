@@ -44,6 +44,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
   const [crm, setCrmLocal]  = useState<CrmStatus>(saved?.crmStatus ?? 'to_contact')
   const [notes, setNotesLocal] = useState(saved?.notes ?? '')
   const [script, setScript] = useState(buildScript(e))
+  const [notesSaved, setNotesSaved] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -66,8 +67,12 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
   const handleNotesChange = useCallback((value: string) => {
     setNotesLocal(value)
+    setNotesSaved(false)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => persistNotes(e.id, value), 500)
+    debounceRef.current = setTimeout(() => {
+      persistNotes(e.id, value)
+      setNotesSaved(true)
+    }, 500)
   }, [e.id, persistNotes])
 
   const badge  = BADGE_STYLE[e.websiteStatus]
@@ -169,7 +174,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
             value={script}
             onChange={e => setScript(e.target.value)}
             rows={10}
-            className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-4 text-sm text-gray-800 dark:text-slate-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-4 text-sm text-gray-800 dark:text-slate-200 leading-relaxed focus:ring-2 focus:ring-emerald-500 resize-none"
           />
           <div className="flex justify-end">
             <button
@@ -184,13 +189,21 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
       {tab === 'notes' && (
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">Vos notes privées sur ce prospect.</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">Vos notes privées sur ce prospect.</p>
+            {notesSaved && (
+              <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 anim-fade-in">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Sauvegardé
+              </span>
+            )}
+          </div>
           <textarea
             value={notes}
             onChange={e => handleNotesChange(e.target.value)}
             placeholder="Ex : Propriétaire sympa, à rappeler jeudi matin…"
             rows={10}
-            className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-4 text-sm text-gray-700 dark:text-slate-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
+            className="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 p-4 text-sm text-gray-700 dark:text-slate-200 leading-relaxed focus:ring-2 focus:ring-emerald-500 resize-none placeholder:text-gray-400 dark:placeholder:text-slate-500"
           />
         </div>
       )}
