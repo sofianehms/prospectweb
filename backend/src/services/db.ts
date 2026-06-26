@@ -122,6 +122,8 @@ export async function initDb(): Promise<void> {
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT NOT NULL DEFAULT 'none'`);
 
+  await db.query(`ALTER TABLE user_usage ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'`);
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS stripe_events (
       event_id    TEXT PRIMARY KEY,

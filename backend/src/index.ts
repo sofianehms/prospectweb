@@ -13,7 +13,7 @@ import plansRouter from './routes/plans';
 import billingRouter from './routes/billing';
 import { stripeWebhookHandler } from './routes/stripeWebhook';
 import { getUsage } from './services/googleQuota';
-import { getUserUsage, getAllUsersUsage } from './services/userQuota';
+import { getUserUsage, getAllUsersUsage, getUserUsageHistory, getAllUsersUsagePeriod } from './services/userQuota';
 import { requireAuth, requireAdmin } from './middleware/requireAuth';
 
 // Charge le .env racine du projet (un niveau au-dessus de /backend).
@@ -40,8 +40,12 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRouter);
 
-app.get('/api/usage', requireAuth, requireAdmin, (_req, res) => {
-  res.json({ global: getUsage(), users: getAllUsersUsage() });
+app.get('/api/usage', requireAuth, requireAdmin, async (_req, res) => {
+  const now = new Date();
+  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const today = now.toISOString().slice(0, 10);
+  const periodUsers = await getAllUsersUsagePeriod(startOfMonth, today);
+  res.json({ global: getUsage(), users: getAllUsersUsage(), period: { from: startOfMonth, to: today, users: periodUsers } });
 });
 
 app.get('/api/usage/me', requireAuth, async (req, res) => {
@@ -52,6 +56,12 @@ app.get('/api/usage/me', requireAuth, async (req, res) => {
     } catch { /* fallback */ }
   }
   res.json(getUserUsage(req.user!.sub));
+});
+
+app.get('/api/usage/me/history', requireAuth, async (req, res) => {
+  const days = Math.min(Number(req.query.days) || 30, 90);
+  const history = await getUserUsageHistory(req.user!.sub, days);
+  res.json(history);
 });
 
 app.use('/api/autocomplete', autocompleteRouter);

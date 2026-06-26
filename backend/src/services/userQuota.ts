@@ -121,7 +121,8 @@ export function trackUserCalls(userId: string, count: number = 1): void {
   const db = getDb();
   if (db) {
     db.query(
-      `INSERT INTO user_usage (user_id, date, calls) VALUES ($1, CURRENT_DATE, $2)
+      `INSERT INTO user_usage (user_id, date, calls, plan)
+       VALUES ($1, CURRENT_DATE, $2, (SELECT COALESCE(plan, 'free') FROM users WHERE id = $1))
        ON CONFLICT (user_id, date) DO UPDATE SET calls = user_usage.calls + $2`,
       [userId, count],
     ).catch((err: Error) => console.error('[user-quota] DB write failed:', err.message));
@@ -192,6 +193,71 @@ export async function loadFromDb(userId: string): Promise<void> {
       memCounters.set(userId, { date: todayKey(), calls: rows[0].calls });
     }
   } catch { /* fallback to in-memory */ }
+}
+
+export async function getUserUsageHistory(
+  userId: string,
+  days: number = 30,
+): Promise<Array<{ date: string; calls: number; plan: string }>> {
+  const db = getDb();
+  if (!db) return [];
+  try {
+    const { rows } = await db.query<{ date: string; calls: number; plan: string }>(
+      `SELECT date::text, calls, plan FROM user_usage
+       WHERE user_id = $1 AND date >= CURRENT_DATE - $2::int
+       ORDER BY date DESC`,
+      [userId, days],
+    );
+    return rows;
+  } catch { return []; }
+}
+
+export async function getUserUsagePeriod(
+  userId: string,
+  startDate: string,
+  endDate: string,
+): Promise<{ totalCalls: number; days: number; plan: string }> {
+  const db = getDb();
+  if (!db) return { totalCalls: 0, days: 0, plan: 'free' };
+  try {
+    const { rows } = await db.query<{ total_calls: string; days: string; plan: string }>(
+      `SELECT COALESCE(SUM(calls), 0) AS total_calls, COUNT(*)::int AS days,
+              COALESCE(MAX(plan), 'free') AS plan
+       FROM user_usage
+       WHERE user_id = $1 AND date >= $2::date AND date <= $3::date`,
+      [userId, startDate, endDate],
+    );
+    return {
+      totalCalls: Number(rows[0]?.total_calls ?? 0),
+      days: Number(rows[0]?.days ?? 0),
+      plan: rows[0]?.plan ?? 'free',
+    };
+  } catch { return { totalCalls: 0, days: 0, plan: 'free' }; }
+}
+
+export async function getAllUsersUsagePeriod(
+  startDate: string,
+  endDate: string,
+): Promise<Array<{ userId: string; plan: string; totalCalls: number; days: number }>> {
+  const db = getDb();
+  if (!db) return [];
+  try {
+    const { rows } = await db.query<{ user_id: string; plan: string; total_calls: string; days: string }>(
+      `SELECT user_id, COALESCE(MAX(plan), 'free') AS plan,
+              COALESCE(SUM(calls), 0) AS total_calls, COUNT(*)::int AS days
+       FROM user_usage
+       WHERE date >= $1::date AND date <= $2::date
+       GROUP BY user_id
+       ORDER BY total_calls DESC`,
+      [startDate, endDate],
+    );
+    return rows.map(r => ({
+      userId: r.user_id,
+      plan: r.plan,
+      totalCalls: Number(r.total_calls),
+      days: Number(r.days),
+    }));
+  } catch { return []; }
 }
 
 function notifyQuotaReached(userId: string, usage: number, limit: number): void {

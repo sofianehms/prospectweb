@@ -12,6 +12,7 @@ interface Prospect {
   phone: string | null; rating: number | null; ratingCount: number | null;
   websiteStatus: string; crmStatus: string; notes: string; addedAt: string;
 }
+interface UsageHistoryEntry { date: string; calls: number; plan: string }
 interface SearchRecord {
   id: string; address: string; radius: number; types: string;
   resultCount: number; createdAt: string;
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [plan, setPlan] = useState<PlanInfo | null>(null)
   const [usage, setUsage] = useState<UsageInfo | null>(null)
+  const [usageHistory, setUsageHistory] = useState<UsageHistoryEntry[]>([])
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [history, setHistory] = useState<SearchRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,12 +64,14 @@ export default function DashboardPage() {
       fetch('/api/prospects').then(r => r.ok ? r.json() : []),
       fetch('/api/history').then(r => r.ok ? r.json() : []),
       fetch('/api/usage/me').then(r => r.ok ? r.json() : null),
-    ]).then(([u, p, pr, h, usg]) => {
+      fetch('/api/usage/me/history?days=7').then(r => r.ok ? r.json() : []),
+    ]).then(([u, p, pr, h, usg, uh]) => {
       setUser(u)
       setPlan(p)
       setProspects(Array.isArray(pr) ? pr : [])
       setHistory(Array.isArray(h) ? h : [])
       setUsage(usg)
+      setUsageHistory(Array.isArray(uh) ? uh : [])
     }).finally(() => setLoading(false))
   }, [])
 
@@ -179,6 +183,53 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+
+            {/* Usage history (7 derniers jours) */}
+            {usageHistory.length > 0 && (
+              <div style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  padding: '18px 22px',
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <span style={{ fontSize: 15, fontWeight: 600 }}>Consommation (7 derniers jours)</span>
+                  <span style={{ fontSize: 12, color: 'var(--t3)' }}>
+                    Total : {usageHistory.reduce((s, d) => s + d.calls, 0)} appels
+                  </span>
+                </div>
+                <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                  {(() => {
+                    const max = Math.max(...usageHistory.map(d => d.calls), 1)
+                    const last7 = [...usageHistory].reverse().slice(-7)
+                    return last7.map((d, i) => (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div
+                          style={{
+                            width: '100%',
+                            maxWidth: 40,
+                            height: Math.max(4, (d.calls / max) * 60),
+                            background: 'var(--accent)',
+                            borderRadius: 4,
+                            opacity: d.calls > 0 ? 1 : 0.2,
+                          }}
+                          title={`${d.date}: ${d.calls} appels`}
+                        />
+                        <span style={{ fontSize: 10, color: 'var(--t3)' }}>
+                          {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3)}
+                        </span>
+                      </div>
+                    ))
+                  })()}
+                </div>
+              </div>
+            )}
 
             {/* Two column grid: À contacter + Recherches récentes */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
