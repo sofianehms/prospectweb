@@ -13,6 +13,7 @@ export default function AppHeader({
         <Link href="/" className="flex items-center gap-2">
           {/* stroke="currentColor" + color CSS var = logo suit l'accent du thème */}
           <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             width="22" height="22"
             viewBox="0 0 24 24"

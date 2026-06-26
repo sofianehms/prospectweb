@@ -154,6 +154,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
       <div className="flex flex-wrap gap-2 mb-4">
         <button
           onClick={clearStatus}
+          aria-pressed={isAllActive}
           className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
             isAllActive
               ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -166,6 +167,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
           <button
             key={t.id}
             onClick={() => toggleStatus(t.id)}
+            aria-pressed={statusFilters.has(t.id)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
               statusFilters.has(t.id)
                 ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -189,6 +191,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
           <select
             value={sortBy}
             onChange={e => handleSort(e.target.value as SortBy)}
+            aria-label="Trier les résultats"
             className="bg-transparent border-none outline-none text-xs text-gray-600 dark:text-slate-300 cursor-pointer font-medium"
           >
             {SORT_OPTIONS.map(o => (
@@ -240,6 +243,7 @@ export default function ResultsClient({ data, initialFilters = '' }: { data: Sea
                 <span className={`hidden sm:inline px-3 py-1 rounded-full text-xs font-medium ${badge.className}`}>
                   {badge.label}
                 </span>
+                <span className="sr-only sm:hidden">{badge.label}</span>
                 <button
                   onClick={() => toggle(e)}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg border text-xs sm:text-sm font-medium transition ${

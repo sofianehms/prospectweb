@@ -92,7 +92,7 @@ export default function PricingPage() {
         </div>
 
         {error && (
-          <div style={{
+          <div role="alert" style={{
             padding: '12px 16px',
             marginBottom: 16,
             borderRadius: 8,

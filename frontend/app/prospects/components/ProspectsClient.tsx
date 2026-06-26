@@ -70,7 +70,7 @@ export default function ProspectsClient() {
           disabled={prospects.length === 0}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-gray-400 dark:hover:border-slate-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           Exporter CSV
@@ -86,6 +86,7 @@ export default function ProspectsClient() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              aria-pressed={active}
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
                 active
                   ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -142,6 +143,7 @@ export default function ProspectsClient() {
                   <select
                     value={p.crmStatus}
                     onChange={e => setStatus(p.id, e.target.value as CrmStatus)}
+                    aria-label={`Statut CRM pour ${p.name}`}
                     className={`max-w-[120px] sm:max-w-none px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition ${meta.className}`}
                   >
                     <option value="to_contact">À contacter</option>

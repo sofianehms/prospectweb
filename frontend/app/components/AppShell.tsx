@@ -20,30 +20,30 @@ interface PlanInfo { id: string; name: string }
 const NAV_ITEMS = [
   {
     href: '/dashboard', label: 'Dashboard',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/></svg>,
   },
   {
     href: '/search', label: 'Recherche',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3"/><path d="M14 14l-2.5-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3"/><path d="M14 14l-2.5-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
   },
   {
     href: '/results', label: 'Résultats',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12.5" cy="11.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M15 14l-1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12.5" cy="11.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M15 14l-1-1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
   },
   {
     href: '/prospects', label: 'Prospects',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" strokeWidth="1.3"/><path d="M1 14c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M11 7l1.5 1.5L15 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="3" stroke="currentColor" strokeWidth="1.3"/><path d="M1 14c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M11 7l1.5 1.5L15 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   },
 ]
 
 const NAV_BOTTOM = [
   {
     href: '/prospects', label: 'CRM',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="6" y="5" width="3" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="11" y="2" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.3"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="6" y="5" width="3" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="11" y="2" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.3"/></svg>,
   },
   {
     href: '/settings', label: 'Paramètres',
-    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
   },
 ]
 
@@ -89,9 +89,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     function onClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
     }
+    function onEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape' && menuOpen) setMenuOpen(false)
+    }
     document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
+    document.addEventListener('keydown', onEscape)
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside)
+      document.removeEventListener('keydown', onEscape)
+    }
+  }, [menuOpen])
 
   function toggleTheme() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
@@ -110,8 +117,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--t1)', fontFamily: "'DM Sans', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-[var(--on-accent)] focus:rounded-lg focus:font-semibold focus:text-sm">
+        Aller au contenu principal
+      </a>
       {/* SIDEBAR */}
-      <aside className="flex flex-col overflow-hidden" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+      <aside className="flex flex-col overflow-hidden" aria-label="Navigation principale" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
           <Link href="/dashboard" className="flex items-center gap-[9px]">
@@ -173,7 +183,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div ref={menuRef} style={{ padding: '12px 10px', borderTop: '1px solid var(--border)', position: 'relative' }}>
           {/* Popover menu */}
           {menuOpen && (
-            <div style={{
+            <div role="menu" style={{
               position: 'absolute', bottom: '100%', left: 10, right: 10, marginBottom: 8,
               background: 'var(--surface)', border: '1px solid var(--border-b)',
               borderRadius: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--t1) 18%, transparent)',
@@ -266,6 +276,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Profile trigger button */}
           <button
             onClick={() => setMenuOpen(v => !v)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-label="Menu utilisateur"
             className="flex items-center gap-[10px] w-full transition-all duration-200"
             style={{
               padding: 10, borderRadius: 9, background: menuOpen ? 'var(--accent-d)' : 'var(--surface2)',
@@ -288,7 +301,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto flex flex-col" style={{ background: 'var(--bg)' }}>
+      <main id="main-content" className="flex-1 overflow-y-auto flex flex-col" style={{ background: 'var(--bg)' }}>
         {children}
       </main>
     </div>

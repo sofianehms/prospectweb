@@ -97,10 +97,14 @@ export default function DetailClient({ e }: { e: Establishment }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-slate-700 mb-6">
+      <div role="tablist" className="flex border-b border-gray-200 dark:border-slate-700 mb-6">
         {(['infos', 'script', 'notes'] as Tab[]).map(t => (
           <button
             key={t}
+            role="tab"
+            aria-selected={tab === t}
+            aria-controls={`tabpanel-${t}`}
+            id={`tab-${t}`}
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${
               tab === t
@@ -115,7 +119,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
       {/* Contenu tabs */}
       {tab === 'infos' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="tabpanel-infos" aria-labelledby="tab-infos" className="space-y-6">
 
           {/* Coordonnées */}
           <section>
@@ -168,9 +172,10 @@ export default function DetailClient({ e }: { e: Establishment }) {
       )}
 
       {tab === 'script' && (
-        <div className="space-y-3">
+        <div role="tabpanel" id="tabpanel-script" aria-labelledby="tab-script" className="space-y-3">
           <p className="text-sm text-gray-500">Personnalisez votre script avant l&apos;appel.</p>
           <textarea
+            aria-label="Script de prospection"
             value={script}
             onChange={e => setScript(e.target.value)}
             rows={10}
@@ -188,17 +193,20 @@ export default function DetailClient({ e }: { e: Establishment }) {
       )}
 
       {tab === 'notes' && (
-        <div className="space-y-3">
+        <div role="tabpanel" id="tabpanel-notes" aria-labelledby="tab-notes" className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">Vos notes privées sur ce prospect.</p>
-            {notesSaved && (
-              <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 anim-fade-in">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                Sauvegardé
-              </span>
-            )}
+            <span aria-live="polite">
+              {notesSaved && (
+                <span className="text-xs font-medium text-emerald-600 flex items-center gap-1 anim-fade-in">
+                  <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Sauvegardé
+                </span>
+              )}
+            </span>
           </div>
           <textarea
+            aria-label="Notes sur le prospect"
             value={notes}
             onChange={e => handleNotesChange(e.target.value)}
             placeholder="Ex : Propriétaire sympa, à rappeler jeudi matin…"

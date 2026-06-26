@@ -138,6 +138,11 @@ export default function SearchForm() {
             <div className="relative flex-1">
               <input
                 id="address" type="text" value={address} autoComplete="off"
+                role="combobox"
+                aria-expanded={showSugg && suggestions.length > 0}
+                aria-autocomplete="list"
+                aria-controls="address-listbox"
+                aria-activedescendant={activeIdx >= 0 ? `address-option-${activeIdx}` : undefined}
                 onChange={e => { setAddress(e.target.value); setCoords(null) }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => suggestions.length > 0 && setShowSugg(true)}
@@ -145,9 +150,9 @@ export default function SearchForm() {
                 className="w-full h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
               />
               {showSugg && suggestions.length > 0 && (
-                <ul className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                <ul id="address-listbox" role="listbox" className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
                   {suggestions.map((s, i) => (
-                    <li key={i}>
+                    <li key={i} id={`address-option-${i}`} role="option" aria-selected={i === activeIdx}>
                       <button
                         type="button"
                         onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
@@ -167,7 +172,7 @@ export default function SearchForm() {
                 </ul>
               )}
             </div>
-            <button type="button" onClick={handleGeolocate} title="Utiliser ma position"
+            <button type="button" onClick={handleGeolocate} aria-label="Utiliser ma position"
               className="h-11 px-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition flex-shrink-0">
               <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
@@ -183,6 +188,8 @@ export default function SearchForm() {
             <button
               type="button"
               onClick={() => setShowCatMenu(v => !v)}
+              aria-expanded={showCatMenu}
+              aria-haspopup="listbox"
               className="w-full h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
             >
               <span className={categories.length === 0 ? 'text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-slate-100'}>
@@ -246,6 +253,7 @@ export default function SearchForm() {
             const active = activeFilters.includes(f.id)
             return (
               <button key={f.id} type="button" onClick={() => toggleFilter(f.id)}
+                aria-pressed={active}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
                   active
                     ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -257,7 +265,7 @@ export default function SearchForm() {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <div aria-live="assertive">{error && <p className="text-sm text-red-500 mb-4">{error}</p>}</div>
 
       <div className="flex justify-end">
         <button type="submit" disabled={loading}

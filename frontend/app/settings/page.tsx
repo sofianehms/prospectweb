@@ -95,7 +95,7 @@ export default function SettingsPage() {
         </p>
 
         {message && (
-          <div style={{
+          <div role="alert" style={{
             padding: '12px 16px',
             marginBottom: 16,
             borderRadius: 8,

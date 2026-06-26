@@ -130,7 +130,7 @@ export default function DashboardPage() {
               textDecoration: 'none',
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none">
               <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
               <path d="M14 14l-2.5-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -204,7 +204,7 @@ export default function DashboardPage() {
                     Total : {usageHistory.reduce((s, d) => s + d.calls, 0)} appels
                   </span>
                 </div>
-                <div style={{ padding: '16px 22px', display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                <div role="img" aria-label={`Consommation des 7 derniers jours : ${usageHistory.reduce((s, d) => s + d.calls, 0)} appels au total`} style={{ padding: '16px 22px', display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
                   {(() => {
                     const max = Math.max(...usageHistory.map(d => d.calls), 1)
                     const last7 = [...usageHistory].reverse().slice(-7)
