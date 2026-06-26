@@ -169,7 +169,7 @@ export default function SettingsPage() {
                 textDecoration: 'none',
               }}
             >
-              Voir mes factures et l'historique de facturation
+              Voir mes factures et l&apos;historique de facturation
             </Link>
           )}
 
