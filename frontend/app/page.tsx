@@ -15,7 +15,7 @@ function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-200 h-16 px-6 md:px-16 flex items-center justify-between backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-transparent">
       <Link href="/" className="flex items-center gap-2.5 shrink-0">
         <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center shrink-0" style={{ background: 'var(--accent)' }}>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="#09090B" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="#09090B" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="var(--on-accent)" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="var(--on-accent)" strokeWidth="1.3" strokeLinecap="round" /></svg>
         </div>
         <span className="font-display font-bold text-[19px] tracking-tight text-gray-900 dark:text-slate-100">nosite</span>
       </Link>
@@ -26,11 +26,11 @@ function Nav() {
       </div>
       <div className="flex items-center gap-2.5 shrink-0">
         {loggedIn ? (
-          <Link href="/dashboard" className="text-sm font-semibold text-[#09090B] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Mon espace →</Link>
+          <Link href="/dashboard" className="text-sm font-semibold text-[var(--on-accent)] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Mon espace →</Link>
         ) : (
           <>
             <Link href="/login" className="text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 px-4 py-2 rounded-lg transition-colors">Se connecter</Link>
-            <Link href="/login" className="text-sm font-semibold text-[#09090B] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Essai gratuit →</Link>
+            <Link href="/login" className="text-sm font-semibold text-[var(--on-accent)] px-5 py-2.5 rounded-[9px] whitespace-nowrap transition-all hover:-translate-y-px" style={{ background: 'var(--accent)' }}>Essai gratuit →</Link>
           </>
         )}
       </div>
@@ -54,9 +54,9 @@ function Hero() {
         Nosite identifie les entreprises locales sans site web dans n&apos;importe quelle zone — avec le statut exact du site web et un script de prospection pour chaque résultat.
       </p>
       <div className="flex items-center gap-3.5 mb-5 flex-wrap justify-center anim-fade-up [animation-delay:0.24s]">
-        <Link href="/login" className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-bold text-[#09090B] rounded-[10px] transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent)' }}>
+        <Link href="/login" className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-bold text-[var(--on-accent)] rounded-[10px] transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent)' }}>
           Commencer gratuitement
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5H12M8.5 4l3.5 3.5-3.5 3.5" stroke="#09090B" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5H12M8.5 4l3.5 3.5-3.5 3.5" stroke="var(--on-accent)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </Link>
         <a href="#produit" className="inline-flex items-center gap-2 px-7 py-3.5 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 text-[15px] font-medium rounded-[10px] transition-all hover:border-gray-300 dark:hover:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800">
           Voir comment ça marche
@@ -116,11 +116,11 @@ function Hero() {
                 </div>
               </div>
               <div className="flex items-center gap-2.5 shrink-0">
-                <div className={`px-2.5 py-1 rounded-md border ${r.statusType === 'green' ? 'border-emerald-200 dark:border-emerald-700/30' : 'border-amber-200 dark:border-amber-700/30'}`} style={r.statusType === 'green' ? { background: 'color-mix(in srgb, var(--accent) 12%, transparent)' } : { background: 'rgba(245,158,11,0.12)' }}>
+                <div className={`px-2.5 py-1 rounded-md border ${r.statusType === 'green' ? 'border-emerald-200 dark:border-emerald-700/30' : 'border-amber-200 dark:border-amber-700/30'}`} style={r.statusType === 'green' ? { background: 'color-mix(in srgb, var(--accent) 12%, transparent)' } : { background: 'var(--warn-d)' }}>
                   <span className={`text-[11px] font-bold uppercase tracking-wider ${r.statusType === 'green' ? '' : 'text-amber-500 dark:text-amber-400'}`} style={r.statusType === 'green' ? { color: 'var(--accent)' } : undefined}>{r.status}</span>
                 </div>
                 <div className="text-center min-w-[40px]">
-                  <div className="font-display text-[22px] font-bold leading-none" style={{ color: r.statusType === 'green' ? 'var(--accent)' : '#F59E0B' }}>{r.score}</div>
+                  <div className="font-display text-[22px] font-bold leading-none" style={{ color: r.statusType === 'green' ? 'var(--accent)' : 'var(--warn)' }}>{r.score}</div>
                   <div className="text-[9px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">score</div>
                 </div>
               </div>
@@ -185,7 +185,7 @@ function HowItWorks() {
           {/* Step 2 — highlight */}
           <div className="p-8 bg-white dark:bg-slate-800 border rounded-2xl relative" style={{ borderColor: 'var(--accent)', boxShadow: '0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent), 0 8px 32px color-mix(in srgb, var(--accent) 6%, transparent)' }}>
             <div className="absolute -top-px left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-b-lg" style={{ background: 'var(--accent)' }}>
-              <span className="text-[10px] font-bold text-[#09090B] uppercase tracking-wider">Cœur du produit</span>
+              <span className="text-[10px] font-bold text-[var(--on-accent)] uppercase tracking-wider">Cœur du produit</span>
             </div>
             <div className="w-10 h-10 rounded-[10px] flex items-center justify-center mb-5 mt-2 border" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--accent) 22%, transparent)' }}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5L10.9 6.8H16.5L11.9 9.9L13.8 15.2L9 12.1L4.2 15.2L6.1 9.9L1.5 6.8H7.1L9 1.5Z" stroke="var(--accent)" strokeWidth="1.4" strokeLinejoin="round" /></svg>
@@ -438,18 +438,18 @@ function Pricing() {
             <div className="absolute -top-[13px] left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full border whitespace-nowrap bg-white dark:bg-slate-900" style={{ borderColor: 'var(--accent)' }}>
               <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>Le plus populaire</span>
             </div>
-            <div className="text-xs font-bold text-[#09090B]/55 uppercase tracking-wider mb-2.5">Pro</div>
+            <div className="text-xs font-bold uppercase tracking-wider mb-2.5" style={{ color: 'color-mix(in srgb, var(--on-accent) 55%, transparent)' }}>Pro</div>
             <div className="flex items-baseline gap-1 mb-1.5">
-              <span className="font-display text-[42px] font-bold tracking-tight text-[#09090B]">29€</span>
-              <span className="text-sm text-[#09090B]/55">/mois</span>
+              <span className="font-display text-[42px] font-bold tracking-tight" style={{ color: 'var(--on-accent)' }}>29€</span>
+              <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--on-accent) 55%, transparent)' }}>/mois</span>
             </div>
-            <p className="text-[13px] text-[#09090B]/60 mb-6 leading-relaxed">Pour les freelances et agences actifs en prospection.</p>
-            <Link href="/sign-up" className="flex items-center justify-center py-3 bg-[#09090B] rounded-[9px] text-sm font-bold transition-all mb-6 hover:bg-[#1a1a1a]" style={{ color: 'var(--accent)' }}>Commencer Pro →</Link>
+            <p className="text-[13px] mb-6 leading-relaxed" style={{ color: 'color-mix(in srgb, var(--on-accent) 60%, transparent)' }}>Pour les freelances et agences actifs en prospection.</p>
+            <Link href="/sign-up" className="flex items-center justify-center py-3 bg-[var(--on-accent)] rounded-[9px] text-sm font-bold transition-all mb-6 hover:opacity-85" style={{ color: 'var(--accent)' }}>Commencer Pro →</Link>
             <div className="flex flex-col gap-2.5">
               {['300 recherches / jour', '1 000 prospects en base', 'CRM Kanban complet', 'Export CSV & Sheets', 'Score IA avancé', 'Support prioritaire', 'Vue carte interactive'].map((f, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#09090B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  <span className="text-sm text-[#09090B]/78">{f}</span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--on-accent) 78%, transparent)' }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -565,9 +565,9 @@ function CtaFinal() {
         <h2 className="font-display text-[clamp(32px,4vw,52px)] font-bold tracking-tight leading-[1.08] mb-5 text-gray-900 dark:text-slate-100">Prêt à trouver vos<br />prochains clients ?</h2>
         <p className="text-base text-gray-500 dark:text-slate-400 mb-8 leading-relaxed">Rejoignez des centaines d&apos;agences et freelances qui prospectent plus intelligemment avec Nosite.</p>
         <div className="flex flex-wrap items-center justify-center gap-3.5">
-          <Link href="/login" className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-bold text-[#09090B] rounded-[10px] transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent)' }}>
+          <Link href="/login" className="inline-flex items-center gap-2 px-7 py-3.5 text-[15px] font-bold text-[var(--on-accent)] rounded-[10px] transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent)' }}>
             Commencer gratuitement
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5H12M8.5 4l3.5 3.5-3.5 3.5" stroke="#09090B" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5H12M8.5 4l3.5 3.5-3.5 3.5" stroke="var(--on-accent)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </Link>
           <a href="#tarifs" className="inline-flex items-center px-7 py-3.5 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 text-[15px] font-medium rounded-[10px] transition-all hover:border-gray-300 dark:hover:border-slate-600 hover:bg-white dark:hover:bg-slate-800">
             Voir les tarifs
@@ -589,7 +589,7 @@ function LandingFooter() {
           <div>
             <div className="mb-3 flex items-center gap-2.5">
               <div className="w-[22px] h-[22px] rounded-[5px] flex items-center justify-center shrink-0" style={{ background: 'var(--accent)' }}>
-                <svg width="11" height="11" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="#09090B" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="#09090B" strokeWidth="1.3" strokeLinecap="round" /></svg>
+                <svg width="11" height="11" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="var(--on-accent)" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="var(--on-accent)" strokeWidth="1.3" strokeLinecap="round" /></svg>
               </div>
               <span className="font-display font-bold text-sm text-gray-900 dark:text-slate-100">nosite</span>
             </div>

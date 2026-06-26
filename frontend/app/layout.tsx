@@ -3,6 +3,8 @@ import { DM_Sans, Space_Grotesk } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { ClerkProvider } from '@clerk/nextjs'
 import { frFR } from '@clerk/localizations'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import RouteChrome from './components/RouteChrome'
 import './globals.css'
 
@@ -62,6 +64,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {children}
           <RouteChrome />
+          <Analytics />
+          <SpeedInsights />
         </ClerkProvider>
       </body>
     </html>

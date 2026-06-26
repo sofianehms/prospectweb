@@ -136,7 +136,7 @@ export default function BillingPage() {
                       cursor: portalLoading ? 'wait' : 'pointer',
                       fontSize: 13,
                       fontWeight: 700,
-                      color: '#09090B',
+                      color: 'var(--on-accent)',
                       opacity: portalLoading ? 0.6 : 1,
                     }}
                   >
@@ -149,7 +149,7 @@ export default function BillingPage() {
                   <span style={{ color: 'var(--t3)' }}>Statut : </span>
                   <span style={{
                     fontWeight: 600,
-                    color: isActive ? 'var(--accent)' : subscription?.status === 'past_due' ? '#f59e0b' : 'var(--t2)',
+                    color: isActive ? 'var(--accent)' : subscription?.status === 'past_due' ? 'var(--warn)' : 'var(--t2)',
                   }}>
                     {statusLabel}
                   </span>

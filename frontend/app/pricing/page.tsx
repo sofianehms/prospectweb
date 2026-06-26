@@ -132,7 +132,7 @@ export default function PricingPage() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  color: isPro ? 'rgba(9,9,11,0.55)' : 'var(--t3)',
+                  color: isPro ? 'color-mix(in srgb, var(--on-accent) 55%, transparent)' : 'var(--t3)',
                   marginBottom: 10,
                 }}>
                   {plan.name}
@@ -143,13 +143,13 @@ export default function PricingPage() {
                     fontSize: 42,
                     fontWeight: 700,
                     letterSpacing: '-0.04em',
-                    color: isPro ? '#09090B' : 'var(--t1)',
+                    color: isPro ? 'var(--on-accent)' : 'var(--t1)',
                   }}>
                     {plan.monthlyPrice === 0 ? '0' : plan.monthlyPrice}
                   </span>
                   <span style={{
                     fontSize: 14,
-                    color: isPro ? 'rgba(9,9,11,0.55)' : 'var(--t3)',
+                    color: isPro ? 'color-mix(in srgb, var(--on-accent) 55%, transparent)' : 'var(--t3)',
                   }}>
                     EUR/mois
                   </span>
@@ -157,7 +157,7 @@ export default function PricingPage() {
 
                 <p style={{
                   fontSize: 13,
-                  color: isPro ? 'rgba(9,9,11,0.6)' : 'var(--t3)',
+                  color: isPro ? 'color-mix(in srgb, var(--on-accent) 60%, transparent)' : 'var(--t3)',
                   marginBottom: 24,
                   lineHeight: 1.5,
                 }}>
@@ -172,7 +172,7 @@ export default function PricingPage() {
                     fontSize: 14,
                     fontWeight: 700,
                     border: isPro ? '2px solid #09090B' : '2px solid var(--accent)',
-                    color: isPro ? '#09090B' : 'var(--accent)',
+                    color: isPro ? 'var(--on-accent)' : 'var(--accent)',
                     marginBottom: 24,
                   }}>
                     Plan actuel
@@ -190,8 +190,8 @@ export default function PricingPage() {
                       border: 'none',
                       cursor: loading === plan.id ? 'wait' : 'pointer',
                       opacity: loading === plan.id ? 0.6 : 1,
-                      background: isPro ? '#09090B' : 'var(--accent)',
-                      color: isPro ? 'var(--accent)' : '#09090B',
+                      background: isPro ? 'var(--on-accent)' : 'var(--accent)',
+                      color: isPro ? 'var(--accent)' : 'var(--on-accent)',
                       marginBottom: 24,
                     }}
                   >
@@ -221,11 +221,11 @@ export default function PricingPage() {
                   {features.map((f, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 7l3 3 7-7" stroke={isPro ? '#09090B' : 'var(--accent)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 7l3 3 7-7" stroke={isPro ? 'var(--on-accent)' : 'var(--accent)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span style={{
                         fontSize: 14,
-                        color: isPro ? 'rgba(9,9,11,0.78)' : 'var(--t2)',
+                        color: isPro ? 'color-mix(in srgb, var(--on-accent) 78%, transparent)' : 'var(--t2)',
                       }}>
                         {f}
                       </span>

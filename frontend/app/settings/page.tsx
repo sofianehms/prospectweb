@@ -100,9 +100,9 @@ export default function SettingsPage() {
             marginBottom: 16,
             borderRadius: 8,
             fontSize: 13,
-            background: message.type === 'success' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)',
-            color: message.type === 'success' ? '#16a34a' : '#dc2626',
-            border: `1px solid ${message.type === 'success' ? 'rgba(22,163,74,0.2)' : 'rgba(220,38,38,0.2)'}`,
+            background: message.type === 'success' ? 'var(--accent-d)' : 'var(--error-d)',
+            color: message.type === 'success' ? 'var(--accent)' : 'var(--error)',
+            border: `1px solid ${message.type === 'success' ? 'var(--accent-border)' : 'var(--error-border)'}`,
           }}>
             {message.text}
           </div>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                   cursor: loading === 'portal' ? 'wait' : 'pointer',
                   fontSize: 13,
                   fontWeight: 700,
-                  color: '#09090B',
+                  color: 'var(--on-accent)',
                   opacity: loading === 'portal' ? 0.6 : 1,
                 }}
               >
@@ -206,7 +206,7 @@ export default function SettingsPage() {
                       cursor: loading === p.id ? 'wait' : 'pointer',
                       fontSize: 13,
                       fontWeight: 700,
-                      color: '#09090B',
+                      color: 'var(--on-accent)',
                       opacity: loading === p.id ? 0.6 : 1,
                     }}
                   >
