@@ -22,6 +22,7 @@ function Nav() {
       <div className="hidden md:flex items-center gap-9">
         <a href="#produit" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">Produit</a>
         <a href="#tarifs" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">Tarifs</a>
+        <a href="#avis" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">Avis</a>
         <a href="#faq" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">FAQ</a>
       </div>
       <div className="flex items-center gap-2.5 shrink-0">
@@ -297,6 +298,38 @@ function Scoring() {
 }
 
 /* ══════════════════════════════════════════════════════
+   PROMESSES
+   ══════════════════════════════════════════════════════ */
+function Promises() {
+  const items = [
+    { icon: <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1l2.5 6.5H20l-5.3 4 2 6.5L11 14l-5.7 4 2-6.5L2 7.5h6.5L11 1z" stroke="var(--accent)" strokeWidth="1.4" strokeLinejoin="round" /></svg>, title: 'Données fiables, pas de scraping', desc: 'Nosite utilise exclusivement les APIs officielles de Google Maps. Chaque résultat est vérifié, sourcé et conforme aux conditions d\'utilisation.' },
+    { icon: <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="var(--accent)" strokeWidth="1.4" /><path d="M11 7v4l3 3" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" /></svg>, title: '3 minutes pour votre premier lead', desc: 'Saisissez une adresse, lancez la recherche : les résultats arrivent en temps réel. Pas de configuration, pas d\'import, pas d\'attente.' },
+    { icon: <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11h16M11.5 6l5 5-5 5" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>, title: 'Du prospect au client, sans quitter Nosite', desc: 'CRM intégré, script de prospection par statut, export CSV et Google Sheets. Tout est pensé pour convertir, pas juste pour lister.' },
+  ]
+  return (
+    <section className="py-24 px-6 md:px-16">
+      <div className="max-w-[1140px] mx-auto">
+        <div className="text-center mb-3.5"><span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>Pourquoi Nosite</span></div>
+        <h2 className="font-display text-[clamp(32px,4vw,52px)] font-bold tracking-tight text-center leading-[1.08] mb-[72px] text-gray-900 dark:text-slate-100">
+          Les promesses qu&apos;on tient.<br /><span className="text-gray-400 dark:text-slate-500">Vraiment.</span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {items.map((item, i) => (
+            <div key={i} className="flex flex-col items-start gap-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)' }}>
+                {item.icon}
+              </div>
+              <h3 className="font-display text-lg font-semibold tracking-tight text-gray-900 dark:text-slate-100">{item.title}</h3>
+              <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ══════════════════════════════════════════════════════
    FEATURES
    ══════════════════════════════════════════════════════ */
 function Features() {
@@ -473,6 +506,11 @@ function Pricing() {
             </div>
           </div>
         </div>
+        <p className="text-center mt-10">
+          <Link href="/pricing" className="text-sm font-semibold hover:underline transition" style={{ color: 'var(--accent)' }}>
+            Voir tous les plans et comparer en détail →
+          </Link>
+        </p>
       </div>
     </section>
   )
@@ -488,9 +526,9 @@ function Testimonials() {
     { quote: "Un seul client signé m'a couvert 6 mois d'abonnement. Je n'aurais jamais pu identifier ces prospects manuellement. Le ROI est évident et immédiat.", name: 'Marc B.', role: 'Consultant SEO · Paris', badge: 'ROI ×8', initial: 'M' },
   ]
   return (
-    <section className="py-24 px-6 md:px-16 bg-gray-50 dark:bg-slate-900/50">
+    <section id="avis" className="py-24 px-6 md:px-16 bg-gray-50 dark:bg-slate-900/50">
       <div className="max-w-[1140px] mx-auto">
-        <div className="text-center mb-3.5"><span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>Résultats</span></div>
+        <div className="text-center mb-3.5"><span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>Avis clients</span></div>
         <h2 className="font-display text-[clamp(32px,4vw,52px)] font-bold tracking-tight text-center leading-[1.08] mb-[72px] text-gray-900 dark:text-slate-100">
           Ils ont trouvé leurs clients.<br /><span className="text-gray-400 dark:text-slate-500">Avec Nosite.</span>
         </h2>
@@ -644,6 +682,7 @@ export default function HomePage() {
         <Stats />
         <HowItWorks />
         <Scoring />
+        <Promises />
         <Features />
         <RoiCalculator />
         <Pricing />
