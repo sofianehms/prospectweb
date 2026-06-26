@@ -3,6 +3,29 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+if (process.env.NODE_ENV !== 'test') {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
+
+import * as Sentry from '@sentry/node';
+
+if (process.env.SENTRY_DSN && process.env.NODE_ENV !== 'test') {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.2,
+    sendDefaultPii: false,
+    beforeSend(event) {
+      if (event.user) {
+        delete event.user.ip_address;
+        delete event.user.email;
+      }
+      return event;
+    },
+  });
+}
+
 import searchRouter from './routes/search';
 import authRouter from './routes/auth';
 import autocompleteRouter from './routes/autocomplete';
@@ -16,13 +39,6 @@ import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage, getUserUsageHistory, getAllUsersUsagePeriod } from './services/userQuota';
 import { requireAuth, requireAdmin } from './middleware/requireAuth';
 
-// Charge le .env racine du projet (un niveau au-dessus de /backend).
-// Jamais en test : le suite doit rester hermétique et ne pas hériter du
-// DATABASE_URL / des clés réelles du développeur.
-if (process.env.NODE_ENV !== 'test') {
-  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-}
-
 export const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
@@ -33,6 +49,13 @@ app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 app.use(express.json());
+
+app.use((req, _res, next) => {
+  if (req.user?.sub) {
+    Sentry.setUser({ id: req.user.sub });
+  }
+  next();
+});
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -71,6 +94,8 @@ app.use('/api/history', historyRouter);
 app.use('/api/plans', plansRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
+
+Sentry.setupExpressErrorHandler(app);
 
 if (process.env.NODE_ENV !== 'test') {
   (async () => {
