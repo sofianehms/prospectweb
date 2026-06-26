@@ -339,7 +339,7 @@ function RoiCalculator() {
   const [value, setValue] = useState(2000)
   const monthly = clients * value
   const annual = monthly * 12
-  const mult = Math.round(monthly / 79)
+  const mult = Math.round(monthly / 29)
 
   return (
     <section className="py-24 px-6 md:px-16 bg-gray-50 dark:bg-slate-900/50">
@@ -397,7 +397,7 @@ function RoiCalculator() {
               <span className="font-display text-[26px] font-bold" style={{ color: 'var(--accent)' }}>×{mult}</span>
             </div>
           </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500 text-center">Basé sur le plan Pro à 79€/mois · Estimation indicative</p>
+          <p className="text-xs text-gray-400 dark:text-slate-500 text-center">Basé sur le plan Pro à 29€/mois · Estimation indicative</p>
         </div>
       </div>
     </section>
@@ -408,38 +408,24 @@ function RoiCalculator() {
    PRICING
    ══════════════════════════════════════════════════════ */
 function Pricing() {
-  const [annual, setAnnual] = useState(false)
-  const soloPrice = annual ? 23 : 29
-  const proPrice = annual ? 63 : 79
-  const expertPrice = annual ? 119 : 149
-
   return (
     <section id="tarifs" className="py-24 px-6 md:px-16">
       <div className="max-w-[1140px] mx-auto">
         <div className="text-center mb-3.5"><span className="text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>Tarifs</span></div>
         <h2 className="font-display text-[clamp(32px,4vw,52px)] font-bold tracking-tight text-center leading-[1.08] mb-3.5 text-gray-900 dark:text-slate-100">Simples, transparents,<br />sans surprise.</h2>
-        <p className="text-base text-gray-500 dark:text-slate-400 text-center mb-10">Commencez gratuitement. Passez au plan suivant quand vous êtes prêt.</p>
-        <div className="flex justify-center mb-14">
-          <div className="inline-flex bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-[10px] p-1 gap-0.5">
-            <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${!annual ? 'bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100' : 'text-gray-400 dark:text-slate-500'}`}>Mensuel</button>
-            <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${annual ? 'bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100' : 'text-gray-400 dark:text-slate-500'}`}>
-              Annuel
-              <span className="text-[10px] font-bold text-[#09090B] px-1.5 py-0.5 rounded-[5px] ml-1.5" style={{ background: 'var(--accent)' }}>-20%</span>
-            </button>
-          </div>
-        </div>
+        <p className="text-base text-gray-500 dark:text-slate-400 text-center mb-14">Commencez gratuitement. Passez au plan suivant quand vous êtes prêt.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
-          {/* Solo */}
+          {/* Gratuit */}
           <div className="p-8 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl">
-            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Solo</div>
+            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Gratuit</div>
             <div className="flex items-baseline gap-1 mb-1.5">
-              <span className="font-display text-[42px] font-bold tracking-tight text-gray-900 dark:text-slate-100">{soloPrice}€</span>
+              <span className="font-display text-[42px] font-bold tracking-tight text-gray-900 dark:text-slate-100">0€</span>
               <span className="text-sm text-gray-400 dark:text-slate-500">/mois</span>
             </div>
-            <p className="text-[13px] text-gray-400 dark:text-slate-500 mb-6 leading-relaxed">Pour les freelances qui débutent la prospection locale.</p>
-            <Link href="/login" className="flex items-center justify-center py-3 border border-gray-200 dark:border-slate-700 rounded-[9px] text-sm font-semibold text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all mb-6">Démarrer gratuitement</Link>
+            <p className="text-[13px] text-gray-400 dark:text-slate-500 mb-6 leading-relaxed">Pour découvrir Nosite et tester la prospection locale.</p>
+            <Link href="/sign-up" className="flex items-center justify-center py-3 border border-gray-200 dark:border-slate-700 rounded-[9px] text-sm font-semibold text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all mb-6">Démarrer gratuitement</Link>
             <div className="flex flex-col gap-2.5">
-              {['5 recherches / mois', '200 prospects analysés', 'Export CSV', 'Score IA basique', 'CRM basique'].map((f, i) => (
+              {['50 recherches / jour', '100 prospects en base', 'Export CSV', 'CRM basique', 'Score site web'].map((f, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   <span className="text-sm text-gray-500 dark:text-slate-400">{f}</span>
@@ -454,13 +440,13 @@ function Pricing() {
             </div>
             <div className="text-xs font-bold text-[#09090B]/55 uppercase tracking-wider mb-2.5">Pro</div>
             <div className="flex items-baseline gap-1 mb-1.5">
-              <span className="font-display text-[42px] font-bold tracking-tight text-[#09090B]">{proPrice}€</span>
+              <span className="font-display text-[42px] font-bold tracking-tight text-[#09090B]">29€</span>
               <span className="text-sm text-[#09090B]/55">/mois</span>
             </div>
-            <p className="text-[13px] text-[#09090B]/60 mb-6 leading-relaxed">Pour les agences et freelances actifs en prospection.</p>
-            <Link href="/login" className="flex items-center justify-center py-3 bg-[#09090B] rounded-[9px] text-sm font-bold transition-all mb-6 hover:bg-[#1a1a1a]" style={{ color: 'var(--accent)' }}>Commencer Pro →</Link>
+            <p className="text-[13px] text-[#09090B]/60 mb-6 leading-relaxed">Pour les freelances et agences actifs en prospection.</p>
+            <Link href="/sign-up" className="flex items-center justify-center py-3 bg-[#09090B] rounded-[9px] text-sm font-bold transition-all mb-6 hover:bg-[#1a1a1a]" style={{ color: 'var(--accent)' }}>Commencer Pro →</Link>
             <div className="flex flex-col gap-2.5">
-              {['Recherches illimitées', '2 000 prospects / mois', 'CSV, Sheets, Notion, Airtable', 'Tri par statut & note Google', 'CRM Kanban complet', 'Script de prospection automatique', 'Vue carte interactive'].map((f, i) => (
+              {['300 recherches / jour', '1 000 prospects en base', 'CRM Kanban complet', 'Export CSV & Sheets', 'Score IA avancé', 'Support prioritaire', 'Vue carte interactive'].map((f, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="#09090B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   <span className="text-sm text-[#09090B]/78">{f}</span>
@@ -468,17 +454,17 @@ function Pricing() {
               ))}
             </div>
           </div>
-          {/* Expert */}
+          {/* Business */}
           <div className="p-8 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl">
-            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Expert</div>
+            <div className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Business</div>
             <div className="flex items-baseline gap-1 mb-1.5">
-              <span className="font-display text-[42px] font-bold tracking-tight text-gray-900 dark:text-slate-100">{expertPrice}€</span>
+              <span className="font-display text-[42px] font-bold tracking-tight text-gray-900 dark:text-slate-100">79€</span>
               <span className="text-sm text-gray-400 dark:text-slate-500">/mois</span>
             </div>
             <p className="text-[13px] text-gray-400 dark:text-slate-500 mb-6 leading-relaxed">Pour les équipes et agences à fort volume de prospection.</p>
-            <Link href="/login" className="flex items-center justify-center py-3 border border-gray-200 dark:border-slate-700 rounded-[9px] text-sm font-semibold text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all mb-6">Nous contacter</Link>
+            <Link href="/sign-up" className="flex items-center justify-center py-3 border border-gray-200 dark:border-slate-700 rounded-[9px] text-sm font-semibold text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all mb-6">Commencer Business →</Link>
             <div className="flex flex-col gap-2.5">
-              {['Tout le plan Pro inclus', 'Illimité', 'Multi-utilisateurs (5 sièges)', 'HubSpot & Pipedrive', 'Accès API', 'Support prioritaire', 'Onboarding personnalisé'].map((f, i) => (
+              {['1 000 recherches / jour', '10 000 prospects en base', 'Tout le plan Pro inclus', 'Multi-utilisateurs', 'Accès API', 'Support prioritaire', 'Onboarding personnalisé'].map((f, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   <span className="text-sm text-gray-500 dark:text-slate-400">{f}</span>
