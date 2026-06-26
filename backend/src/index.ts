@@ -16,8 +16,12 @@ import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage } from './services/userQuota';
 import { requireAuth, requireAdmin } from './middleware/requireAuth';
 
-// Charge le .env racine du projet (un niveau au-dessus de /backend)
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Charge le .env racine du projet (un niveau au-dessus de /backend).
+// Jamais en test : le suite doit rester hermétique et ne pas hériter du
+// DATABASE_URL / des clés réelles du développeur.
+if (process.env.NODE_ENV !== 'test') {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
 
 export const app = express();
 app.set('trust proxy', 1);

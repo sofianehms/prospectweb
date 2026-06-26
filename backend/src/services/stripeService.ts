@@ -114,7 +114,8 @@ export async function syncSubscription(
   priceId: string,
 ): Promise<void> {
   const planId = planIdFromPriceId(priceId);
-  const effectivePlan = (status === 'active' || status === 'trialing') && planId ? planId : 'free';
+  const keepPaid = ['active', 'trialing', 'past_due'].includes(status);
+  const effectivePlan = keepPaid && planId ? planId : 'free';
 
   const { rowCount } = await getPool().query(
     `UPDATE users

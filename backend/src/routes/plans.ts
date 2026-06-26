@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { requireInternalSecret } from '../middleware/auth';
-import { listPlans, getUserPlan, setUserPlan, getPlan, isPaidPlan } from '../services/planStore';
+import { listPlans, getUserPlan, setUserPlan, getPlan, isPaidPlan, getUserSubscriptionStatus } from '../services/planStore';
 
 const router = Router();
 
@@ -14,8 +14,12 @@ router.use(requireInternalSecret);
 router.use(requireAuth);
 
 router.get('/me', async (req: Request, res: Response) => {
-  const plan = await getUserPlan(req.user!.sub);
-  res.json(plan);
+  const userId = req.user!.sub;
+  const [plan, subscriptionStatus] = await Promise.all([
+    getUserPlan(userId),
+    getUserSubscriptionStatus(userId),
+  ]);
+  res.json({ ...plan, subscriptionStatus });
 });
 
 router.patch('/me', async (req: Request, res: Response) => {
@@ -31,12 +35,19 @@ router.patch('/me', async (req: Request, res: Response) => {
   }
   const targetPlan = await getPlan(planId);
   if (isPaidPlan(targetPlan)) {
-    // M7.2: block paid plan assignment until Stripe is wired (M9)
-    res.status(403).json({ error: 'Abonnement payant requis pour ce plan.' });
+    res.status(403).json({ error: 'Les plans payants ne peuvent être activés que via un abonnement Stripe.' });
     return;
   }
-  await setUserPlan(req.user!.sub, planId);
-  const updated = await getUserPlan(req.user!.sub);
+
+  const userId = req.user!.sub;
+  const currentStatus = await getUserSubscriptionStatus(userId);
+  if (currentStatus && ['active', 'trialing', 'past_due'].includes(currentStatus)) {
+    res.status(403).json({ error: 'Gérez votre abonnement depuis le portail de facturation.' });
+    return;
+  }
+
+  await setUserPlan(userId, planId);
+  const updated = await getUserPlan(userId);
   res.json(updated);
 });
 

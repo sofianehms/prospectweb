@@ -13,4 +13,7 @@ export function adminToken(): string {
 
 export function setupAuthEnv(): void {
   process.env.JWT_SECRET = TEST_SECRET;
+  // requireAuth only attempts verification when a Clerk secret is present;
+  // the @clerk/backend mock (helpers/setup.ts) verifies our test JWTs.
+  process.env.CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY || 'test-clerk-secret';
 }

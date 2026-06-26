@@ -29,12 +29,17 @@ vi.mock('../services/prospectStore', () => ({
   ),
 }));
 
+import { setupAuthEnv } from './helpers/auth';
+
+process.env.BACKEND_SECRET = 'test-secret';
+setupAuthEnv();
+
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { app } from '../index';
 
-const SECRET = process.env.BACKEND_SECRET ?? 'test';
-const JWT = jwt.sign({ sub: 'u1', email: 'test@test.com' }, process.env.JWT_SECRET ?? 'test-jwt');
+const SECRET = process.env.BACKEND_SECRET;
+const JWT = jwt.sign({ sub: 'u1', email: 'test@test.com' }, process.env.JWT_SECRET!);
 
 function auth(r: request.Test) {
   return r.set('x-internal-secret', SECRET).set('Authorization', `Bearer ${JWT}`);

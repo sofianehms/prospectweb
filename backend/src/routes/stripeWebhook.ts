@@ -45,7 +45,12 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
       }
     }
   } catch (err) {
+    // Returning a non-2xx makes Stripe retry the event later. Swallowing the
+    // error with a 200 would mark it delivered and silently drop the sync
+    // (e.g. a paid user never gets upgraded if the DB write failed).
     console.error('[stripe webhook] Error processing event:', err);
+    res.status(500).json({ error: 'Webhook processing failed' });
+    return;
   }
 
   res.json({ received: true });

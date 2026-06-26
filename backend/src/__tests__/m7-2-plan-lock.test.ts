@@ -50,7 +50,7 @@ describe('M7.2 -- PATCH /api/plans/me verrouille les plans payants', () => {
       .set('Authorization', `Bearer ${testToken()}`)
       .send({ planId: 'business' });
     expect(res.status).toBe(403);
-    expect(res.body.error).toContain('Abonnement payant requis');
+    expect(res.body.error).toContain('abonnement Stripe');
   });
 
   it('autorise le retour vers Free', async () => {

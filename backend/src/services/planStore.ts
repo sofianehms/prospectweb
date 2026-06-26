@@ -54,6 +54,14 @@ export async function getUserPlan(userId: string): Promise<Plan> {
   return getPlan(planId);
 }
 
+export async function getUserSubscriptionStatus(userId: string): Promise<string | null> {
+  const { rows } = await getPool().query<{ subscription_status: string | null }>(
+    'SELECT subscription_status FROM users WHERE id = $1',
+    [userId],
+  );
+  return rows[0]?.subscription_status ?? null;
+}
+
 export function isPaidPlan(plan: Plan): boolean {
   return plan.monthlyPrice > 0;
 }
