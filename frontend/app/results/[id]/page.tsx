@@ -10,28 +10,41 @@ import DetailClient from './components/DetailClient'
 export default function DetailPage() {
   const { id } = useParams<{ id: string }>()
   const [establishment, setEstablishment] = useState<Establishment | null>(null)
-  const [notFound, setNotFound] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     (async () => {
       let base: Establishment | null = null
 
-      const raw = sessionStorage.getItem('pw_search_results')
-      if (raw) {
-        const data: SearchResult = JSON.parse(raw)
-        base = data.establishments.find(e => e.id === id) ?? null
-      }
+      try {
+        const raw = sessionStorage.getItem('pw_search_results')
+        if (raw) {
+          const data: SearchResult = JSON.parse(raw)
+          base = data.establishments.find(e => e.id === id) ?? null
+        }
+      } catch { /* corrupted storage */ }
 
       if (!base) {
         try {
           const res = await fetch(`/api/establishment/${encodeURIComponent(id)}`)
-          if (res.ok) base = await res.json()
-        } catch { /* fall through */ }
+          if (res.ok) {
+            base = await res.json()
+          } else {
+            const data = await res.json().catch(() => ({}))
+            setError(data.error ?? 'Établissement introuvable.')
+            setLoading(false)
+            return
+          }
+        } catch {
+          setError('Erreur réseau. Vérifiez votre connexion.')
+          setLoading(false)
+          return
+        }
       }
 
       if (!base) {
-        setNotFound(true)
+        setError('Établissement introuvable.')
         setLoading(false)
         return
       }
@@ -84,18 +97,18 @@ export default function DetailPage() {
 
         {/* Content */}
         <div style={{ padding: '24px 28px', overflowY: 'auto' }}>
-          {notFound && (
+          {error && (
             <div style={{
               background: 'var(--surface)', border: '1px solid var(--border)',
               borderRadius: 14, padding: 24, textAlign: 'center',
               color: 'var(--t3)', fontSize: 13,
             }}>
-              Établissement introuvable ou lien expiré.{' '}
+              {error}{' '}
               <Link href="/search" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Lancer une recherche</Link>
             </div>
           )}
 
-          {loading && !notFound && (
+          {loading && !error && (
             <div style={{
               background: 'var(--surface)', border: '1px solid var(--border)',
               borderRadius: 14, padding: 24, textAlign: 'center',

@@ -189,6 +189,28 @@ export interface PlaceDetails {
   ratingCount: number | null;
 }
 
+export async function fetchPlaceById(placeId: string): Promise<Place & { apiCalls: number }> {
+  await checkBreaker();
+  const apiKey = process.env.GOOGLE_PLACES_KEY!;
+  checkQuota();
+  const res = await fetch(`${DETAIL_URL}/${placeId}`, {
+    headers: {
+      'X-Goog-Api-Key':   apiKey,
+      'X-Goog-FieldMask': DETAIL_FIELD_MASK,
+    },
+  });
+  trackCall('places');
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    await recordFailure();
+    throw new GoogleApiError(res.status, body);
+  }
+  await recordSuccess();
+  const data = await res.json() as RawPlace;
+  const primaryType = data.types?.find(t => COMMERCIAL_TYPES.includes(t)) ?? data.types?.[0] ?? 'establishment';
+  return { ...mapPlace(data, primaryType), apiCalls: 1 };
+}
+
 export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails & { apiCalls: number }> {
   await checkBreaker();
   const apiKey = process.env.GOOGLE_PLACES_KEY!;
