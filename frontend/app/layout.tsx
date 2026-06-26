@@ -31,12 +31,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           localization={frFR}
           appearance={{
             variables: {
-              colorPrimary: '#16A34A',
-              colorText: isDark ? '#FAFAFA' : '#09090B',
-              colorTextSecondary: isDark ? '#A1A1AA' : '#71717A',
+              colorPrimary: isDark ? '#22C55E' : '#16A34A',
+              colorNeutral: isDark ? 'white' : 'black',
+              colorForeground: isDark ? '#FAFAFA' : '#09090B',
+              colorMutedForeground: isDark ? '#A1A1AA' : '#71717A',
               colorBackground: isDark ? '#111115' : '#FFFFFF',
-              colorInputBackground: isDark ? '#1C1C22' : '#FFFFFF',
-              colorInputText: isDark ? '#FAFAFA' : '#09090B',
+              colorInput: isDark ? '#0D0D10' : '#FFFFFF',
+              colorInputForeground: isDark ? '#FAFAFA' : '#09090B',
+              colorBorder: isDark ? '#1C1C22' : '#E5E7EB',
               borderRadius: '10px',
               fontFamily: '"DM Sans", sans-serif',
               fontFamilyButtons: '"DM Sans", sans-serif',
