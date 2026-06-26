@@ -37,7 +37,8 @@ function buildScript(e: Establishment): string {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export default function DetailClient({ e }: { e: Establishment }) {
-  const { prospects, add, setStatus, setNotes: persistNotes, isAdded } = useProspects()
+  const { prospects, add, remove, setStatus, setNotes: persistNotes, isAdded } = useProspects()
+  const added = isAdded(e.id)
   const saved = prospects.find(p => p.id === e.id)
 
   const [tab, setTab]       = useState<Tab>('infos')
@@ -48,9 +49,17 @@ export default function DetailClient({ e }: { e: Establishment }) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!isAdded(e.id)) add(e)
     track(events.PROSPECT_VIEW, { type: e.type, websiteStatus: e.websiteStatus })
-  }, [e, add, isAdded])
+  }, [e])
+
+  function handleToggleProspect() {
+    if (added) {
+      remove(e.id)
+    } else {
+      add(e)
+      track(events.PROSPECT_STATUS_CHANGE, { status: 'to_contact', type: e.type })
+    }
+  }
 
   useEffect(() => {
     if (saved) {
@@ -87,18 +96,32 @@ export default function DetailClient({ e }: { e: Establishment }) {
         <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-2xl flex-shrink-0`}>
           {icon}
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 leading-tight">{e.name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{label} · {e.address.split(',').slice(-1)[0]?.trim()}</p>
-          <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-xs font-medium ${badge.className}`}>
-            {badge.label}
-          </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 leading-tight">{e.name}</h1>
+              <p className="text-sm text-gray-500 mt-0.5">{label} · {e.address.split(',').slice(-1)[0]?.trim()}</p>
+              <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-xs font-medium ${badge.className}`}>
+                {badge.label}
+              </span>
+            </div>
+            <button
+              onClick={handleToggleProspect}
+              className={`shrink-0 mt-1 px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                added
+                  ? 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600'
+                  : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:border-emerald-400 hover:text-emerald-600'
+              }`}
+            >
+              {added ? '✓ Ajouté' : '+ Ajouter à mes prospects'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div role="tablist" className="flex border-b border-gray-200 dark:border-slate-700 mb-6">
-        {(['infos', 'script', 'notes'] as Tab[]).map(t => (
+        {(added ? ['infos', 'script', 'notes'] as Tab[] : ['infos'] as Tab[]).map(t => (
           <button
             key={t}
             role="tab"
@@ -216,8 +239,19 @@ export default function DetailClient({ e }: { e: Establishment }) {
         </div>
       )}
 
-      {/* Statut CRM — toujours visible */}
-      <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 space-y-4">
+      {/* Statut CRM — visible uniquement si ajouté */}
+      {!added && (
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 text-center">
+          <p className="text-sm text-gray-400 dark:text-slate-500 mb-3">Ajoutez ce prospect pour accéder au CRM, aux notes et au script de prospection.</p>
+          <button
+            onClick={handleToggleProspect}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition"
+          >
+            + Ajouter à mes prospects
+          </button>
+        </div>
+      )}
+      {added && <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 space-y-4">
         <h2 className="text-sm font-semibold text-gray-500">Statut CRM</h2>
         <div className="border-t border-gray-100 pt-3">
           <div className="flex flex-wrap gap-2 mb-3">
@@ -261,7 +295,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
             </a>
           </div>
         </div>
-      </div>
+      </div>}
     </>
   )
 }
