@@ -69,10 +69,11 @@ export default function Map({ data }: { data: SearchResult }) {
     }).addTo(map)
 
     // Cercle du rayon de recherche
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#10b981'
     const circle = L.circle([data.center.lat, data.center.lng], {
       radius:      data.radius,
-      color:       '#10b981',
-      fillColor:   '#10b981',
+      color:       accentColor,
+      fillColor:   accentColor,
       fillOpacity: 0.05,
       weight:      1.5,
       dashArray:   '6 4',
@@ -82,7 +83,7 @@ export default function Map({ data }: { data: SearchResult }) {
     L.circleMarker([data.center.lat, data.center.lng], {
       radius:      5,
       color:       '#fff',
-      fillColor:   '#10b981',
+      fillColor:   accentColor,
       fillOpacity: 1,
       weight:      2,
     }).addTo(map)
@@ -95,8 +96,8 @@ export default function Map({ data }: { data: SearchResult }) {
       L.marker([e.lat, e.lng], { icon: dotIcon(color, e.websiteStatus) })
         .bindPopup(
           `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:170px;padding:2px 0">
-            <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:#111827">${e.name}</p>
-            <p style="margin:0 0 8px;font-size:11px;color:#9ca3af">${e.type.replace(/_/g,' ')}</p>
+            <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:var(--t1)">${e.name}</p>
+            <p style="margin:0 0 8px;font-size:11px;color:var(--t3)">${e.type.replace(/_/g,' ')}</p>
             <span style="
               display:inline-block;padding:2px 8px;border-radius:9999px;
               font-size:11px;font-weight:600;
@@ -105,7 +106,7 @@ export default function Map({ data }: { data: SearchResult }) {
             <div style="margin-top:10px">
               <a href="/results/${e.id}" style="
                 display:inline-block;padding:5px 12px;border-radius:7px;
-                background:#111827;color:#fff;font-size:11px;font-weight:600;
+                background:var(--t1);color:var(--surface);font-size:11px;font-weight:600;
                 text-decoration:none;
               ">Voir la fiche →</a>
             </div>

@@ -20,7 +20,7 @@ export default function GlobalError({
         <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>
           Une erreur inattendue s&apos;est produite
         </h1>
-        <p style={{ color: '#71717A', marginBottom: 24 }}>
+        <p style={{ color: 'var(--t3, #71717A)', marginBottom: 24 }}>
           L&apos;erreur a ete signalée automatiquement. Vous pouvez réessayer ci-dessous.
         </p>
         <button
@@ -30,8 +30,8 @@ export default function GlobalError({
             fontSize: 14,
             fontWeight: 600,
             borderRadius: 9,
-            border: '1px solid #E5E7EB',
-            background: '#FAFAF9',
+            border: '1px solid var(--border-b, #E5E7EB)',
+            background: 'var(--bg, #FAFAF9)',
             cursor: 'pointer',
           }}
         >

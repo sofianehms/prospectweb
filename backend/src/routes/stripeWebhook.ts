@@ -177,6 +177,13 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
           failureMessage,
         );
         console.warn(`[stripe webhook] PAYMENT FAILED: invoice=${invoice.id} user=${userId ?? 'unknown'} amount=${invoice.amount_due} reason=${failureMessage}`);
+        import('../services/alertService').then(({ sendAlert }) =>
+          sendAlert(
+            'payment_failed',
+            'Paiement echoue',
+            `Invoice ${invoice.id} — user=${userId ?? 'inconnu'} — montant=${invoice.amount_due} ${invoice.currency} — motif: ${failureMessage}`,
+          ),
+        ).catch(() => {});
 
         if (userId) {
           const failEmail = await getUserEmail(userId);

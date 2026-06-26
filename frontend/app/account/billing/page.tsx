@@ -171,9 +171,9 @@ export default function BillingPage() {
                   padding: '8px 12px',
                   borderRadius: 8,
                   fontSize: 12,
-                  background: 'rgba(220,38,38,0.1)',
-                  color: '#dc2626',
-                  border: '1px solid rgba(220,38,38,0.2)',
+                  background: 'var(--error-d)',
+                  color: 'var(--error)',
+                  border: '1px solid var(--error-border)',
                 }}>
                   Votre abonnement sera annule a la fin de la periode en cours.
                 </div>

@@ -126,6 +126,23 @@ export function trackCall(service: GoogleService, count: number = 1): void {
 
   if (total >= limit * 0.8 && total - count < limit * 0.8) {
     console.warn(`[google-quota] WARNING: 80% du quota journalier atteint (${total}/${limit})`);
+    import('./alertService').then(({ sendAlert }) =>
+      sendAlert(
+        'google_quota_80',
+        'Quota Google a 80%',
+        `${total}/${limit} appels utilises aujourd'hui. Seuil de 80% franchi.`,
+      ),
+    ).catch(() => {});
+  }
+
+  if (total >= limit && total - count < limit) {
+    import('./alertService').then(({ sendAlert }) =>
+      sendAlert(
+        'google_quota_100',
+        'Quota Google atteint (100%)',
+        `${total}/${limit} appels. Les prochaines recherches seront bloquees.`,
+      ),
+    ).catch(() => {});
   }
 
   const db = getDb();

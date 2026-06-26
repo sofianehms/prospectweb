@@ -124,7 +124,7 @@ export default function DashboardPage() {
               alignItems: 'center',
               gap: 8,
               background: 'var(--accent)',
-              color: '#09090B',
+              color: 'var(--on-accent)',
               padding: '10px 20px',
               fontSize: 14,
               fontWeight: 700,

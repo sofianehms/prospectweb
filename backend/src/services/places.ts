@@ -142,6 +142,13 @@ async function recordFailure(): Promise<void> {
   if (consecutiveFailures >= BREAKER_THRESHOLD) {
     breakerOpenUntil = Date.now() + BREAKER_RESET_MS;
     console.error(`[circuit-breaker] Google Places circuit OPEN after ${consecutiveFailures} failures, retry in ${BREAKER_RESET_MS / 1000}s`);
+    import('./alertService').then(({ sendAlert }) =>
+      sendAlert(
+        'circuit_breaker_open',
+        'Circuit-breaker Google Places ouvert',
+        `${consecutiveFailures} echecs consecutifs. Google Places desactive pour ${BREAKER_RESET_MS / 1000}s.`,
+      ),
+    ).catch(() => {});
   }
   await saveBreakerState();
 }

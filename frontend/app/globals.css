@@ -217,23 +217,23 @@ input[type="range"]::-moz-range-thumb {
   background: transparent !important;
 }
 [data-theme="dark"] .cl-card {
-  background-color: #111115 !important;
-  border-color: #1C1C22 !important;
+  background-color: var(--surface) !important;
+  border-color: var(--surface2) !important;
 }
 [data-theme="dark"] .cl-socialButtonsBlockButton {
-  border-color: #1C1C22 !important;
+  border-color: var(--surface2) !important;
 }
 [data-theme="dark"] .cl-socialButtonsBlockButton:hover {
-  background-color: #1C1C22 !important;
+  background-color: var(--surface2) !important;
 }
 [data-theme="dark"] .cl-dividerLine {
-  background-color: #1C1C22 !important;
+  background-color: var(--surface2) !important;
 }
 [data-theme="dark"] .cl-formFieldInput {
-  border-color: #1C1C22 !important;
-  background-color: #0D0D10 !important;
+  border-color: var(--surface2) !important;
+  background-color: var(--bg1) !important;
 }
 [data-theme="dark"] .cl-footerActionText,
 [data-theme="dark"] .cl-footerActionLink {
-  color: #A1A1AA !important;
+  color: var(--t2) !important;
 }

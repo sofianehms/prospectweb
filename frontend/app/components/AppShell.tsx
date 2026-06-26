@@ -116,7 +116,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
           <Link href="/dashboard" className="flex items-center gap-[9px]">
             <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7 }}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="#09090B"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="#09090B" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
             </div>
             <span className="font-display" style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em' }}>nosite</span>
           </Link>
@@ -176,7 +176,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div style={{
               position: 'absolute', bottom: '100%', left: 10, right: 10, marginBottom: 8,
               background: 'var(--surface)', border: '1px solid var(--border-b)',
-              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              borderRadius: 12, boxShadow: '0 8px 32px color-mix(in srgb, var(--t1) 18%, transparent)',
               overflow: 'hidden', zIndex: 50,
             }}>
               {/* Email */}

@@ -171,7 +171,7 @@ export default function PricingPage() {
                     borderRadius: 9,
                     fontSize: 14,
                     fontWeight: 700,
-                    border: isPro ? '2px solid #09090B' : '2px solid var(--accent)',
+                    border: isPro ? '2px solid var(--on-accent)' : '2px solid var(--accent)',
                     color: isPro ? 'var(--on-accent)' : 'var(--accent)',
                     marginBottom: 24,
                   }}>

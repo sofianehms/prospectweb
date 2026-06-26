@@ -41,12 +41,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               colorInput: isDark ? '#0D0D10' : '#FFFFFF',
               colorInputForeground: isDark ? '#FAFAFA' : '#09090B',
               colorBorder: isDark ? '#1C1C22' : '#E5E7EB',
+              // Note M11.1 : ces valeurs dupliquent les tokens CSS (--accent, --t1, --t3, --surface, --bg1).
+              // Clerk exige des valeurs statiques server-side, pas de var() ici.
               borderRadius: '10px',
               fontFamily: '"DM Sans", sans-serif',
               fontFamilyButtons: '"DM Sans", sans-serif',
             },
             elements: {
-              card: 'shadow-xl border border-gray-200 dark:border-slate-700 !bg-white dark:!bg-[#111115]',
+              card: 'shadow-xl border border-gray-200 dark:border-slate-700 !bg-[var(--surface)]',
               headerTitle: 'font-display !font-bold !tracking-tight',
               headerSubtitle: '!text-gray-500 dark:!text-slate-400',
               socialButtonsBlockButton: '!border-gray-200 dark:!border-slate-700 !rounded-[9px] hover:!bg-gray-50 dark:hover:!bg-slate-800',
