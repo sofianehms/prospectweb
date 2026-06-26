@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { getPool } from './db';
 import { ensureClerkUser } from './userStore';
+import { syncLimitFromPlan } from './userQuota';
 
 let _stripe: Stripe | null = null;
 
@@ -127,7 +128,11 @@ export async function syncSubscription(
 
   if (!rowCount) {
     console.error(`[stripe] syncSubscription: aucun utilisateur avec id=${userId}`);
+    return;
   }
+
+  await syncLimitFromPlan(userId);
+  console.log(`[stripe] syncSubscription: user=${userId} plan=${effectivePlan}`);
 }
 
 export async function handleSubscriptionDeleted(userId: string): Promise<void> {
@@ -142,5 +147,9 @@ export async function handleSubscriptionDeleted(userId: string): Promise<void> {
 
   if (!rowCount) {
     console.error(`[stripe] handleSubscriptionDeleted: aucun utilisateur avec id=${userId}`);
+    return;
   }
+
+  await syncLimitFromPlan(userId);
+  console.log(`[stripe] handleSubscriptionDeleted: user=${userId} reverted to free`);
 }

@@ -12,15 +12,19 @@ interface PlanInfo {
   maxProspects: number
 }
 
+interface UsageInfo { calls: number; limit: number; remaining: number; date: string }
+
 export default function SettingsPage() {
   const [plan, setPlan] = useState<PlanInfo | null>(null)
   const [plans, setPlans] = useState<PlanInfo[]>([])
+  const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/plans/me').then(r => r.ok ? r.json() : null).then(setPlan)
     fetch('/api/plans').then(r => r.ok ? r.json() : []).then(setPlans)
+    fetch('/api/usage/me').then(r => r.ok ? r.json() : null).then(setUsage)
   }, [])
 
   useEffect(() => {
@@ -121,6 +125,11 @@ export default function SettingsPage() {
               <div style={{ fontSize: 13, color: 'var(--t2)' }}>
                 {plan ? (plan.monthlyPrice > 0 ? `${plan.monthlyPrice} EUR/mois` : 'Gratuit') : 'Chargement...'}
               </div>
+              {usage && (
+                <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 4 }}>
+                  Quota : {usage.calls}/{usage.limit} appels aujourd'hui — {usage.remaining} restants
+                </div>
+              )}
             </div>
             {isPaid && (
               <button

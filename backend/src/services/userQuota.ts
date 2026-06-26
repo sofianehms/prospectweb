@@ -55,6 +55,17 @@ export function getUserDailyLimit(userId?: string): number {
   return Number(process.env.USER_DAILY_LIMIT) || DEFAULT_USER_DAILY_LIMIT;
 }
 
+export async function syncLimitFromPlan(userId: string): Promise<number> {
+  try {
+    const { getUserPlan } = await import('./planStore');
+    const plan = await getUserPlan(userId);
+    setUserLimitOverride(userId, plan.dailyLimit);
+    return plan.dailyLimit;
+  } catch {
+    return getUserDailyLimit(userId);
+  }
+}
+
 export class UserQuotaExceededError extends Error {
   constructor(usage: number, limit: number) {
     super(`Quota utilisateur dépassé (${usage}/${limit} appels aujourd'hui). Réessayez demain.`);

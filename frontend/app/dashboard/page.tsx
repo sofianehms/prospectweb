@@ -6,6 +6,7 @@ import AppShell from '../components/AppShell'
 
 interface UserInfo { id: string; email: string }
 interface PlanInfo { id: string; name: string; dailyLimit: number; monthlyPrice: number; maxProspects: number }
+interface UsageInfo { calls: number; limit: number; remaining: number; date: string }
 interface Prospect {
   id: string; name: string; address: string; type: string;
   phone: string | null; rating: number | null; ratingCount: number | null;
@@ -48,7 +49,8 @@ const CRM_ORDER = ['to_contact', 'contacted', 'discussing', 'won', 'lost'] as co
 
 export default function DashboardPage() {
   const [user, setUser] = useState<UserInfo | null>(null)
-  const [, setPlan] = useState<PlanInfo | null>(null)
+  const [plan, setPlan] = useState<PlanInfo | null>(null)
+  const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [history, setHistory] = useState<SearchRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,11 +61,13 @@ export default function DashboardPage() {
       fetch('/api/plans/me').then(r => r.ok ? r.json() : null),
       fetch('/api/prospects').then(r => r.ok ? r.json() : []),
       fetch('/api/history').then(r => r.ok ? r.json() : []),
-    ]).then(([u, p, pr, h]) => {
+      fetch('/api/usage/me').then(r => r.ok ? r.json() : null),
+    ]).then(([u, p, pr, h, usg]) => {
       setUser(u)
       setPlan(p)
       setProspects(Array.isArray(pr) ? pr : [])
       setHistory(Array.isArray(h) ? h : [])
+      setUsage(usg)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -142,7 +146,7 @@ export default function DashboardPage() {
                 { label: 'Opportunités', value: toContact.length, sub: `sur ${prospects.length} prospects`, accent: true },
                 { label: 'Prospects actifs', value: prospects.length, sub: 'en base', accent: false },
                 { label: 'Signés ce mois', value: wonThisMonth.length, sub: `${won.length} au total`, accent: true },
-                { label: 'Recherches', value: history.length, sub: 'effectuées', accent: false },
+                { label: 'Quota du jour', value: usage?.remaining ?? 0, sub: usage ? `${usage.calls}/${usage.limit} utilisés — ${plan?.name ?? 'Free'}` : 'Chargement...', accent: false },
               ].map((card) => (
                 <div key={card.label} style={{
                   background: 'var(--surface)',

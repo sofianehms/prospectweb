@@ -107,10 +107,8 @@ router.get('/', async (req: Request, res: Response) => {
 
     if (process.env.DATABASE_URL) {
       try {
-        const { getUserPlan } = await import('../services/planStore');
-        const { setUserLimitOverride } = await import('../services/userQuota');
-        const plan = await getUserPlan(userId);
-        setUserLimitOverride(userId, plan.dailyLimit);
+        const { syncLimitFromPlan } = await import('../services/userQuota');
+        await syncLimitFromPlan(userId);
       } catch { /* fallback to env default */ }
     }
 

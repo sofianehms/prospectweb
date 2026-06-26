@@ -33,6 +33,12 @@ router.get('/:id/details', async (req: Request, res: Response) => {
 
   try {
     const userId = req.user!.sub;
+    if (process.env.DATABASE_URL) {
+      try {
+        const { syncLimitFromPlan } = await import('../services/userQuota');
+        await syncLimitFromPlan(userId);
+      } catch { /* fallback to env default */ }
+    }
     checkUserQuota(userId);
     const { apiCalls, ...details } = await fetchPlaceDetails(id);
     if (apiCalls > 0) trackUserCalls(userId, apiCalls);

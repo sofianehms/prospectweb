@@ -40,7 +40,13 @@ app.get('/api/usage', requireAuth, requireAdmin, (_req, res) => {
   res.json({ global: getUsage(), users: getAllUsersUsage() });
 });
 
-app.get('/api/usage/me', requireAuth, (req, res) => {
+app.get('/api/usage/me', requireAuth, async (req, res) => {
+  if (process.env.DATABASE_URL) {
+    try {
+      const { syncLimitFromPlan } = await import('./services/userQuota');
+      await syncLimitFromPlan(req.user!.sub);
+    } catch { /* fallback */ }
+  }
   res.json(getUserUsage(req.user!.sub));
 });
 
