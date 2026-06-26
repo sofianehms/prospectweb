@@ -10,6 +10,18 @@ export interface User {
   createdAt: string;
 }
 
+export async function ensureClerkUser(
+  clerkId: string,
+  email: string,
+): Promise<void> {
+  await getPool().query(
+    `INSERT INTO users (id, email, password_hash, first_name, last_name)
+     VALUES ($1, $2, '', '', '')
+     ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email`,
+    [clerkId, email.toLowerCase()],
+  );
+}
+
 interface UserRow {
   id: string;
   email: string;

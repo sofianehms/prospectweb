@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
+import { ensureClerkUser } from '../services/userStore';
 
 export interface AuthPayload {
   sub: string;
@@ -30,11 +31,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       const payload = await verifyToken(token, {
         secretKey: process.env.CLERK_SECRET_KEY,
       });
+      const email = (payload as Record<string, unknown>).email as string ?? '';
       req.user = {
         sub: payload.sub,
-        email: (payload as Record<string, unknown>).email as string ?? '',
+        email,
         role: (payload as Record<string, unknown>).role as string | undefined,
       };
+      if (email) {
+        ensureClerkUser(payload.sub, email).catch(() => {});
+      }
       next();
       return;
     } catch {
