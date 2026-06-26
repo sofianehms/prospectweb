@@ -183,3 +183,49 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid var(--accent);
   cursor: pointer;
 }
+
+/* ════════════════════════════════════════════════════
+   CLERK THEME OVERRIDES
+   ════════════════════════════════════════════════════ */
+.cl-card {
+  border-radius: 18px !important;
+}
+.cl-internal-b3fm6y {
+  display: none !important;
+}
+.cl-headerTitle {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif !important;
+}
+.cl-socialButtonsBlockButton {
+  transition: all 0.15s ease !important;
+}
+.cl-formButtonPrimary {
+  transition: all 0.15s ease !important;
+}
+.cl-formButtonPrimary:hover {
+  transform: translateY(-1px);
+}
+.cl-footer {
+  background: transparent !important;
+}
+[data-theme="dark"] .cl-card {
+  background-color: #111115 !important;
+  border-color: #1C1C22 !important;
+}
+[data-theme="dark"] .cl-socialButtonsBlockButton {
+  border-color: #1C1C22 !important;
+}
+[data-theme="dark"] .cl-socialButtonsBlockButton:hover {
+  background-color: #1C1C22 !important;
+}
+[data-theme="dark"] .cl-dividerLine {
+  background-color: #1C1C22 !important;
+}
+[data-theme="dark"] .cl-formFieldInput {
+  border-color: #1C1C22 !important;
+  background-color: #0D0D10 !important;
+}
+[data-theme="dark"] .cl-footerActionText,
+[data-theme="dark"] .cl-footerActionLink {
+  color: #A1A1AA !important;
+}
