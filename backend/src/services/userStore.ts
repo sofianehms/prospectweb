@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs';
 import { getPool } from './db';
 
 export interface User {
@@ -50,28 +49,6 @@ export async function findByEmail(email: string): Promise<User | undefined> {
   return rows.length ? rowToUser(rows[0]) : undefined;
 }
 
-export async function createUser(
-  email: string,
-  password: string,
-  firstName: string,
-  lastName: string,
-): Promise<User> {
-  const existing = await findByEmail(email);
-  if (existing) throw new Error('Un compte existe déjà avec cet e-mail.');
-
-  const id = crypto.randomUUID();
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const { rows } = await getPool().query<UserRow>(
-    'INSERT INTO users (id, email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-    [id, email.toLowerCase(), passwordHash, firstName.trim(), lastName.trim()],
-  );
-  return rowToUser(rows[0]);
-}
-
-export async function verifyPassword(user: User, password: string): Promise<boolean> {
-  return bcrypt.compare(password, user.passwordHash);
-}
 
 export async function deleteUser(userId: string): Promise<boolean> {
   const { rowCount } = await getPool().query('DELETE FROM users WHERE id = $1', [userId]);

@@ -43,22 +43,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       next();
       return;
     } catch {
-      // Clerk verification failed — try legacy JWT as fallback
+      // Clerk verification failed
     }
-  }
-
-  // Legacy JWT fallback (for migration period)
-  try {
-    const jwt = await import('jsonwebtoken');
-    const secret = process.env.JWT_SECRET;
-    if (secret) {
-      const payload = jwt.default.verify(token, secret) as AuthPayload;
-      req.user = payload;
-      next();
-      return;
-    }
-  } catch {
-    // Both verifications failed
   }
 
   res.status(401).json({ error: 'Token invalide ou expiré.' });
