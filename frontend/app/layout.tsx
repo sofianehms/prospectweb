@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Space_Grotesk } from 'next/font/google'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { ClerkProvider } from '@clerk/nextjs'
 import { frFR } from '@clerk/localizations'
 import { Analytics } from '@vercel/analytics/react'
@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies()
+  const hdrs = await headers()
+  const nonce = hdrs.get('x-nonce') ?? undefined
   const theme = store.get('pw_theme')?.value ?? 'dark'
   const isDark = theme === 'dark'
 
