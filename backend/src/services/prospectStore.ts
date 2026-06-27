@@ -142,3 +142,11 @@ export async function purgeStaleGoogleData(): Promise<number> {
   );
   return rowCount ?? 0;
 }
+
+export async function optOutProspect(placeId: string): Promise<number> {
+  const { rowCount } = await getPool().query(
+    `DELETE FROM prospects WHERE id = $1`,
+    [placeId],
+  );
+  return rowCount ?? 0;
+}

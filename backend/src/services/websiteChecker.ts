@@ -70,16 +70,17 @@ export function isPrivateIp(ip: string): boolean {
   return false;
 }
 
-async function assertPublicHost(url: string): Promise<void> {
+async function resolveAndPin(url: string): Promise<{ ip: string; hostname: string }> {
   const hostname = new URL(url).hostname;
   if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     if (isPrivateIp(hostname)) throw new SsrfError(`Adresse IP privée bloquée : ${hostname}`);
-    return;
+    return { ip: hostname, hostname };
   }
   const { address } = await lookup(hostname);
   if (isPrivateIp(address)) {
     throw new SsrfError(`Le domaine ${hostname} résout vers une IP privée (${address})`);
   }
+  return { ip: address, hostname };
 }
 
 export interface ConfidenceSignal {
@@ -108,23 +109,30 @@ export async function checkWebsite(rawUrl: string): Promise<WebsiteStatus> {
   const start = Date.now();
 
   try {
-    await assertPublicHost(url);
+    let pinned = await resolveAndPin(url);
 
     let res: Response | null = null;
     let redirectCount = 0;
 
     while (redirectCount <= MAX_REDIRECTS) {
-      res = await fetch(url, {
+      const pinnedUrl = new URL(url);
+      const originalHost = pinnedUrl.hostname;
+      pinnedUrl.hostname = pinned.ip;
+
+      res = await fetch(pinnedUrl.href, {
         signal:   controller.signal,
         redirect: 'manual',
-        headers:  { 'User-Agent': 'Mozilla/5.0 (compatible; Prospecteur/1.0)' },
+        headers:  {
+          'User-Agent': 'Mozilla/5.0 (compatible; Prospecteur/1.0)',
+          'Host': originalHost,
+        },
       });
 
       if (res.status >= 300 && res.status < 400) {
         const location = res.headers.get('location');
         if (!location) break;
         url = new URL(location, url).href;
-        await assertPublicHost(url);
+        pinned = await resolveAndPin(url);
         redirectCount++;
         continue;
       }

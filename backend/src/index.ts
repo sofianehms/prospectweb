@@ -125,6 +125,26 @@ app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/v1', publicApiRouter);
 
+app.post('/api/opt-out', async (req, res) => {
+  const { placeId, email } = req.body ?? {};
+  if (!placeId || !email) {
+    res.status(400).json({ error: 'placeId et email requis.' });
+    return;
+  }
+  if (!process.env.DATABASE_URL) {
+    res.status(501).json({ error: 'Fonctionnalité non disponible.' });
+    return;
+  }
+  try {
+    const { optOutProspect } = await import('./services/prospectStore');
+    const deleted = await optOutProspect(placeId);
+    console.log(`[opt-out] placeId=${placeId} email=${email} deleted=${deleted}`);
+    res.json({ success: true, message: 'Si des données existaient pour cet établissement, elles ont été supprimées.' });
+  } catch {
+    res.status(500).json({ error: 'Erreur lors du traitement.' });
+  }
+});
+
 Sentry.setupExpressErrorHandler(app);
 
 if (process.env.NODE_ENV !== 'test') {
