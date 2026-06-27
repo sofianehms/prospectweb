@@ -133,6 +133,17 @@ export async function initDb(): Promise<void> {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS api_keys (
+      key         TEXT PRIMARY KEY,
+      user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name        TEXT NOT NULL DEFAULT 'default',
+      scopes      TEXT[] NOT NULL DEFAULT '{prospects:read}',
+      revoked     BOOLEAN NOT NULL DEFAULT false,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS stripe_payment_log (
       id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       user_id     TEXT,

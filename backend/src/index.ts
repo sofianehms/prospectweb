@@ -34,6 +34,7 @@ import establishmentRouter from './routes/establishment';
 import historyRouter from './routes/history';
 import plansRouter from './routes/plans';
 import billingRouter from './routes/billing';
+import publicApiRouter from './routes/publicApi';
 import { stripeWebhookHandler } from './routes/stripeWebhook';
 import { getUsage } from './services/googleQuota';
 import { getUserUsage, getAllUsersUsage, getUserUsageHistory, getAllUsersUsagePeriod } from './services/userQuota';
@@ -122,6 +123,7 @@ app.use('/api/history', historyRouter);
 app.use('/api/plans', plansRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/v1', publicApiRouter);
 
 Sentry.setupExpressErrorHandler(app);
 
