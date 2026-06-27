@@ -47,11 +47,23 @@ export default function DetailClient({ e }: { e: Establishment }) {
   const [notes, setNotesLocal] = useState(saved?.notes ?? '')
   const [script, setScript] = useState(buildScript(e))
   const [notesSaved, setNotesSaved] = useState(false)
+  const [enrichment, setEnrichment] = useState(e.enrichment ?? null)
+  const [enrichLoading, setEnrichLoading] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     track(events.PROSPECT_VIEW, { type: e.type, websiteStatus: e.websiteStatus })
   }, [e])
+
+  useEffect(() => {
+    if (enrichment || enrichLoading) return
+    setEnrichLoading(true)
+    fetch(`/api/establishment/${encodeURIComponent(e.id)}?enrich=1`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.found) setEnrichment(data) })
+      .catch(() => {})
+      .finally(() => setEnrichLoading(false))
+  }, [e.id, enrichment, enrichLoading])
 
   function handleToggleProspect() {
     if (added) {
@@ -154,8 +166,36 @@ export default function DetailClient({ e }: { e: Establishment }) {
                 ? <Row icon="📞"><a href={`tel:${e.phone}`} className="hover:text-emerald-600 transition">{e.phone}</a></Row>
                 : <Row icon="📞"><span className="text-gray-400 italic">Non renseigné</span></Row>
               }
+              {e.website && (
+                <Row icon="✉️">
+                  {(() => {
+                    try { const host = new URL(e.website.startsWith('http') ? e.website : `https://${e.website}`).hostname.replace('www.', ''); return <a href={`mailto:contact@${host}`} className="hover:text-emerald-600 transition">contact@{host}</a> } catch { return <span className="text-gray-400 italic">E-mail indisponible</span> }
+                  })()}
+                  <span className="text-gray-400 text-xs ml-1">(estimé)</span>
+                </Row>
+              )}
               {e.rating && (
                 <Row icon="⭐">{e.rating} / 5 · {e.ratingCount} avis Google</Row>
+              )}
+            </div>
+          </section>
+
+          {/* Identité entreprise (enrichissement) */}
+          <section>
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-2">Identité entreprise</h2>
+            <div className="border-t border-gray-100 dark:border-slate-700 pt-3 space-y-3">
+              {enrichLoading && <Row icon="🔄"><span className="text-gray-400 italic">Recherche en cours...</span></Row>}
+              {!enrichLoading && !enrichment && <Row icon="🏢"><span className="text-gray-400 italic">Aucune correspondance trouvée dans le registre français</span></Row>}
+              {enrichment?.siret && <Row icon="🏢">SIRET : <span className="font-mono text-xs">{enrichment.siret}</span></Row>}
+              {enrichment?.dirigeant && <Row icon="👤">Dirigeant : {enrichment.dirigeant}</Row>}
+              {enrichment?.activite && <Row icon="📋">Activité (NAF) : {enrichment.activite}</Row>}
+              {enrichment?.dateCreation && <Row icon="📅">Création : {new Date(enrichment.dateCreation).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })}</Row>}
+              {enrichment?.siret && (
+                <Row icon="🔗">
+                  <a href={`https://annuaire-entreprises.data.gouv.fr/entreprise/${enrichment.siren ?? enrichment.siret}`} target="_blank" rel="noopener" className="text-emerald-600 underline">
+                    Voir sur l&apos;Annuaire des Entreprises
+                  </a>
+                </Row>
               )}
             </div>
           </section>
@@ -284,6 +324,17 @@ export default function DetailClient({ e }: { e: Establishment }) {
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12 19.79 19.79 0 0 1 1.08 3.37 2 2 0 0 1 3.05 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/>
                 </svg>
                 Appeler
+              </a>
+            )}
+            {e.website && (
+              <a
+                href={(() => { try { const host = new URL(e.website.startsWith('http') ? e.website : `https://${e.website}`).hostname.replace('www.', ''); return `mailto:contact@${host}` } catch { return '#' } })()}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-gray-400 dark:hover:border-slate-500 transition"
+              >
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                E-mail
               </a>
             )}
             <a

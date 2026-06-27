@@ -7,9 +7,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
 
   const details = req.nextUrl.searchParams.get('details') === '1'
-  const endpoint = details
-    ? `${BACKEND}/api/establishment/${id}/details`
-    : `${BACKEND}/api/establishment/${id}`
+  const enrich = req.nextUrl.searchParams.get('enrich') === '1'
+  const endpoint = enrich
+    ? `${BACKEND}/api/establishment/${id}/enrich`
+    : details
+      ? `${BACKEND}/api/establishment/${id}/details`
+      : `${BACKEND}/api/establishment/${id}`
 
   const res = await fetch(endpoint, {
     headers: await backendHeaders(),

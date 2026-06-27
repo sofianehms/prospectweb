@@ -99,4 +99,35 @@ router.get('/:id/details', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/:id/enrich', async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const cacheKey = `enrichment:${id}`;
+
+  const cached = await getCached<unknown>(cacheKey);
+  if (cached) {
+    res.json(cached);
+    return;
+  }
+
+  const establishment = await getCached<{ name: string; lat: number; lng: number }>(`establishment:${id}`);
+  if (!establishment) {
+    res.status(404).json({ error: 'Établissement non trouvé. Ouvrez la fiche d\'abord.' });
+    return;
+  }
+
+  try {
+    const { enrichByNameAndLocation } = await import('../services/enrichment');
+    const result = await enrichByNameAndLocation(establishment.name, establishment.lat, establishment.lng);
+    if (!result) {
+      res.json({ found: false });
+      return;
+    }
+    const enrichment = { found: true, ...result };
+    await setCached(cacheKey, enrichment);
+    res.json(enrichment);
+  } catch {
+    res.status(502).json({ error: 'Impossible d\'enrichir cet établissement.' });
+  }
+});
+
 export default router;

@@ -15,6 +15,14 @@ export interface Establishment {
   websiteStatus: WebsiteStatus
   confidenceScore: number
   alreadySaved?: boolean
+  enrichment?: {
+    found: boolean
+    siret?: string | null
+    siren?: string | null
+    dirigeant?: string | null
+    activite?: string | null
+    dateCreation?: string | null
+  }
 }
 
 export interface SearchMeta {
