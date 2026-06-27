@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { geocodeAddress } from '../services/geocode';
-import { nearbySearch, Place, COMMERCIAL_TYPES, SearchMeta } from '../services/places';
+import { nearbySearch, Place, COMMERCIAL_TYPES, SearchMeta, getBreakerStatus, GoogleApiError } from '../services/places';
+import { overpassProvider } from '../services/overpassFallback';
 import { checkWebsite } from '../services/websiteChecker';
 import { cacheKey, getCached, setCached } from '../services/cache';
 import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
 import { QuotaExceededError } from '../services/googleQuota';
-import { GoogleApiError } from '../services/places';
 import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
 import { recordSearch, getKnownPlaceIds } from '../services/searchHistory';
 
@@ -117,7 +117,27 @@ router.get('/', async (req: Request, res: Response) => {
     checkUserQuota(userId);
 
     console.log(`[search] user=${req.user?.email} types=${typeList.join(',') || 'all'} radius=${radiusMeters}`);
-    const { places, meta, apiCalls } = await nearbySearch(center, radiusMeters, typeList);
+
+    let places: Place[];
+    let meta: SearchMeta;
+    let apiCalls: number;
+    let provider: 'google' | 'overpass' = 'google';
+
+    const breaker = await getBreakerStatus();
+    if (breaker.isOpen) {
+      console.warn('[search] circuit-breaker ouvert, bascule sur Overpass (OSM)');
+      const fallback = await overpassProvider.search(center, radiusMeters, typeList);
+      places = fallback.places;
+      meta = fallback.meta;
+      apiCalls = 0;
+      provider = 'overpass';
+    } else {
+      const result = await nearbySearch(center, radiusMeters, typeList);
+      places = result.places;
+      meta = result.meta;
+      apiCalls = result.apiCalls;
+    }
+
     if (apiCalls > 0) trackUserCalls(userId, apiCalls);
 
     const establishments: Establishment[] = await Promise.all(
@@ -150,7 +170,7 @@ router.get('/', async (req: Request, res: Response) => {
       if (knownIds.has(e.id)) e.alreadySaved = true;
     }
 
-    const payload = { center, radius: radiusMeters, summary, meta, establishments };
+    const payload = { center, radius: radiusMeters, summary, meta, provider, establishments };
     await setCached(key, payload);
     await Promise.all(
       establishments.map(e => setCached(`establishment:${e.id}`, e))

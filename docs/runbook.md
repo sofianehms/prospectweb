@@ -32,9 +32,19 @@ Chaque section reference l'alerte correspondante (type `alertService.ts`).
   ```
 - **Si cle revoquee** : generer une nouvelle cle dans Google Cloud Console, mettre a jour `GOOGLE_PLACES_KEY` dans Railway, redemarrer le backend.
 
+### Repli automatique (Overpass/OSM)
+
+Quand le circuit-breaker est ouvert, la route `/api/search` bascule automatiquement sur le fournisseur Overpass (OpenStreetMap). Les resultats sont degrades :
+- Pas de note Google ni d'avis (rating/ratingCount = null)
+- Pas de Place ID Google (identifiants prefixes `osm:`)
+- Couverture variable selon les contributions OSM locales
+- Le champ `provider` dans la reponse vaut `'overpass'` au lieu de `'google'`
+
+L'alerte `circuit_breaker_open` est envoyee par e-mail. Aucune intervention manuelle n'est requise pour la bascule.
+
 ### Retablissement
 
-Le circuit-breaker se referme automatiquement. Verifier dans `/ops` que l'etat repasse a "ferme". Les recherches reprennent sans intervention.
+Le circuit-breaker se referme automatiquement apres 60 secondes. Les recherches repassent sur Google Places. Verifier dans `/ops` que l'etat repasse a "ferme".
 
 ### Escalade
 
