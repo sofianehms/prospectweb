@@ -139,8 +139,21 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
-            <p style={{ color: 'var(--t3)', fontSize: 14 }}>Chargement…</p>
+          <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              {[1,2,3,4].map(i => (
+                <div key={i} className="animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+                  <div style={{ width: 80, height: 10, borderRadius: 4, background: 'var(--surface2)', marginBottom: 12 }} />
+                  <div style={{ width: 48, height: 28, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
+                  <div style={{ width: 100, height: 10, borderRadius: 4, background: 'var(--surface2)' }} />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+              {[1,2].map(i => (
+                <div key={i} className="animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, height: 200 }} />
+              ))}
+            </div>
           </div>
         ) : (
           <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>

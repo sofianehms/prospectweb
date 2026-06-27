@@ -109,12 +109,22 @@ export default function DetailPage() {
           )}
 
           {loading && !error && (
-            <div style={{
+            <div className="animate-pulse" style={{
               background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 14, padding: 24, textAlign: 'center',
-              color: 'var(--t3)', fontSize: 13,
+              borderRadius: 14, padding: 24,
             }}>
-              Chargement…
+              <div className="flex items-start gap-4 mb-6">
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--surface2)' }} />
+                <div className="flex-1">
+                  <div style={{ width: 180, height: 16, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
+                  <div style={{ width: 120, height: 12, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
+                  <div style={{ width: 80, height: 20, borderRadius: 10, background: 'var(--surface2)' }} />
+                </div>
+              </div>
+              <div style={{ height: 1, background: 'var(--border)', marginBottom: 16 }} />
+              {[1,2,3].map(i => (
+                <div key={i} style={{ width: `${70 - i * 15}%`, height: 12, borderRadius: 4, background: 'var(--surface2)', marginBottom: 12 }} />
+              ))}
             </div>
           )}
 

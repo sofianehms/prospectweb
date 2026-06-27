@@ -132,9 +132,9 @@ export default function Map({ data }: { data: SearchResult }) {
 
   return (
     <div className="relative">
-      <div ref={containerRef} role="img" aria-label="Carte des résultats de recherche" className="h-56 sm:h-80 w-full rounded-xl overflow-hidden border border-gray-200" />
+      <div ref={containerRef} role="img" aria-label="Carte des résultats de recherche" className="h-56 sm:h-80 w-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700" />
       {/* Légende */}
-      <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 flex gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-600 shadow-sm border border-gray-100">
+      <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 flex gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-600 dark:text-slate-300 shadow-sm border border-gray-100 dark:border-slate-700">
         {Object.entries(STATUS_COLOR).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1.5">
             <span style={{ background: color }} className="w-2.5 h-2.5 rounded-full flex-shrink-0 block" />

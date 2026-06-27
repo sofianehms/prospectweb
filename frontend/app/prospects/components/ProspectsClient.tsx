@@ -7,11 +7,11 @@ import { track, events } from '@/app/lib/analytics'
 
 // ── Statuts ───────────────────────────────────────────────────────────────────
 const STATUS_META: Record<CrmStatus, { label: string; className: string }> = {
-  to_contact: { label: 'À contacter',    className: 'border border-emerald-400 text-emerald-600 bg-white' },
-  contacted:  { label: 'Contacté',       className: 'border border-blue-300 text-blue-500 bg-white' },
-  discussing: { label: 'En discussion',  className: 'border border-blue-400 text-blue-600 bg-blue-50' },
-  won:        { label: 'Client gagné ✓', className: 'border border-emerald-500 text-emerald-700 bg-emerald-50' },
-  lost:       { label: 'Pas intéressé',  className: 'border border-gray-300 text-gray-400 bg-white' },
+  to_contact: { label: 'À contacter',    className: 'border border-emerald-400 dark:border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-800' },
+  contacted:  { label: 'Contacté',       className: 'border border-blue-300 dark:border-blue-600 text-blue-500 dark:text-blue-400 bg-white dark:bg-slate-800' },
+  discussing: { label: 'En discussion',  className: 'border border-blue-400 dark:border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' },
+  won:        { label: 'Client gagné ✓', className: 'border border-emerald-500 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' },
+  lost:       { label: 'Pas intéressé',  className: 'border border-gray-300 dark:border-slate-600 text-gray-400 dark:text-slate-500 bg-white dark:bg-slate-800' },
 }
 
 type FilterTab = 'all' | 'to_contact' | 'in_progress' | 'won' | 'lost'
@@ -52,7 +52,19 @@ export default function ProspectsClient() {
   const [tab, setTab] = useState<FilterTab>('all')
 
   if (!ready) {
-    return <div className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">Chargement…</div>
+    return (
+      <div className="flex flex-col gap-2">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4 flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <div style={{ width: 160, height: 14, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
+              <div style={{ width: 100, height: 10, borderRadius: 4, background: 'var(--surface2)' }} />
+            </div>
+            <div style={{ width: 90, height: 28, borderRadius: 14, background: 'var(--surface2)' }} />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const filtered = prospects.filter(p => matchTab(p, tab))
@@ -110,7 +122,7 @@ export default function ProspectsClient() {
           {prospects.length === 0 && (
             <Link
               href="/search"
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>

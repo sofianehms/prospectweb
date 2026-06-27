@@ -20,11 +20,11 @@ const SORT_OPTIONS: { id: SortBy; label: string }[] = [
 const STATUS_SCORE: Record<WebsiteStatus, number> = { none: 0, unreachable: 1, outdated: 2, blocked: 3, active: 4 }
 
 const BADGE: Record<WebsiteStatus, { label: string; className: string }> = {
-  none:        { label: 'Pas de site',      className: 'bg-red-50 text-red-500' },
-  unreachable: { label: 'Site injoignable', className: 'bg-gray-50 text-gray-500' },
-  outdated:    { label: 'Site obsolète',    className: 'bg-orange-50 text-orange-500' },
-  active:      { label: 'Site actif',       className: 'bg-green-50 text-green-600' },
-  blocked:     { label: 'Bloqué anti-bot',  className: 'bg-purple-50 text-purple-500' },
+  none:        { label: 'Pas de site',      className: 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400' },
+  unreachable: { label: 'Site injoignable', className: 'bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-slate-400' },
+  outdated:    { label: 'Site obsolète',    className: 'bg-orange-50 dark:bg-orange-900/20 text-orange-500 dark:text-orange-400' },
+  active:      { label: 'Site actif',       className: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
+  blocked:     { label: 'Bloqué anti-bot',  className: 'bg-purple-50 dark:bg-purple-900/20 text-purple-500 dark:text-purple-400' },
 }
 
 import { typeLabel } from '@/app/lib/typeConfig'

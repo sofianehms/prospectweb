@@ -105,7 +105,10 @@ export default function BillingPage() {
         </p>
 
         {loading ? (
-          <p style={{ color: 'var(--t3)', fontSize: 14 }}>Chargement...</p>
+          <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: 12, height: 80 }} />
+            <div style={{ background: 'var(--surface2)', borderRadius: 14, height: 200 }} />
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Subscription status card */}

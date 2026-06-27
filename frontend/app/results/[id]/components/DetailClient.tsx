@@ -17,11 +17,11 @@ const CRM_STATUSES: { id: CrmStatus; label: string }[] = [
 ]
 
 const BADGE_STYLE: Record<WebsiteStatus, { label: string; className: string }> = {
-  none:        { label: 'Pas de site web',   className: 'bg-red-50 text-red-500 border border-red-100' },
-  unreachable: { label: 'Site injoignable',  className: 'bg-gray-50 text-gray-500 border border-gray-200' },
-  outdated:    { label: 'Site obsolète',     className: 'bg-orange-50 text-orange-500 border border-orange-100' },
-  active:      { label: 'Site actif',        className: 'bg-green-50 text-green-600 border border-green-100' },
-  blocked:     { label: 'Bloqué anti-bot',   className: 'bg-purple-50 text-purple-500 border border-purple-100' },
+  none:        { label: 'Pas de site web',   className: 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-800/30' },
+  unreachable: { label: 'Site injoignable',  className: 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600' },
+  outdated:    { label: 'Site obsolète',     className: 'bg-orange-50 dark:bg-orange-900/20 text-orange-500 dark:text-orange-400 border border-orange-100 dark:border-orange-800/30' },
+  active:      { label: 'Site actif',        className: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/30' },
+  blocked:     { label: 'Bloqué anti-bot',   className: 'bg-purple-50 dark:bg-purple-900/20 text-purple-500 dark:text-purple-400 border border-purple-100 dark:border-purple-800/30' },
 }
 
 import { typeLabel as getTypeLabel, typeIcon, typeColor } from '@/app/lib/typeConfig'
@@ -100,7 +100,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 leading-tight">{e.name}</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100 leading-tight">{e.name}</h1>
               <p className="text-sm text-gray-500 mt-0.5">{label} · {e.address.split(',').slice(-1)[0]?.trim()}</p>
               <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-xs font-medium ${badge.className}`}>
                 {badge.label}
@@ -188,7 +188,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
           {/* Script suggéré */}
           <section>
             <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-2">Script de prospection suggéré</h2>
-            <div className="border-t border-gray-100 pt-3">
+            <div className="border-t border-gray-100 dark:border-slate-700 pt-3">
               <div className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 text-sm text-gray-700 dark:text-slate-300 leading-relaxed border border-gray-200 dark:border-slate-600 italic">
                 {buildScript(e)}
               </div>
@@ -257,7 +257,7 @@ export default function DetailClient({ e }: { e: Establishment }) {
       )}
       {added && <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 space-y-4">
         <h2 className="text-sm font-semibold text-gray-500">Statut CRM</h2>
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-gray-100 dark:border-slate-700 pt-3">
           <div className="flex flex-wrap gap-2 mb-3">
             {CRM_STATUSES.map(s => (
               <button
