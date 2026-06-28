@@ -8,7 +8,7 @@ import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
 import { QuotaExceededError } from '../services/googleQuota';
-import { checkUserQuota, trackUserCalls, setUserLimitOverride, UserQuotaExceededError } from '../services/userQuota';
+import { checkUserQuota, trackUserCalls, setUserLimitOverride, UserQuotaExceededError, getUserTotalCalls } from '../services/userQuota';
 import { recordSearch, getKnownPlaceIds, countUserSearches } from '../services/searchHistory';
 import { getUserPlan, isFreePlan, FreePlanLimitError, FREE_PLAN_SEARCH_LIMIT } from '../services/planStore';
 
@@ -129,8 +129,12 @@ router.get('/', async (req: Request, res: Response) => {
 
         if (isFreePlan(plan)) {
           onFreePlan = true;
-          const previousSearches = await countUserSearches(userId);
-          if (previousSearches >= FREE_PLAN_SEARCH_LIMIT) {
+          const [previousSearches, totalCalls] = await Promise.all([
+            countUserSearches(userId),
+            getUserTotalCalls(userId),
+          ]);
+          const consumedSearches = Math.max(previousSearches, totalCalls > 0 ? FREE_PLAN_SEARCH_LIMIT : 0);
+          if (consumedSearches >= FREE_PLAN_SEARCH_LIMIT) {
             throw new FreePlanLimitError();
           }
         }

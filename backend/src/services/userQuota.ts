@@ -235,6 +235,20 @@ export async function getUserUsagePeriod(
   } catch { return { totalCalls: 0, days: 0, plan: 'free' }; }
 }
 
+export async function getUserTotalCalls(userId: string): Promise<number> {
+  const db = getDb();
+  if (!db) return getUserUsage(userId).calls;
+  try {
+    const { rows } = await db.query<{ total_calls: string }>(
+      'SELECT COALESCE(SUM(calls), 0) AS total_calls FROM user_usage WHERE user_id = $1',
+      [userId],
+    );
+    return Number(rows[0]?.total_calls ?? 0);
+  } catch {
+    return getUserUsage(userId).calls;
+  }
+}
+
 export async function getAllUsersUsagePeriod(
   startDate: string,
   endDate: string,

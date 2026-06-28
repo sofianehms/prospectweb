@@ -37,7 +37,7 @@ import billingRouter from './routes/billing';
 import publicApiRouter from './routes/publicApi';
 import { stripeWebhookHandler } from './routes/stripeWebhook';
 import { getUsage } from './services/googleQuota';
-import { getUserUsage, getAllUsersUsage, getUserUsageHistory, getAllUsersUsagePeriod } from './services/userQuota';
+import { getUserUsage, getAllUsersUsage, getUserUsageHistory, getAllUsersUsagePeriod, getUserTotalCalls } from './services/userQuota';
 import { requireAuth, requireAdmin } from './middleware/requireAuth';
 
 export const app = express();
@@ -111,7 +111,11 @@ app.get('/api/usage/me', requireAuth, async (req, res) => {
       // appels API quotidiens). On expose donc l'usage « recherches » (0 ou 1).
       if (isFreePlan(plan)) {
         const { countUserSearches } = await import('./services/searchHistory');
-        const used = await countUserSearches(userId);
+        const [searches, totalCalls] = await Promise.all([
+          countUserSearches(userId),
+          getUserTotalCalls(userId),
+        ]);
+        const used = Math.max(searches, totalCalls > 0 ? FREE_PLAN_SEARCH_LIMIT : 0);
         res.json({
           date: new Date().toISOString().slice(0, 10),
           calls: Math.min(used, FREE_PLAN_SEARCH_LIMIT),
