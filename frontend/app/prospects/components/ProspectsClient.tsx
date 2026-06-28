@@ -1,18 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useProspects, type CrmStatus, type SavedProspect } from '@/app/hooks/useProspects'
+import { typeIcon, typeLabel } from '@/app/lib/typeConfig'
 import { track, events } from '@/app/lib/analytics'
 
 // ── Statuts ───────────────────────────────────────────────────────────────────
-const STATUS_META: Record<CrmStatus, { label: string; className: string }> = {
-  to_contact: { label: 'À contacter',    className: 'border border-emerald-400 dark:border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-800' },
-  contacted:  { label: 'Contacté',       className: 'border border-blue-300 dark:border-blue-600 text-blue-500 dark:text-blue-400 bg-white dark:bg-slate-800' },
-  discussing: { label: 'En discussion',  className: 'border border-blue-400 dark:border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' },
-  won:        { label: 'Client gagné ✓', className: 'border border-emerald-500 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' },
-  lost:       { label: 'Pas intéressé',  className: 'border border-gray-300 dark:border-slate-600 text-gray-400 dark:text-slate-500 bg-white dark:bg-slate-800' },
+const STATUS_LABEL: Record<CrmStatus, string> = {
+  to_contact: 'À contacter',
+  contacted:  'Contacté',
+  discussing: 'En discussion',
+  won:        'Client gagné ✓',
+  lost:       'Pas intéressé',
 }
+
+const STATUS_STYLE: Record<CrmStatus, React.CSSProperties> = {
+  to_contact: { color: 'var(--accent)', borderColor: 'var(--accent-border)', background: 'var(--accent-d)' },
+  contacted:  { color: '#3B82F6', borderColor: 'rgba(59,130,246,.35)', background: 'rgba(59,130,246,.08)' },
+  discussing: { color: '#7C3AED', borderColor: 'rgba(124,58,237,.3)', background: 'rgba(124,58,237,.08)' },
+  won:        { color: 'var(--accent)', borderColor: 'var(--accent-border)', background: 'var(--accent-d)' },
+  lost:       { color: 'var(--t3)', borderColor: 'var(--border-b)', background: 'transparent' },
+}
+
+const STATUS_ORDER: CrmStatus[] = ['to_contact', 'contacted', 'discussing', 'won', 'lost']
 
 type FilterTab = 'all' | 'to_contact' | 'in_progress' | 'won' | 'lost'
 
@@ -22,6 +34,16 @@ const TABS: { id: FilterTab; label: string }[] = [
   { id: 'in_progress', label: 'En cours'    },
   { id: 'won',         label: 'Gagnés'      },
   { id: 'lost',        label: 'Perdus'      },
+]
+
+type SortKey = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'status'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'date_desc', label: 'Plus récents' },
+  { value: 'date_asc',  label: 'Plus anciens' },
+  { value: 'name_asc',  label: 'Nom A → Z' },
+  { value: 'name_desc', label: 'Nom Z → A' },
+  { value: 'status',    label: 'Par statut' },
 ]
 
 function matchTab(p: SavedProspect, tab: FilterTab): boolean {
@@ -38,148 +60,318 @@ function tabCount(prospects: SavedProspect[], tab: FilterTab): number {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
-function extractCity(address: string): string {
-  const parts = address.split(',')
-  return parts[parts.length - 1]?.trim() ?? address
+function sortProspects(list: SavedProspect[], sort: SortKey): SavedProspect[] {
+  return [...list].sort((a, b) => {
+    switch (sort) {
+      case 'date_desc': return +new Date(b.addedAt) - +new Date(a.addedAt)
+      case 'date_asc':  return +new Date(a.addedAt) - +new Date(b.addedAt)
+      case 'name_asc':  return a.name.localeCompare(b.name, 'fr')
+      case 'name_desc': return b.name.localeCompare(a.name, 'fr')
+      case 'status':    return STATUS_ORDER.indexOf(a.crmStatus) - STATUS_ORDER.indexOf(b.crmStatus)
+      default:          return 0
+    }
+  })
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 export default function ProspectsClient() {
+  const router = useRouter()
   const { prospects, ready, remove, setStatus, exportCsv } = useProspects()
   const [tab, setTab] = useState<FilterTab>('all')
+  const [searchQ, setSearchQ] = useState('')
+  const [sortBy, setSortBy] = useState<SortKey>('date_desc')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  if (!ready) {
-    return (
-      <div className="flex flex-col gap-2">
-        {[1,2,3,4].map(i => (
-          <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4 flex items-center justify-between gap-3">
-            <div className="flex-1">
-              <div style={{ width: 160, height: 14, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
-              <div style={{ width: 100, height: 10, borderRadius: 4, background: 'var(--surface2)' }} />
-            </div>
-            <div style={{ width: 90, height: 28, borderRadius: 14, background: 'var(--surface2)' }} />
-          </div>
-        ))}
-      </div>
-    )
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current) }, [])
+
+  function showToast(msg: string) {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
   }
 
-  const filtered = prospects.filter(p => matchTab(p, tab))
+  function confirmDelete(p: SavedProspect) {
+    remove(p.id)
+    setDeletingId(null)
+    showToast(`« ${p.name} » supprimé`)
+  }
+
+  const q = searchQ.trim().toLowerCase()
+  const filtered = sortProspects(prospects, sortBy)
+    .filter(p => matchTab(p, tab))
+    .filter(p => !q || p.name.toLowerCase().includes(q))
+
+  const isEmpty = filtered.length === 0
+  const noProspects = prospects.length === 0
 
   return (
     <>
-      {/* Titre + export */}
-      <div className="flex items-start justify-between mb-6">
+      {/* Toast */}
+      {toast && <div className="toast-notif" role="status">{toast}</div>}
+
+      {/* Header */}
+      <div
+        className="flex items-center justify-between gap-4 flex-wrap shrink-0"
+        style={{ padding: '22px 32px 18px', borderBottom: '1px solid var(--border)' }}
+      >
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Mes prospects</h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">{prospects.length} contact{prospects.length !== 1 ? 's' : ''} enregistré{prospects.length !== 1 ? 's' : ''}</p>
+          <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>
+            Mes prospects
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--t3)' }}>
+            {prospects.length} contact{prospects.length !== 1 ? 's' : ''} enregistré{prospects.length !== 1 ? 's' : ''}
+          </p>
         </div>
         <button
           onClick={() => { track(events.EXPORT_CSV, { count: prospects.length }); exportCsv() }}
           disabled={prospects.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-gray-400 dark:hover:border-slate-500 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 shrink-0 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            padding: '9px 18px', borderRadius: 9, border: '1px solid var(--border-b)',
+            background: 'var(--surface)', fontSize: 13, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer',
+          }}
+          onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.background = 'var(--surface2)' }}
+          onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface)')}
         >
-          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M12 9v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9M7 1v8M4.5 6.5L7 9l2.5-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           Exporter CSV
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {TABS.map(t => {
-          const count = tabCount(prospects, t.id)
-          const active = tab === t.id
-          return (
+      {/* Controls : tabs + view toggle + search + sort */}
+      <div
+        className="flex items-center justify-between gap-3 flex-wrap shrink-0"
+        style={{ padding: '14px 32px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}
+      >
+        <div className="flex flex-wrap gap-2">
+          {TABS.map(t => (
             <button
               key={t.id}
+              className="pw-tab"
+              aria-pressed={tab === t.id}
               onClick={() => setTab(t.id)}
-              aria-pressed={active}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
-                active
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:border-gray-400'
-              }`}
             >
-              {t.label} ({count})
+              {t.label} ({tabCount(prospects, t.id)})
             </button>
-          )
-        })}
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex" style={{ border: '1px solid var(--border-b)', borderRadius: 8, overflow: 'hidden', background: 'var(--surface)' }}>
+            <button
+              onClick={() => setViewMode('list')}
+              title="Vue liste"
+              aria-pressed={viewMode === 'list'}
+              className="flex items-center transition-all duration-150"
+              style={{
+                padding: '8px 11px', border: 'none', cursor: 'pointer', borderRight: '1px solid var(--border)',
+                background: viewMode === 'list' ? 'var(--accent-d)' : 'transparent',
+                color: viewMode === 'list' ? 'var(--accent)' : 'var(--t3)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              title="Vue grille"
+              aria-pressed={viewMode === 'grid'}
+              className="flex items-center transition-all duration-150"
+              style={{
+                padding: '8px 11px', border: 'none', cursor: 'pointer',
+                background: viewMode === 'grid' ? 'var(--accent-d)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--accent)' : 'var(--t3)',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/></svg>
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="pointer-events-none" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)' }}>
+              <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3"/><path d="M12 12l-2-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+            <input
+              type="text"
+              className="pw-search"
+              placeholder="Rechercher un prospect…"
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+              aria-label="Rechercher un prospect"
+            />
+          </div>
+
+          {/* Sort */}
+          <div className="relative">
+            <select
+              className="pw-sort"
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as SortKey)}
+              aria-label="Trier les prospects"
+            >
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="pointer-events-none" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--t4)' }}>
+              <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      {/* Liste */}
-      {filtered.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-gray-400 dark:text-slate-500 text-sm">
-            {prospects.length === 0
-              ? 'Aucun prospect enregistré. Lancez une recherche et ajoutez des commerces.'
-              : 'Aucun prospect dans cette catégorie.'}
-          </p>
-          {prospects.length === 0 && (
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-              </svg>
-              Lancer une recherche
-            </Link>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {filtered.map(p => {
-            const meta = STATUS_META[p.crmStatus]
-            return (
+      {/* Content */}
+      <div className="flex-1" style={{ padding: '16px 32px 36px' }}>
+
+        {/* Loading skeleton */}
+        {!ready ? (
+          <div className="flex flex-col gap-[7px]">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="animate-pulse flex items-center justify-between gap-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '13px 16px' }}>
+                <div className="flex-1">
+                  <div style={{ width: 160, height: 14, borderRadius: 4, background: 'var(--surface2)', marginBottom: 8 }} />
+                  <div style={{ width: 100, height: 10, borderRadius: 4, background: 'var(--surface2)' }} />
+                </div>
+                <div style={{ width: 90, height: 28, borderRadius: 20, background: 'var(--surface2)' }} />
+              </div>
+            ))}
+          </div>
+        ) : isEmpty ? (
+          /* Empty state */
+          <div style={{ textAlign: 'center', padding: '64px 32px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 }}>
+            <div className="flex items-center justify-center" style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--surface2)', margin: '0 auto 16px' }}>
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="9" cy="9" r="6" stroke="var(--t3)" strokeWidth="1.5"/><path d="M19 19l-3-3" stroke="var(--t3)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            </div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--t2)', marginBottom: 6 }}>
+              {noProspects ? 'Aucun prospect enregistré' : 'Aucun résultat'}
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--t4)', marginBottom: 20 }}>
+              {noProspects
+                ? 'Lancez une recherche et ajoutez des commerces.'
+                : q
+                  ? `Aucun prospect ne correspond à « ${searchQ} ».`
+                  : 'Changez de filtre.'}
+            </p>
+            {noProspects && (
+              <Link href="/search" className="inline-flex items-center gap-1.5 btn-accent" style={{ padding: '9px 18px', borderRadius: 9, fontSize: 13, fontWeight: 700 }}>
+                Lancer une recherche
+              </Link>
+            )}
+          </div>
+        ) : viewMode === 'grid' ? (
+          /* Grid view */
+          <div className="anim-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
+            {filtered.map(p => (
               <div
                 key={p.id}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between gap-3 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm transition"
+                className="flex flex-col gap-3 transition-colors duration-150"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 18 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-b)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
               >
-                {/* Infos */}
-                <Link href={`/results/${p.id}`} className="min-w-0 flex-1 group">
-                  <p className="font-semibold text-gray-900 dark:text-slate-100 text-[15px] group-hover:text-emerald-600 transition truncate">
-                    {p.name}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    Ajouté le {formatDate(p.addedAt)} · {extractCity(p.address)}
-                  </p>
-                </Link>
-
-                {/* Statut + actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <select
-                    value={p.crmStatus}
-                    onChange={e => setStatus(p.id, e.target.value as CrmStatus)}
-                    aria-label={`Statut CRM pour ${p.name}`}
-                    className={`max-w-[120px] sm:max-w-none px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition ${meta.className}`}
-                  >
-                    <option value="to_contact">À contacter</option>
-                    <option value="contacted">Contacté</option>
-                    <option value="discussing">En discussion</option>
-                    <option value="won">Client gagné ✓</option>
-                    <option value="lost">Pas intéressé</option>
-                  </select>
-
+                <div className="flex items-center justify-between">
+                  <span style={{ fontSize: 26 }}>{typeIcon(p.type)}</span>
+                  <StatusPill p={p} onChange={s => setStatus(p.id, s)} />
+                </div>
+                <div className="flex-1">
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginBottom: 3, lineHeight: 1.3 }}>{p.name}</p>
+                  <p style={{ fontSize: 12, color: 'var(--t4)' }}>Ajouté le {formatDate(p.addedAt)} · {typeLabel(p.type)}</p>
+                </div>
+                <div className="flex items-center justify-between">
                   <button
-                    onClick={() => remove(p.id)}
-                    className="p-1.5 text-gray-300 dark:text-slate-600 hover:text-red-400 transition rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                    aria-label="Supprimer"
+                    onClick={() => router.push(`/results/${p.id}`)}
+                    className="transition-all duration-150"
+                    style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'var(--surface2)', border: '1px solid var(--border-b)', color: 'var(--t2)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-d)'; e.currentTarget.style.borderColor = 'var(--accent-border)'; e.currentTarget.style.color = 'var(--accent)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.borderColor = 'var(--border-b)'; e.currentTarget.style.color = 'var(--t2)' }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                    </svg>
+                    Voir
                   </button>
+                  <DeleteButton onClick={() => setDeletingId(p.id)} />
                 </div>
               </div>
-            )
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          /* List view */
+          <div className="anim-fade-in flex flex-col gap-[7px]">
+            {filtered.map(p => (
+              <div key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+                {deletingId === p.id ? (
+                  /* Inline delete confirm */
+                  <div className="flex items-center justify-between gap-3" style={{ padding: '13px 16px', background: 'var(--error-d)', borderLeft: '3px solid var(--error)' }}>
+                    <div className="flex items-center gap-[10px] min-w-0">
+                      <span style={{ fontSize: 18 }}>{typeIcon(p.type)}</span>
+                      <p className="truncate" style={{ fontSize: 13, fontWeight: 600, color: 'var(--error)' }}>Supprimer « {p.name} » ?</p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button onClick={() => confirmDelete(p)} style={{ padding: '6px 14px', borderRadius: 7, background: 'var(--error)', color: 'white', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}>Supprimer</button>
+                      <button onClick={() => setDeletingId(null)} style={{ padding: '6px 14px', borderRadius: 7, background: 'var(--surface)', border: '1px solid var(--border-b)', color: 'var(--t2)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Annuler</button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Normal row */
+                  <div className="flex items-center gap-3" style={{ padding: '13px 16px' }}>
+                    <button
+                      onClick={() => router.push(`/results/${p.id}`)}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      <span className="shrink-0" style={{ fontSize: 20 }}>{typeIcon(p.type)}</span>
+                      <div className="min-w-0">
+                        <p className="truncate" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginBottom: 1 }}>{p.name}</p>
+                        <p style={{ fontSize: 12, color: 'var(--t4)' }}>Ajouté le {formatDate(p.addedAt)} · {typeLabel(p.type)}</p>
+                      </div>
+                    </button>
+                    <div className="flex items-center gap-[10px] shrink-0">
+                      <StatusPill p={p} onChange={s => setStatus(p.id, s)} />
+                      <DeleteButton onClick={() => setDeletingId(p.id)} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
+  )
+}
+
+// ── Sous-composants ───────────────────────────────────────────────────────────
+function StatusPill({ p, onChange }: { p: SavedProspect; onChange: (s: CrmStatus) => void }) {
+  return (
+    <select
+      className="pw-pill"
+      style={STATUS_STYLE[p.crmStatus]}
+      value={p.crmStatus}
+      onChange={e => onChange(e.target.value as CrmStatus)}
+      aria-label={`Statut CRM pour ${p.name}`}
+    >
+      {STATUS_ORDER.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+    </select>
+  )
+}
+
+function DeleteButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      title="Supprimer"
+      aria-label="Supprimer"
+      className="flex items-center transition-all duration-150"
+      style={{ padding: 7, borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--t4)' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'var(--error-d)'; e.currentTarget.style.color = 'var(--error)' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--t4)' }}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5.5 2h3M6 6v5M8 6v5M3.5 3.5l.5 8h6l.5-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    </button>
   )
 }

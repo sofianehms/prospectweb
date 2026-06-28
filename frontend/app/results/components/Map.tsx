@@ -54,7 +54,7 @@ function dotIcon(color: string, status: WebsiteStatus) {
   })
 }
 
-export default function Map({ data }: { data: SearchResult }) {
+export default function Map({ data, fullHeight = false }: { data: SearchResult; fullHeight?: boolean }) {
   const containerRef    = useRef<HTMLDivElement>(null)
   const mapRef          = useRef<L.Map | null>(null)
 
@@ -131,8 +131,15 @@ export default function Map({ data }: { data: SearchResult }) {
   }, [data])
 
   return (
-    <div className="relative">
-      <div ref={containerRef} role="img" aria-label="Carte des résultats de recherche" className="h-56 sm:h-80 w-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700" />
+    <div className={fullHeight ? 'relative h-full' : 'relative'}>
+      <div
+        ref={containerRef}
+        role="img"
+        aria-label="Carte des résultats de recherche"
+        className={fullHeight
+          ? 'h-full w-full overflow-hidden'
+          : 'h-56 sm:h-80 w-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700'}
+      />
       {/* Légende */}
       <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 flex gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-600 dark:text-slate-300 shadow-sm border border-gray-100 dark:border-slate-700">
         {Object.entries(STATUS_COLOR).map(([status, color]) => (

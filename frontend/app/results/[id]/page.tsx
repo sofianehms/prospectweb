@@ -67,36 +67,29 @@ export default function DetailPage() {
   return (
     <AppShell>
       <div className="anim-slide-right">
-        {/* Header */}
+        {/* Back bar */}
         <div style={{
-          padding: '20px 28px',
+          padding: '14px 32px',
           borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
+          background: 'var(--surface)',
         }}>
-          <Link href="/results" style={{
-            width: 32, height: 32, borderRadius: 8,
-            border: '1px solid var(--border)',
-            background: 'transparent',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <Link
+            href="/results"
+            className="detail-back-link"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, fontWeight: 500, color: 'var(--t3)',
+            }}
+          >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M9 11L5 7l4-4" stroke="var(--t2)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+            Retour aux résultats
           </Link>
-          <div style={{ flex: 1 }}>
-            <h1 className="font-display" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em' }}>
-              {establishment?.name ?? 'Chargement…'}
-            </h1>
-            <p style={{ fontSize: 13, color: 'var(--t3)' }}>
-              {establishment?.address ?? ''}
-            </p>
-          </div>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px 28px', overflowY: 'auto' }}>
+        <div className="anim-fade-in" style={{ padding: '28px 36px', overflowY: 'auto' }}>
           {error && (
             <div style={{
               background: 'var(--surface)', border: '1px solid var(--border)',
@@ -109,10 +102,7 @@ export default function DetailPage() {
           )}
 
           {loading && !error && (
-            <div className="animate-pulse" style={{
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 14, padding: 24,
-            }}>
+            <div className="animate-pulse">
               <div className="flex items-start gap-4 mb-6">
                 <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--surface2)' }} />
                 <div className="flex-1">
@@ -128,14 +118,7 @@ export default function DetailPage() {
             </div>
           )}
 
-          {establishment && (
-            <div style={{
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 14, padding: 24,
-            }}>
-              <DetailClient e={establishment} />
-            </div>
-          )}
+          {establishment && <DetailClient e={establishment} />}
         </div>
       </div>
     </AppShell>

@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import AppShell from '../components/AppShell'
 import { identify } from '@/app/lib/analytics'
 
 interface UserInfo { id: string; email: string }
-interface PlanInfo { id: string; name: string; dailyLimit: number; monthlyPrice: number; maxProspects: number }
 interface UsageInfo { calls: number; limit: number; remaining: number; date: string }
 interface Prospect {
   id: string; name: string; address: string; type: string;
@@ -51,12 +50,20 @@ const CRM_ORDER = ['to_contact', 'contacted', 'discussing', 'won', 'lost'] as co
 
 export default function DashboardPage() {
   const [user, setUser] = useState<UserInfo | null>(null)
-  const [plan, setPlan] = useState<PlanInfo | null>(null)
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [usageHistory, setUsageHistory] = useState<UsageHistoryEntry[]>([])
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [history, setHistory] = useState<SearchRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
+  }
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current) }, [])
 
   useEffect(() => {
     Promise.all([
@@ -68,7 +75,6 @@ export default function DashboardPage() {
       fetch('/api/usage/me/history?days=7').then(r => r.ok ? r.json() : []),
     ]).then(([u, p, pr, h, usg, uh]) => {
       setUser(u)
-      setPlan(p)
       setProspects(Array.isArray(pr) ? pr : [])
       setHistory(Array.isArray(h) ? h : [])
       setUsage(usg)
@@ -98,9 +104,22 @@ export default function DashboardPage() {
 
   const contactEmojis = ['📞', '✉️', '💬']
 
+  // Quota du jour — progress bar with color thresholds
+  const quotaUsed = usage?.calls ?? 0
+  const quotaLimit = usage?.limit ?? 0
+  const quotaPct = quotaLimit > 0 ? quotaUsed / quotaLimit : 0
+  const quotaColor = quotaPct > 0.9 ? 'var(--error)' : quotaPct > 0.7 ? 'var(--warn)' : 'var(--t1)'
+  const quotaBarColor = quotaPct > 0.9 ? 'var(--error)' : quotaPct > 0.7 ? 'var(--warn)' : 'var(--accent)'
+  const quotaBarLabel = quotaPct > 0.9
+    ? 'Quota presque atteint !'
+    : quotaPct > 0.7
+      ? 'Utilisation élevée'
+      : `${Math.max(0, quotaLimit - quotaUsed)} restants`
+
   return (
     <AppShell>
       <div className="anim-fade-in">
+        {toast && <div className="toast-notif" role="status">{toast}</div>}
         {/* Header */}
         <div style={{
           padding: '28px 36px 20px',
@@ -159,12 +178,18 @@ export default function DashboardPage() {
           <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-              {[
-                { label: 'Opportunités', value: toContact.length, sub: `sur ${prospects.length} prospects`, accent: true },
-                { label: 'Prospects actifs', value: prospects.length, sub: 'en base', accent: false },
-                { label: 'Signés ce mois', value: wonThisMonth.length, sub: `${won.length} au total`, accent: true },
-                { label: 'Quota du jour', value: usage?.remaining ?? 0, sub: usage ? `${usage.calls}/${usage.limit} utilisés — ${plan?.name ?? 'Free'}` : 'Chargement...', accent: false },
-              ].map((card) => (
+              {([
+                { label: 'Opportunités', value: toContact.length, sub: `sur ${prospects.length} prospects`, color: toContact.length > 0 ? 'var(--accent)' : 'var(--t1)' },
+                { label: 'Prospects actifs', value: prospects.length, sub: 'en base', color: 'var(--t1)' },
+                { label: 'Signés ce mois', value: wonThisMonth.length, sub: `${won.length} au total`, color: wonThisMonth.length > 0 ? 'var(--accent)' : 'var(--t1)' },
+                {
+                  label: 'Quota du jour',
+                  value: usage ? `${quotaUsed} / ${quotaLimit}` : '…',
+                  sub: 'recherches utilisées',
+                  color: quotaColor,
+                  bar: usage ? { width: `${Math.round(quotaPct * 100)}%`, color: quotaBarColor, label: quotaBarLabel } : undefined,
+                },
+              ] as const).map((card) => (
                 <div key={card.label} style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -182,17 +207,27 @@ export default function DashboardPage() {
                     {card.label}
                   </p>
                   <p className="font-display" style={{
-                    fontSize: 36,
+                    fontSize: 'bar' in card ? 30 : 36,
                     fontWeight: 700,
                     letterSpacing: '-0.04em',
                     lineHeight: 1,
-                    color: card.accent && card.value > 0 ? 'var(--accent)' : 'var(--t1)',
+                    color: card.color,
                   }}>
                     {card.value}
                   </p>
                   <p style={{ fontSize: 13, color: 'var(--t3)', marginTop: 6 }}>
                     {card.sub}
                   </p>
+                  {'bar' in card && card.bar && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ height: 5, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: card.bar.width, background: card.bar.color, borderRadius: 3, transition: 'width 0.4s' }} />
+                      </div>
+                      <p style={{ fontSize: 11, color: card.bar.color, marginTop: 5, fontWeight: 600 }}>
+                        {card.bar.label}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -217,28 +252,35 @@ export default function DashboardPage() {
                     Total : {usageHistory.reduce((s, d) => s + d.calls, 0)} appels
                   </span>
                 </div>
-                <div role="img" aria-label={`Consommation des 7 derniers jours : ${usageHistory.reduce((s, d) => s + d.calls, 0)} appels au total`} style={{ padding: '16px 22px', display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                <div role="img" aria-label={`Consommation des 7 derniers jours : ${usageHistory.reduce((s, d) => s + d.calls, 0)} appels au total`} style={{ padding: '16px 22px 20px', display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
                   {(() => {
                     const max = Math.max(...usageHistory.map(d => d.calls), 1)
                     const last7 = [...usageHistory].reverse().slice(-7)
-                    return last7.map((d, i) => (
-                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                        <div
-                          style={{
-                            width: '100%',
-                            maxWidth: 40,
-                            height: Math.max(4, (d.calls / max) * 60),
-                            background: 'var(--accent)',
-                            borderRadius: 4,
-                            opacity: d.calls > 0 ? 1 : 0.2,
-                          }}
-                          title={`${d.date}: ${d.calls} appels`}
-                        />
-                        <span style={{ fontSize: 10, color: 'var(--t3)' }}>
-                          {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3)}
-                        </span>
-                      </div>
-                    ))
+                    const todayStr = new Date().toISOString().slice(0, 10)
+                    return last7.map((d, i) => {
+                      const isToday = d.date.slice(0, 10) === todayStr
+                      return (
+                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: isToday ? 'var(--accent)' : 'var(--t4)' }}>
+                            {d.calls}
+                          </span>
+                          <div
+                            style={{
+                              width: '100%',
+                              maxWidth: 44,
+                              height: Math.max(4, Math.round((d.calls / max) * 100)),
+                              background: isToday ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 45%, var(--surface2))',
+                              borderRadius: 5,
+                              transition: 'height 0.3s',
+                            }}
+                            title={`${d.date}: ${d.calls} appels`}
+                          />
+                          <span style={{ fontSize: 10, color: 'var(--t3)' }}>
+                            {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3)}
+                          </span>
+                        </div>
+                      )
+                    })
                   })()}
                 </div>
               </div>
@@ -309,30 +351,40 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           {p.phone ? (
-                            <a href={`tel:${p.phone}`} style={{
-                              flexShrink: 0,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              padding: '5px 14px',
-                              borderRadius: 7,
-                              background: 'var(--accent-d)',
-                              color: 'var(--accent)',
-                              textDecoration: 'none',
-                            }}>
+                            <a
+                              href={`tel:${p.phone}`}
+                              onClick={() => showToast('📞 Composition du numéro…')}
+                              style={{
+                                flexShrink: 0,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                padding: '5px 14px',
+                                borderRadius: 7,
+                                background: 'var(--accent-d)',
+                                color: 'var(--accent)',
+                                textDecoration: 'none',
+                              }}
+                            >
                               Appeler
                             </a>
                           ) : (
-                            <span style={{
-                              flexShrink: 0,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              padding: '5px 14px',
-                              borderRadius: 7,
-                              border: '1px solid var(--border)',
-                              color: 'var(--t3)',
-                            }}>
+                            <button
+                              onClick={() => showToast('✉️ Ouverture du client mail…')}
+                              style={{
+                                flexShrink: 0,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                padding: '5px 14px',
+                                borderRadius: 7,
+                                border: '1px solid var(--border)',
+                                background: 'transparent',
+                                color: 'var(--t3)',
+                                cursor: 'pointer',
+                                fontFamily: "'DM Sans', sans-serif",
+                              }}
+                            >
                               Email
-                            </span>
+                            </button>
                           )}
                         </div>
                       ))}

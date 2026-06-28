@@ -16,15 +16,25 @@ const CRM_STATUSES: { id: CrmStatus; label: string }[] = [
   { id: 'lost',       label: 'Pas intéressé' },
 ]
 
-const BADGE_STYLE: Record<WebsiteStatus, { label: string; className: string }> = {
-  none:        { label: 'Pas de site web',   className: 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-800/30' },
-  unreachable: { label: 'Site injoignable',  className: 'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600' },
-  outdated:    { label: 'Site obsolète',     className: 'bg-orange-50 dark:bg-orange-900/20 text-orange-500 dark:text-orange-400 border border-orange-100 dark:border-orange-800/30' },
-  active:      { label: 'Site actif',        className: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/30' },
-  blocked:     { label: 'Bloqué anti-bot',   className: 'bg-purple-50 dark:bg-purple-900/20 text-purple-500 dark:text-purple-400 border border-purple-100 dark:border-purple-800/30' },
+// Badge restylé sur les tokens de la charte : « pas de site » = l'opportunité (accent),
+// « obsolète/bloqué » = avertissement (warn), « actif » = neutre (déjà accompagné).
+const BADGE_BASE: React.CSSProperties = {
+  display: 'inline-flex', padding: '4px 12px', borderRadius: 20,
+  fontSize: 12, fontWeight: 700,
+}
+const BADGE_ACCENT: React.CSSProperties = { ...BADGE_BASE, background: 'var(--accent-d)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }
+const BADGE_WARN:   React.CSSProperties = { ...BADGE_BASE, background: 'var(--warn-d)', color: 'var(--warn)', border: '1px solid rgba(217,119,6,.25)' }
+const BADGE_NEUTRAL: React.CSSProperties = { ...BADGE_BASE, background: 'var(--surface2)', color: 'var(--t3)', border: '1px solid var(--border-b)' }
+
+const BADGE_STYLE: Record<WebsiteStatus, { label: string; style: React.CSSProperties }> = {
+  none:        { label: 'Pas de site web',  style: BADGE_ACCENT },
+  unreachable: { label: 'Site injoignable', style: BADGE_ACCENT },
+  outdated:    { label: 'Site obsolète',    style: BADGE_WARN },
+  blocked:     { label: 'Bloqué anti-bot',  style: BADGE_WARN },
+  active:      { label: 'Site actif',       style: BADGE_NEUTRAL },
 }
 
-import { typeLabel as getTypeLabel, typeIcon, typeColor } from '@/app/lib/typeConfig'
+import { typeLabel as getTypeLabel, typeIcon } from '@/app/lib/typeConfig'
 
 // ── Script personnalisé ───────────────────────────────────────────────────────
 function buildScript(e: Establishment): string {
@@ -99,34 +109,36 @@ export default function DetailClient({ e }: { e: Establishment }) {
 
   const badge  = BADGE_STYLE[e.websiteStatus]
   const icon   = typeIcon(e.type)
-  const color  = typeColor(e.type)
   const label  = getTypeLabel(e.type)
 
   return (
     <>
       {/* En-tête établissement */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-2xl flex-shrink-0`}>
+      <div className="flex items-start gap-4 mb-6">
+        <div
+          className="flex items-center justify-center flex-shrink-0"
+          style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--surface2)', border: '1px solid var(--border)', fontSize: 26 }}
+        >
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-slate-100 leading-tight">{e.name}</h1>
-              <p className="text-sm text-gray-500 mt-0.5">{label} · {e.address.split(',').slice(-1)[0]?.trim()}</p>
-              <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-xs font-medium ${badge.className}`}>
-                {badge.label}
-              </span>
+              <h1 className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--t1)', marginBottom: 4 }}>{e.name}</h1>
+              <p style={{ fontSize: 13, color: 'var(--t3)', marginBottom: 10 }}>
+                {label}{e.rating ? ` · ⭐ ${e.rating} (${e.ratingCount} avis)` : ''}
+              </p>
+              <span style={badge.style}>{badge.label}</span>
             </div>
             <button
               onClick={handleToggleProspect}
-              className={`shrink-0 mt-1 px-4 py-2 rounded-lg border text-sm font-medium transition ${
-                added
-                  ? 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600'
-                  : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:border-emerald-400 hover:text-emerald-600'
-              }`}
+              className="shrink-0"
+              style={added
+                ? { padding: '9px 18px', borderRadius: 9, background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }
+                : { padding: '9px 18px', borderRadius: 9, background: 'var(--surface)', color: 'var(--t2)', fontSize: 14, fontWeight: 600, border: '1px solid var(--border-b)', cursor: 'pointer' }
+              }
             >
-              {added ? '✓ Ajouté' : '+ Ajouter à mes prospects'}
+              {added ? '✓ Dans mes prospects' : '+ Ajouter à mes prospects'}
             </button>
           </div>
         </div>
@@ -229,7 +241,10 @@ export default function DetailClient({ e }: { e: Establishment }) {
           <section>
             <h2 className="text-sm font-semibold text-gray-500 dark:text-slate-400 mb-2">Script de prospection suggéré</h2>
             <div className="border-t border-gray-100 dark:border-slate-700 pt-3">
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 text-sm text-gray-700 dark:text-slate-300 leading-relaxed border border-gray-200 dark:border-slate-600 italic">
+              <div
+                className="rounded-xl p-4 text-sm leading-relaxed italic"
+                style={{ background: 'var(--bg1)', border: '1px solid var(--border-b)', borderTop: '3px solid var(--accent)', color: 'var(--t2)' }}
+              >
                 {buildScript(e)}
               </div>
             </div>

@@ -68,12 +68,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [plan, setPlan] = useState<PlanInfo | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const t = (document.documentElement.getAttribute('data-theme') ?? 'dark') as Theme
     setTheme(t)
+    const sb = localStorage.getItem('pw_sidebar')
+    if (sb !== null) setSidebarOpen(sb !== 'false')
   }, [])
+
+  function toggleSidebar() {
+    setSidebarOpen(prev => {
+      const next = !prev
+      localStorage.setItem('pw_sidebar', String(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     Promise.all([
@@ -120,16 +131,74 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-[var(--on-accent)] focus:rounded-lg focus:font-semibold focus:text-sm">
         Aller au contenu principal
       </a>
-      {/* SIDEBAR */}
+      {/* SIDEBAR — collapsed rail */}
+      {!sidebarOpen && (
+        <aside className="flex flex-col items-center" aria-label="Navigation principale" style={{ width: 48, flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)', padding: '12px 0', gap: 2 }}>
+          <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7, marginBottom: 8 }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          </div>
+          <button
+            onClick={toggleSidebar}
+            title="Développer le menu"
+            aria-label="Développer le menu"
+            className="flex items-center justify-center transition-all duration-200"
+            style={{ width: 34, height: 34, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--t4)', borderRadius: 8, marginBottom: 4 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.color = 'var(--t2)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--t4)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          {NAV_ITEMS.map(item => {
+            const active = isActive(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={item.label}
+                aria-label={item.label}
+                className="flex items-center justify-center transition-all duration-200"
+                style={{ width: 34, height: 34, borderRadius: 8, background: active ? 'var(--accent-d)' : 'transparent', color: active ? 'var(--accent)' : 'var(--t3)' }}
+              >
+                {item.icon}
+              </Link>
+            )
+          })}
+          <div className="mt-auto">
+            <button
+              onClick={toggleSidebar}
+              title="Développer le menu"
+              aria-label="Développer le menu"
+              className="flex items-center justify-center"
+              style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--accent-d)', color: 'var(--accent)', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+            >
+              {extractInitial(user)}
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* SIDEBAR — full */}
+      {sidebarOpen && (
       <aside className="flex flex-col overflow-hidden" aria-label="Navigation principale" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Logo */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-          <Link href="/dashboard" className="flex items-center gap-[9px]">
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
+          <Link href="/dashboard" className="flex items-center gap-[9px] flex-1 min-w-0">
             <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7 }}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
             </div>
             <span className="font-display" style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em' }}>nosite</span>
           </Link>
+          <button
+            onClick={toggleSidebar}
+            title="Réduire le menu"
+            aria-label="Réduire le menu"
+            className="flex items-center justify-center shrink-0 transition-all duration-200"
+            style={{ width: 26, height: 26, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--t4)', borderRadius: 6 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface2)'; e.currentTarget.style.color = 'var(--t2)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--t4)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </div>
 
         {/* Nav */}
@@ -299,6 +368,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </aside>
+      )}
 
       {/* MAIN CONTENT */}
       <main id="main-content" className="flex-1 overflow-y-auto flex flex-col" style={{ background: 'var(--bg)' }}>

@@ -45,6 +45,7 @@ export default function SearchForm() {
   const [radius, setRadius]           = useState(5)
   const [activeFilters, setActiveFilters] = useState<string[]>(['no_website'])
   const [loading, setLoading]         = useState(false)
+  const [geoLoading, setGeoLoading]   = useState(false)
   const [error, setError]             = useState('')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -103,6 +104,11 @@ export default function SearchForm() {
     categories.length === 1 ? (CATEGORIES.find(c => c.value === categories[0])?.label ?? categories[0]) :
     `${categories.length} types sélectionnés`
 
+  const activeFilterLabel = activeFilters.length > 0
+    ? FILTERS.filter(f => activeFilters.includes(f.id)).map(f => f.label).join(', ')
+        + ' actif' + (activeFilters.length > 1 ? 's' : '')
+    : ''
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(''); setShowSugg(false); setShowCatMenu(false)
     if (!address.trim() && !coords) { setError('Entrez une adresse ou utilisez votre position.'); return }
@@ -118,23 +124,31 @@ export default function SearchForm() {
 
   function handleGeolocate() {
     if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(pos => {
-      setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-      setAddress('Ma position actuelle')
-      setSuggestions([]); setShowSugg(false)
-    })
+    setGeoLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setAddress('Ma position actuelle')
+        setSuggestions([]); setShowSugg(false); setGeoLoading(false)
+      },
+      () => setGeoLoading(false),
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-8">
-
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 mb-6">
+    <form
+      onSubmit={handleSubmit}
+      style={{ background: 'var(--surface)', border: '1px solid var(--border-b)', borderRadius: 20, padding: 32, boxShadow: '0 4px 32px rgba(0,0,0,.06)' }}
+    >
+      {/* Address + Category */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-4" style={{ marginBottom: 24 }}>
         {/* Address */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="address" className="text-sm font-medium text-gray-700 dark:text-slate-300">
+        <div>
+          <label htmlFor="address" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t1)', marginBottom: 8 }}>
             Ville ou adresse
+            <span style={{ fontWeight: 400, color: 'var(--t3)', marginLeft: 4 }}>— point de départ</span>
           </label>
-          <div ref={addrRef} className="relative flex gap-2">
+          <div ref={addrRef} className="flex gap-2 relative">
             <div className="relative flex-1">
               <input
                 id="address" type="text" value={address} autoComplete="off"
@@ -143,27 +157,34 @@ export default function SearchForm() {
                 aria-autocomplete="list"
                 aria-controls="address-listbox"
                 aria-activedescendant={activeIdx >= 0 ? `address-option-${activeIdx}` : undefined}
-                onChange={e => { setAddress(e.target.value); setCoords(null) }}
+                onChange={e => { setAddress(e.target.value); setCoords(null); setError('') }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => suggestions.length > 0 && setShowSugg(true)}
                 placeholder="Paris 11e, Cergy, Lyon…"
-                className="w-full h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                className="field-input"
               />
               {showSugg && suggestions.length > 0 && (
-                <ul id="address-listbox" role="listbox" className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                <ul
+                  id="address-listbox" role="listbox"
+                  className="absolute left-0 right-0 overflow-hidden"
+                  style={{ top: 'calc(100% + 6px)', zIndex: 50, background: 'var(--surface)', border: '1px solid var(--border-b)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.14)' }}
+                >
                   {suggestions.map((s, i) => (
                     <li key={i} id={`address-option-${i}`} role="option" aria-selected={i === activeIdx}>
                       <button
                         type="button"
                         onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
-                        className={`w-full text-left px-4 py-2.5 text-sm flex items-start gap-2.5 transition ${
-                          i === activeIdx
-                            ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                            : 'text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-                        } ${i < suggestions.length - 1 ? 'border-b border-gray-100 dark:border-slate-700' : ''}`}
+                        className="flex items-start gap-2.5 w-full text-left"
+                        style={{
+                          padding: '10px 14px', fontSize: 13, cursor: 'pointer',
+                          border: 'none', borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                          background: i === activeIdx ? 'var(--surface2)' : 'transparent',
+                          color: 'var(--t1)',
+                        }}
                       >
-                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5 text-gray-400 dark:text-slate-500">
-                          <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0" style={{ marginTop: 2 }}>
+                          <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5 2.5 7.5 6 11 6 11S9.5 7.5 9.5 4.5C9.5 2.57 7.93 1 6 1z" fill="var(--accent)" opacity=".6" />
+                          <circle cx="6" cy="4.5" r="1.5" fill="var(--surface)" />
                         </svg>
                         <span className="line-clamp-2 leading-snug">{s.display_name}</span>
                       </button>
@@ -172,60 +193,76 @@ export default function SearchForm() {
                 </ul>
               )}
             </div>
-            <button type="button" onClick={handleGeolocate} aria-label="Utiliser ma position"
-              className="h-11 px-3 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition flex-shrink-0">
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
-              </svg>
+            <button
+              type="button" onClick={handleGeolocate} title="Utiliser ma position" aria-label="Utiliser ma position"
+              className="flex items-center justify-center shrink-0 transition-all duration-150"
+              style={{ height: 44, width: 44, border: '1px solid var(--border-b)', borderRadius: 9, background: 'var(--surface)', color: 'var(--t3)', cursor: 'pointer' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-border)'; e.currentTarget.style.color = 'var(--accent)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-b)'; e.currentTarget.style.color = 'var(--t3)' }}
+            >
+              {geoLoading ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spin .7s linear infinite' }}>
+                  <circle cx="8" cy="8" r="6" stroke="var(--accent)" strokeWidth="1.8" strokeDasharray="24" strokeDashoffset="8" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                  <path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
 
         {/* Category multi-select */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Type de commerce</label>
+        <div>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--t1)', marginBottom: 8 }}>Type de commerce</label>
           <div ref={catRef} className="relative">
             <button
               type="button"
               onClick={() => setShowCatMenu(v => !v)}
               aria-expanded={showCatMenu}
               aria-haspopup="listbox"
-              className="w-full h-11 px-3.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              className="flex items-center justify-between gap-2 w-full text-left"
+              style={{ height: 44, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border-b)', background: 'var(--bg1)', fontSize: 14, cursor: 'pointer' }}
             >
-              <span className={categories.length === 0 ? 'text-gray-400 dark:text-slate-500' : 'text-gray-900 dark:text-slate-100'}>
-                {categoryLabel}
-              </span>
-              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                className={`flex-shrink-0 text-gray-400 transition-transform ${showCatMenu ? 'rotate-180' : ''}`}>
-                <path d="m6 9 6 6 6-6"/>
+              <span style={{ color: categories.length > 0 ? 'var(--t1)' : 'var(--t4)' }}>{categoryLabel}</span>
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 transition-transform" style={{ color: 'var(--t4)', transform: showCatMenu ? 'rotate(180deg)' : undefined }}>
+                <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
             {showCatMenu && (
-              <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
-                {/* Tout sélectionner / désélectionner */}
-                <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-700">
+              <div
+                className="absolute left-0 right-0 overflow-hidden"
+                style={{ top: 'calc(100% + 6px)', zIndex: 50, background: 'var(--surface)', border: '1px solid var(--border-b)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,.14)' }}
+              >
+                <div className="flex items-center justify-between" style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--t3)' }}>{categories.length} sélectionné(s)</span>
                   <button
-                    type="button"
-                    onClick={() => setCategories([])}
-                    className="text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                    type="button" onClick={() => setCategories([])}
+                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    {categories.length === 0 ? 'Tous les types (par défaut)' : 'Tout désélectionner'}
+                    Tout effacer
                   </button>
                 </div>
-                <div className="max-h-56 overflow-y-auto">
+                <div style={{ maxHeight: 220, overflowY: 'auto', padding: 4 }}>
                   {CATEGORIES.map(c => (
                     <label
                       key={c.value}
-                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition"
+                      className="flex items-center gap-2.5 cursor-pointer transition-colors"
+                      style={{ padding: '8px 12px', borderRadius: 7 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface2)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <input
                         type="checkbox"
                         checked={categories.includes(c.value)}
                         onChange={() => toggleCategory(c.value)}
-                        className="w-4 h-4 rounded accent-emerald-500 cursor-pointer flex-shrink-0"
+                        className="shrink-0 cursor-pointer"
+                        style={{ width: 15, height: 15, accentColor: 'var(--accent)' }}
                       />
-                      <span className="text-sm text-gray-700 dark:text-slate-300">{c.label}</span>
+                      <span style={{ fontSize: 13, color: 'var(--t1)' }}>{c.label}</span>
                     </label>
                   ))}
                 </div>
@@ -236,47 +273,78 @@ export default function SearchForm() {
       </div>
 
       {/* Radius */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Rayon de recherche</span>
-          <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">{radius} km</span>
+      <div style={{ marginBottom: 24 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Rayon de recherche</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{radius} km</span>
         </div>
         <input type="range" min={1} max={10} step={1} value={radius}
           onChange={e => setRadius(Number(e.target.value))} aria-label="Rayon de recherche" />
-      </div>
-
-      {/* Quick filters */}
-      <div className="mb-8">
-        <span className="text-sm font-medium text-gray-700 dark:text-slate-300 mr-3">Filtres rapides :</span>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {FILTERS.map(f => {
-            const active = activeFilters.includes(f.id)
-            return (
-              <button key={f.id} type="button" onClick={() => toggleFilter(f.id)}
-                aria-pressed={active}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
-                  active
-                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:border-gray-400 dark:hover:border-slate-500'
-                }`}
-              >{f.label}</button>
-            )
-          })}
+        <div className="flex justify-between" style={{ marginTop: 6 }}>
+          <span style={{ fontSize: 11, color: 'var(--t4)' }}>1 km</span>
+          <span style={{ fontSize: 11, color: 'var(--t4)' }}>10 km</span>
         </div>
       </div>
 
-      <div aria-live="assertive">{error && <p className="text-sm text-red-500 mb-4">{error}</p>}</div>
+      {/* Filters */}
+      <div style={{ marginBottom: 28 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Filtres :</span>
+          {activeFilters.length > 0 && (
+            <span className="flex items-center" style={{ gap: 5, fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="4" fill="var(--accent)" /></svg>
+              {activeFilterLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map(f => {
+            const active = activeFilters.includes(f.id)
+            return (
+              <button key={f.id} type="button" onClick={() => toggleFilter(f.id)} aria-pressed={active} className={active ? 'chip-on' : 'chip-off'}>
+                {f.label}
+              </button>
+            )
+          })}
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--t4)', marginTop: 8 }}>
+          Filtre « Sans site web » activé par défaut pour maximiser vos opportunités.
+        </p>
+      </div>
 
+      {/* Error */}
+      <div aria-live="assertive">
+        {error && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 9, background: 'var(--error-d)', border: '1px solid var(--error-border)' }}>
+            <span style={{ fontSize: 13, color: 'var(--error)' }}>{error}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Submit */}
       <div className="flex justify-end">
-        <button type="submit" disabled={loading}
-          className="btn-primary inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition">
-          {loading
-            ? <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            : <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          }
-          {loading ? 'Recherche…' : 'Lancer la recherche'}
+        <button
+          type="submit" disabled={loading}
+          className="inline-flex items-center gap-2 btn-accent"
+          style={{ padding: '12px 28px', borderRadius: 9, fontSize: 14 }}
+        >
+          {loading ? (
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ animation: 'spin .7s linear infinite' }}>
+              <circle cx="7.5" cy="7.5" r="5.5" stroke="var(--on-accent)" strokeWidth="1.8" strokeDasharray="24" strokeDashoffset="8" />
+            </svg>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <circle cx="6.5" cy="6.5" r="4.5" stroke="var(--on-accent)" strokeWidth="1.5" />
+              <path d="M13 13l-2.5-2.5" stroke="var(--on-accent)" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+          {loading ? 'Recherche en cours…' : 'Lancer la recherche'}
         </button>
       </div>
+
+      <p style={{ marginTop: 20, fontSize: 13, color: 'var(--t4)', textAlign: 'center' }}>
+        💡 Conseil : commencez par un arrondissement ou un quartier précis pour des résultats plus pertinents.
+      </p>
     </form>
   )
 }
