@@ -68,7 +68,7 @@ export default function DetailPage() {
     <AppShell>
       <div className="anim-slide-right">
         {/* Back bar */}
-        <div style={{
+        <div className="pw-detail-back" style={{
           padding: '14px 32px',
           borderBottom: '1px solid var(--border)',
           background: 'var(--surface)',
@@ -89,7 +89,7 @@ export default function DetailPage() {
         </div>
 
         {/* Content */}
-        <div className="anim-fade-in" style={{ padding: '28px 36px', overflowY: 'auto' }}>
+        <div className="pw-detail-content anim-fade-in" style={{ padding: '28px 36px', overflowY: 'auto' }}>
           {error && (
             <div style={{
               background: 'var(--surface)', border: '1px solid var(--border)',

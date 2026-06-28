@@ -137,6 +137,7 @@ export default function SearchForm() {
 
   return (
     <form
+      className="pw-search-form"
       onSubmit={handleSubmit}
       style={{ background: 'var(--surface)', border: '1px solid var(--border-b)', borderRadius: 20, padding: 32, boxShadow: '0 4px 32px rgba(0,0,0,.06)' }}
     >
@@ -148,7 +149,7 @@ export default function SearchForm() {
             Ville ou adresse
             <span style={{ fontWeight: 400, color: 'var(--t3)', marginLeft: 4 }}>— point de départ</span>
           </label>
-          <div ref={addrRef} className="flex gap-2 relative">
+          <div ref={addrRef} className="pw-address-control flex gap-2 relative">
             <div className="relative flex-1">
               <input
                 id="address" type="text" value={address} autoComplete="off"
@@ -322,7 +323,7 @@ export default function SearchForm() {
       </div>
 
       {/* Submit */}
-      <div className="flex justify-end">
+      <div className="pw-search-submit flex justify-end">
         <button
           type="submit" disabled={loading}
           className="inline-flex items-center gap-2 btn-accent"

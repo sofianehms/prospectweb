@@ -6,8 +6,8 @@ import SearchForm from '../components/SearchForm'
 export default function SearchPage() {
   return (
     <AppShell>
-      <div className="flex-1 flex items-center justify-center anim-fade-in">
-        <div style={{ width: '100%', maxWidth: 680, padding: '40px 36px' }}>
+      <div className="pw-search-page flex-1 flex items-center justify-center anim-fade-in">
+        <div className="pw-search-wrap" style={{ width: '100%', maxWidth: 680, padding: '40px 36px' }}>
           {/* Hero */}
           <div style={{ marginBottom: 28, textAlign: 'center' }}>
             <div

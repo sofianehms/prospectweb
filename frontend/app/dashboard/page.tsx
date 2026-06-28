@@ -121,7 +121,7 @@ export default function DashboardPage() {
       <div className="anim-fade-in">
         {toast && <div className="toast-notif" role="status">{toast}</div>}
         {/* Header */}
-        <div style={{
+        <div className="pw-page-header" style={{
           padding: '28px 36px 20px',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
@@ -158,8 +158,8 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="pw-dashboard-content" style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div className="pw-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
               {[1,2,3,4].map(i => (
                 <div key={i} className="animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
                   <div style={{ width: 80, height: 10, borderRadius: 4, background: 'var(--surface2)', marginBottom: 12 }} />
@@ -168,16 +168,16 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div className="pw-two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               {[1,2].map(i => (
                 <div key={i} className="animate-pulse" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, height: 200 }} />
               ))}
             </div>
           </div>
         ) : (
-          <div style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="pw-dashboard-content" style={{ padding: '24px 36px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div className="pw-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
               {([
                 { label: 'Opportunités', value: toContact.length, sub: `sur ${prospects.length} prospects`, color: toContact.length > 0 ? 'var(--accent)' : 'var(--t1)' },
                 { label: 'Prospects actifs', value: prospects.length, sub: 'en base', color: 'var(--t1)' },
@@ -287,7 +287,7 @@ export default function DashboardPage() {
             )}
 
             {/* Two column grid: À contacter + Recherches récentes */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div className="pw-two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               {/* À contacter */}
               <div style={{
                 background: 'var(--surface)',
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                   Voir tout &rarr;
                 </Link>
               </div>
-              <div style={{ padding: '20px 22px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+              <div className="pw-pipeline-grid" style={{ padding: '20px 22px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
                 {CRM_ORDER.map((status) => {
                   const isActive = crmCounts[status] > 0 && (status === 'won' || status === 'discussing')
                   return (

@@ -156,9 +156,9 @@ export default function ResultsClient({
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="pw-results" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ padding: '18px 28px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, flexShrink: 0 }}>
+      <div className="pw-results-header" style={{ padding: '18px 28px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, flexShrink: 0 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1C5.07 1 3.5 2.57 3.5 4.5 3.5 7.5 7 12 7 12S10.5 7.5 10.5 4.5C10.5 2.57 8.93 1 7 1z" fill="var(--accent)" opacity=".8" /><circle cx="7" cy="4.5" r="1.8" fill="var(--surface)" /></svg>
@@ -174,7 +174,7 @@ export default function ResultsClient({
             <span style={{ fontSize: 13, color: 'var(--t3)' }}>{total} au total</span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="pw-results-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', border: '1px solid var(--border-b)', borderRadius: 8, overflow: 'hidden', background: 'var(--surface)' }}>
             {viewToggle.map((v, i) => {
               const on = viewMode === v.id
@@ -205,7 +205,7 @@ export default function ResultsClient({
       </div>
 
       {/* Filter tabs */}
-      <div style={{ padding: '12px 28px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, background: 'var(--surface)', flexShrink: 0 }}>
+      <div className="pw-results-filters" style={{ padding: '12px 28px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, background: 'var(--surface)', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {tabs.map(t => {
             const on = activeTab === t.id
@@ -249,7 +249,7 @@ export default function ResultsClient({
 
       {/* LIST VIEW */}
       {viewMode === 'list' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px 80px' }}>
+        <div className="pw-results-body" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px 80px' }}>
           <div className="anim-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {/* Select all */}
             {filtered.length > 0 && (
@@ -274,6 +274,7 @@ export default function ResultsClient({
               return (
                 <div
                   key={e.id}
+                  className="pw-result-row"
                   style={{
                     background: sel ? 'var(--accent-s)' : 'var(--surface)',
                     border: `1px solid ${sel ? 'var(--accent-border)' : 'var(--border)'}`,
@@ -290,7 +291,7 @@ export default function ResultsClient({
                     <MetaLine e={e} />
                     <p style={{ fontSize: 12, color: 'var(--t4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.address}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <div className="pw-result-row-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                     <span style={{ ...badgeBase, ...meta.badge }} className="hidden sm:inline-flex">{meta.short}</span>
                     <button onClick={() => goToDetail(e.id)} style={{ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'var(--surface2)', border: '1px solid var(--border-b)', color: 'var(--t2)', whiteSpace: 'nowrap', transition: 'all .15s' }}>Voir</button>
                     <button onClick={() => toggleAdd(e)} style={addBtnStyle(added)}>{added ? '✓ Ajouté' : '+ Ajouter'}</button>
@@ -310,7 +311,7 @@ export default function ResultsClient({
 
       {/* GRID VIEW */}
       {viewMode === 'grid' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 28px 80px' }}>
+        <div className="pw-results-body" style={{ flex: 1, overflowY: 'auto', padding: '16px 28px 80px' }}>
           <div className="anim-fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
             {filtered.length === 0 && (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '48px 0', color: 'var(--t4)', fontSize: 14 }}>Aucun résultat pour ce filtre.</div>
@@ -347,7 +348,7 @@ export default function ResultsClient({
 
       {/* BULK ACTION BAR */}
       {selInFiltered.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', background: 'var(--t1)', color: 'var(--bg)', borderRadius: 14, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 8px 32px rgba(0,0,0,.28)', zIndex: 100, whiteSpace: 'nowrap' }}>
+        <div className="pw-bulk-bar" style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', background: 'var(--t1)', color: 'var(--bg)', borderRadius: 14, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 8px 32px rgba(0,0,0,.28)', zIndex: 100, whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: 13, opacity: .7 }}>{selInFiltered.length} sélectionné(s)</span>
           <div style={{ width: 1, height: 16, background: 'color-mix(in srgb, var(--bg) 20%, transparent)' }} />
           <button onClick={bulkAdd} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}>

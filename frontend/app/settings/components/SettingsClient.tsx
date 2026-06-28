@@ -64,9 +64,9 @@ export default function SettingsClient() {
   const meta = SECTION_META[activeTab]
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="pw-settings" style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Settings nav */}
-      <div style={{ width: 200, flexShrink: 0, borderRight: '1px solid var(--border)', padding: '24px 10px', display: 'flex', flexDirection: 'column', gap: 2, background: 'var(--bg1)', overflowY: 'auto' }}>
+      <div className="pw-settings-nav" style={{ width: 200, flexShrink: 0, borderRight: '1px solid var(--border)', padding: '24px 10px', display: 'flex', flexDirection: 'column', gap: 2, background: 'var(--bg1)', overflowY: 'auto' }}>
         <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--t4)', padding: '0 10px', marginBottom: 8 }}>Paramètres</p>
         {TABS.map(t => (
           <button key={t.id} className={`set-tab${activeTab === t.id ? ' active' : ''}`} onClick={() => selectTab(t.id)} aria-current={activeTab === t.id}>
@@ -77,15 +77,15 @@ export default function SettingsClient() {
       </div>
 
       {/* Content */}
-      <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
+      <main className="pw-settings-main" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
         {toastMsg && <div className="set-toast" role="status">{toastMsg}</div>}
 
-        <div style={{ padding: '28px 36px 20px', borderBottom: '1px solid var(--border)' }}>
+        <div className="pw-page-header" style={{ padding: '28px 36px 20px', borderBottom: '1px solid var(--border)' }}>
           <h1 className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--t1)', marginBottom: 3 }}>{meta.title}</h1>
           <p style={{ fontSize: 14, color: 'var(--t3)' }}>{meta.desc}</p>
         </div>
 
-        <div className="anim-fade-in" style={{ padding: '28px 36px 48px', maxWidth: 680 }} key={activeTab}>
+        <div className="pw-settings-content anim-fade-in" style={{ padding: '28px 36px 48px', maxWidth: 680 }} key={activeTab}>
           {activeTab === 'profil' && <ProfileTab toast={toast} />}
           {activeTab === 'securite' && <SecurityTab toast={toast} />}
           {activeTab === 'preferences' && <PreferencesTab toast={toast} />}

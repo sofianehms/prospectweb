@@ -116,13 +116,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--t1)', fontFamily: "'DM Sans', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
+    <div className="pw-app-shell flex h-screen overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--t1)', fontFamily: "'DM Sans', sans-serif", WebkitFontSmoothing: 'antialiased' }}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-[var(--on-accent)] focus:rounded-lg focus:font-semibold focus:text-sm">
         Aller au contenu principal
       </a>
       {/* SIDEBAR — collapsed rail */}
       {!sidebarOpen && (
-        <aside className="flex flex-col items-center" aria-label="Navigation principale" style={{ width: 48, flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)', padding: '12px 0', gap: 2 }}>
+        <aside className="hidden md:flex flex-col items-center" aria-label="Navigation principale" style={{ width: 48, flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)', padding: '12px 0', gap: 2 }}>
           <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7, marginBottom: 8 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
           </div>
@@ -168,7 +168,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* SIDEBAR — full */}
       {sidebarOpen && (
-      <aside className="flex flex-col overflow-hidden" aria-label="Navigation principale" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+      <aside className="hidden md:flex flex-col overflow-hidden" aria-label="Navigation principale" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
           <Link href="/dashboard" className="flex items-center gap-[9px] flex-1 min-w-0">
@@ -337,9 +337,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* MAIN CONTENT */}
-      <main id="main-content" className="flex-1 overflow-y-auto flex flex-col" style={{ background: 'var(--bg)' }}>
+      <main id="main-content" className="pw-app-main flex-1 overflow-y-auto flex flex-col" style={{ background: 'var(--bg)' }}>
         {children}
       </main>
+
+      <nav className="pw-mobile-nav md:hidden" aria-label="Navigation principale mobile">
+        {NAV_ITEMS.map(item => {
+          const active = isActive(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? 'page' : undefined}
+              className="pw-mobile-nav-item"
+              style={{ color: active ? 'var(--accent)' : 'var(--t3)' }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
     </div>
   )
 }

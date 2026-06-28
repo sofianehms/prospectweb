@@ -117,7 +117,7 @@ export default function ProspectsClient() {
 
       {/* Header */}
       <div
-        className="flex items-center justify-between gap-4 flex-wrap shrink-0"
+        className="pw-page-header flex items-center justify-between gap-4 flex-wrap shrink-0"
         style={{ padding: '22px 32px 18px', borderBottom: '1px solid var(--border)' }}
       >
         <div>
@@ -148,7 +148,7 @@ export default function ProspectsClient() {
 
       {/* Controls : tabs + view toggle + search + sort */}
       <div
-        className="flex items-center justify-between gap-3 flex-wrap shrink-0"
+        className="pw-prospects-controls flex items-center justify-between gap-3 flex-wrap shrink-0"
         style={{ padding: '14px 32px', borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}
       >
         <div className="flex flex-wrap gap-2">
@@ -164,7 +164,7 @@ export default function ProspectsClient() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="pw-prospects-tools flex items-center gap-2">
           {/* View toggle */}
           <div className="flex" style={{ border: '1px solid var(--border-b)', borderRadius: 8, overflow: 'hidden', background: 'var(--surface)' }}>
             <button
@@ -228,7 +228,7 @@ export default function ProspectsClient() {
       </div>
 
       {/* Content */}
-      <div className="flex-1" style={{ padding: '16px 32px 36px' }}>
+      <div className="pw-prospects-content flex-1" style={{ padding: '16px 32px 36px' }}>
 
         {/* Loading skeleton */}
         {!ready ? (
@@ -303,7 +303,7 @@ export default function ProspectsClient() {
           /* List view */
           <div className="anim-fade-in flex flex-col gap-[7px]">
             {filtered.map(p => (
-              <div key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div key={p.id} className="pw-prospect-row" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
                 {deletingId === p.id ? (
                   /* Inline delete confirm */
                   <div className="flex items-center justify-between gap-3" style={{ padding: '13px 16px', background: 'var(--error-d)', borderLeft: '3px solid var(--error)' }}>
@@ -318,7 +318,7 @@ export default function ProspectsClient() {
                   </div>
                 ) : (
                   /* Normal row */
-                  <div className="flex items-center gap-3" style={{ padding: '13px 16px' }}>
+                  <div className="pw-prospect-row-inner flex items-center gap-3" style={{ padding: '13px 16px' }}>
                     <button
                       onClick={() => router.push(`/results/${p.id}`)}
                       className="flex items-center gap-3 min-w-0 flex-1 text-left"
@@ -330,7 +330,7 @@ export default function ProspectsClient() {
                         <p style={{ fontSize: 12, color: 'var(--t4)' }}>Ajouté le {formatDate(p.addedAt)} · {typeLabel(p.type)}</p>
                       </div>
                     </button>
-                    <div className="flex items-center gap-[10px] shrink-0">
+                    <div className="pw-prospect-row-actions flex items-center gap-[10px] shrink-0">
                       <StatusPill p={p} onChange={s => setStatus(p.id, s)} />
                       <DeleteButton onClick={() => setDeletingId(p.id)} />
                     </div>
