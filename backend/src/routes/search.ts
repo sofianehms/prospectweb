@@ -25,6 +25,15 @@ export interface Establishment extends Place {
   alreadySaved?: boolean;
 }
 
+type SearchRecordPayload = {
+  address: string;
+  lat: number;
+  lng: number;
+  radius: number;
+  types: string;
+  resultCount: number;
+};
+
 function resolveSiteStatus(
   website: string | null,
   reachable: boolean,
@@ -36,6 +45,19 @@ function resolveSiteStatus(
   if (!reachable)        return 'unreachable';
   if (!hasRecentContent) return 'outdated';
   return 'active';
+}
+
+async function consumeSearch(
+  userId: string,
+  data: SearchRecordPayload,
+  mustPersist: boolean,
+): Promise<void> {
+  if (mustPersist) {
+    await recordSearch(userId, data);
+    return;
+  }
+
+  recordSearch(userId, data).catch(err => console.error('[search-history] save failed:', err.message));
 }
 
 // GET /api/search?address=Paris&radius=1000&type=restaurant
@@ -127,16 +149,14 @@ router.get('/', async (req: Request, res: Response) => {
     const cached = await getCached<{ center: typeof center; radius: number; summary: object; establishments: unknown[] }>(key);
     if (cached) {
       // Un résultat servi depuis le cache compte quand même comme la recherche unique du plan gratuit.
-      if (onFreePlan) {
-        recordSearch(userId, {
-          address: addressStr,
-          lat: center.lat,
-          lng: center.lng,
-          radius: radiusMeters,
-          types: typeList.join(','),
-          resultCount: cached.establishments.length,
-        }).catch(err => console.error('[search-history] save failed:', err.message));
-      }
+      await consumeSearch(userId, {
+        address: addressStr,
+        lat: center.lat,
+        lng: center.lng,
+        radius: radiusMeters,
+        types: typeList.join(','),
+        resultCount: cached.establishments.length,
+      }, onFreePlan);
       res.json(cached);
       return;
     }
@@ -203,14 +223,14 @@ router.get('/', async (req: Request, res: Response) => {
       establishments.map(e => setCached(`establishment:${e.id}`, e))
     );
 
-    recordSearch(userId, {
+    await consumeSearch(userId, {
       address: addressStr,
       lat: center.lat,
       lng: center.lng,
       radius: radiusMeters,
       types: typeList.join(','),
       resultCount: establishments.length,
-    }).catch(err => console.error('[search-history] save failed:', err.message));
+    }, onFreePlan);
 
     res.json(payload);
   } catch (err) {
