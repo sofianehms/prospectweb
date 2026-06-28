@@ -9,10 +9,24 @@ export interface User {
   createdAt: string;
 }
 
+// Utilisateurs déjà provisionnés (avec un vrai email) durant la vie du process :
+// évite un aller-retour DB à chaque requête authentifiée.
+const provisionedWithEmail = new Set<string>();
+
 export async function ensureClerkUser(
   clerkId: string,
   email: string,
 ): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Déjà provisionné avec un email réel : rien à faire.
+  if (normalizedEmail && provisionedWithEmail.has(clerkId)) return;
+
+  // `email` est UNIQUE NOT NULL : si Clerk ne nous a pas (encore) donné l'adresse,
+  // on insère un placeholder unique pour garantir l'existence de la ligne (FK),
+  // l'email réel étant mis à jour dès qu'il est connu.
+  const emailToStore = normalizedEmail || `${clerkId}@clerk.local`;
+
   const { rows } = await getPool().query<{ id: string }>(
     'SELECT id FROM users WHERE id = $1',
     [clerkId],
@@ -23,14 +37,16 @@ export async function ensureClerkUser(
     `INSERT INTO users (id, email, password_hash, first_name, last_name)
      VALUES ($1, $2, '', '', '')
      ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email`,
-    [clerkId, email.toLowerCase()],
+    [clerkId, emailToStore],
   );
 
-  if (isNew) {
+  if (normalizedEmail) provisionedWithEmail.add(clerkId);
+
+  if (isNew && normalizedEmail) {
     try {
       const { sendWelcomeEmail } = await import('./emailService');
-      const name = email.split('@')[0].split(/[._-]/)[0];
-      sendWelcomeEmail(email.toLowerCase(), name.charAt(0).toUpperCase() + name.slice(1)).catch(() => {});
+      const name = normalizedEmail.split('@')[0].split(/[._-]/)[0];
+      sendWelcomeEmail(normalizedEmail, name.charAt(0).toUpperCase() + name.slice(1)).catch(() => {});
     } catch { /* email service optional */ }
   }
 }

@@ -58,8 +58,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
         role: (payload as Record<string, unknown>).role as string | undefined,
       };
 
-      if (email) {
-        ensureClerkUser(payload.sub, email).catch(() => {});
+      // Provisionne la ligne `users` AVANT de poursuivre : sans elle, toute insertion
+      // liée (prospects, search_history…) échoue sur la contrainte de clé étrangère.
+      try {
+        await ensureClerkUser(payload.sub, email ?? '');
+      } catch (err) {
+        console.error('[auth] ensureClerkUser failed:', (err as Error).message);
       }
 
       next();

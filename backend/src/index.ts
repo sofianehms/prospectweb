@@ -101,13 +101,31 @@ app.get('/api/ops', requireAuth, requireAdmin, async (_req, res) => {
 });
 
 app.get('/api/usage/me', requireAuth, async (req, res) => {
+  const userId = req.user!.sub;
   if (process.env.DATABASE_URL) {
     try {
+      const { getUserPlan, isFreePlan, FREE_PLAN_SEARCH_LIMIT } = await import('./services/planStore');
+      const plan = await getUserPlan(userId);
+
+      // Plan gratuit : la limite pertinente est le nombre de recherches à vie (pas les
+      // appels API quotidiens). On expose donc l'usage « recherches » (0 ou 1).
+      if (isFreePlan(plan)) {
+        const { countUserSearches } = await import('./services/searchHistory');
+        const used = await countUserSearches(userId);
+        res.json({
+          date: new Date().toISOString().slice(0, 10),
+          calls: Math.min(used, FREE_PLAN_SEARCH_LIMIT),
+          limit: FREE_PLAN_SEARCH_LIMIT,
+          remaining: Math.max(0, FREE_PLAN_SEARCH_LIMIT - used),
+        });
+        return;
+      }
+
       const { syncLimitFromPlan } = await import('./services/userQuota');
-      await syncLimitFromPlan(req.user!.sub);
+      await syncLimitFromPlan(userId);
     } catch { /* fallback */ }
   }
-  res.json(getUserUsage(req.user!.sub));
+  res.json(getUserUsage(userId));
 });
 
 app.get('/api/usage/me/history', requireAuth, async (req, res) => {
