@@ -3,6 +3,20 @@ import { backendHeaders } from '@/app/lib/auth'
 
 const BACKEND = process.env.BACKEND_URL ?? 'http://localhost:4000'
 
+async function readBackendJson(res: Response) {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return {
+      error: 'Réponse backend invalide.',
+      status: res.status,
+      contentType: res.headers.get('content-type') ?? 'unknown',
+    }
+  }
+}
+
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const res = await fetch(`${BACKEND}/api/prospects/${id}`, {
@@ -10,8 +24,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     headers: await backendHeaders(),
   })
   if (res.status === 204) return new NextResponse(null, { status: 204 })
-  const data = await res.json()
-  return NextResponse.json(data, { status: res.status })
+  const data = await readBackendJson(res)
+  const status = data?.error === 'Réponse backend invalide.' ? 502 : res.status
+  return NextResponse.json(data, { status })
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     headers: await backendHeaders(),
     body: JSON.stringify(body),
   })
-  const data = await res.json()
-  return NextResponse.json(data, { status: res.status })
+  const data = await readBackendJson(res)
+  const status = data?.error === 'Réponse backend invalide.' ? 502 : res.status
+  return NextResponse.json(data, { status })
 }

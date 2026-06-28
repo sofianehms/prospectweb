@@ -34,21 +34,56 @@ function loadLocal(): SavedProspect[] {
   }
 }
 
-async function migrateLocal(): Promise<void> {
-  const local = loadLocal()
-  if (local.length === 0) return
+function saveLocal(prospects: SavedProspect[]) {
+  if (prospects.length === 0) localStorage.removeItem(STORAGE_KEY)
+  else localStorage.setItem(STORAGE_KEY, JSON.stringify(prospects))
+}
 
+function upsertLocal(prospect: SavedProspect) {
+  const local = loadLocal()
+  saveLocal([prospect, ...local.filter(p => p.id !== prospect.id)])
+}
+
+function removeLocal(id: string) {
+  saveLocal(loadLocal().filter(p => p.id !== id))
+}
+
+function updateLocal(id: string, patch: Partial<SavedProspect>) {
+  const local = loadLocal()
+  if (local.some(p => p.id === id)) {
+    saveLocal(local.map(p => p.id === id ? { ...p, ...patch } : p))
+  }
+}
+
+function mergeProspects(server: SavedProspect[], local: SavedProspect[]): SavedProspect[] {
+  const seen = new Set<string>()
+  return [...local, ...server].filter(p => {
+    if (seen.has(p.id)) return false
+    seen.add(p.id)
+    return true
+  })
+}
+
+async function migrateLocal(): Promise<SavedProspect[]> {
+  const local = loadLocal()
+  if (local.length === 0) return []
+
+  const failed: SavedProspect[] = []
   for (const p of local) {
     try {
-      await fetch('/api/prospects', {
+      const res = await fetch('/api/prospects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(p),
       })
-    } catch { /* best effort */ }
+      if (!res.ok) failed.push(p)
+    } catch {
+      failed.push(p)
+    }
   }
 
-  localStorage.removeItem(STORAGE_KEY)
+  saveLocal(failed)
+  return failed
 }
 
 export function useProspects() {
@@ -57,15 +92,19 @@ export function useProspects() {
 
   useEffect(() => {
     (async () => {
-      await migrateLocal()
+      const local = await migrateLocal()
 
       try {
         const res = await fetch('/api/prospects')
         if (res.ok) {
           const data: SavedProspect[] = await res.json()
-          setProspects(data)
+          setProspects(mergeProspects(data, local))
+        } else {
+          setProspects(local)
         }
-      } catch { /* offline fallback: empty list */ }
+      } catch {
+        setProspects(local)
+      }
 
       setReady(true)
     })()
@@ -83,26 +122,40 @@ export function useProspects() {
       ratingCount:   e.ratingCount,
       websiteStatus: e.websiteStatus,
     }
+    const optimistic: SavedProspect = {
+      ...body,
+      crmStatus: 'to_contact',
+      notes: '',
+      addedAt: new Date().toISOString(),
+    }
 
     setProspects(prev => {
       if (prev.some(p => p.id === e.id)) return prev
-      return [{ ...body, crmStatus: 'to_contact' as CrmStatus, notes: '', addedAt: new Date().toISOString() }, ...prev]
+      return [optimistic, ...prev]
     })
+    upsertLocal(optimistic)
 
     fetch('/api/prospects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+    }).then(async res => {
+      if (!res.ok) return
+      const saved = await res.json().catch(() => null)
+      removeLocal(e.id)
+      if (saved) setProspects(prev => prev.map(p => p.id === e.id ? saved : p))
     }).catch(() => {})
   }, [])
 
   const remove = useCallback((id: string) => {
     setProspects(prev => prev.filter(p => p.id !== id))
+    removeLocal(id)
     fetch(`/api/prospects/${id}`, { method: 'DELETE' }).catch(() => {})
   }, [])
 
   const setStatus = useCallback((id: string, status: CrmStatus) => {
     setProspects(prev => prev.map(p => p.id === id ? { ...p, crmStatus: status } : p))
+    updateLocal(id, { crmStatus: status })
     fetch(`/api/prospects/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -112,6 +165,7 @@ export function useProspects() {
 
   const setNotes = useCallback((id: string, notes: string) => {
     setProspects(prev => prev.map(p => p.id === id ? { ...p, notes } : p))
+    updateLocal(id, { notes })
     fetch(`/api/prospects/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -121,6 +175,7 @@ export function useProspects() {
 
   const setFollowUp = useCallback((id: string, followUpAt: string | null) => {
     setProspects(prev => prev.map(p => p.id === id ? { ...p, followUpAt } : p))
+    updateLocal(id, { followUpAt })
     fetch(`/api/prospects/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
