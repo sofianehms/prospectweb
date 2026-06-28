@@ -16,6 +16,23 @@ interface PlanRow {
   max_prospects: number;
 }
 
+/**
+ * Nombre total de recherches autorisées, à vie, pour un utilisateur sur le plan gratuit.
+ * Contrairement au quota journalier des plans payants, cette limite ne se réinitialise jamais :
+ * un compte gratuit n'a droit qu'à UNE seule recherche au total.
+ */
+export const FREE_PLAN_SEARCH_LIMIT = 1;
+
+/** Erreur levée lorsqu'un utilisateur gratuit a déjà consommé sa recherche unique. */
+export class FreePlanLimitError extends Error {
+  constructor() {
+    super(
+      'Votre recherche gratuite a déjà été utilisée. Passez à un plan payant pour lancer de nouvelles recherches.',
+    );
+    this.name = 'FreePlanLimitError';
+  }
+}
+
 const planCache = new Map<string, Plan>();
 
 function rowToPlan(r: PlanRow): Plan {
@@ -37,7 +54,7 @@ export async function getPlan(planId: string): Promise<Plan> {
   );
 
   if (!rows.length) {
-    return { id: 'free', name: 'Gratuit', dailyLimit: 50, monthlyPrice: 0, maxProspects: 100 };
+    return { id: 'free', name: 'Gratuit', dailyLimit: 1, monthlyPrice: 0, maxProspects: 100 };
   }
 
   const plan = rowToPlan(rows[0]);
@@ -64,6 +81,10 @@ export async function getUserSubscriptionStatus(userId: string): Promise<string 
 
 export function isPaidPlan(plan: Plan): boolean {
   return plan.monthlyPrice > 0;
+}
+
+export function isFreePlan(plan: Plan): boolean {
+  return !isPaidPlan(plan);
 }
 
 export async function setUserPlan(userId: string, planId: string): Promise<void> {

@@ -102,11 +102,15 @@ export async function initDb(): Promise<void> {
 
   await db.query(`
     INSERT INTO plans (id, name, daily_limit, monthly_price, max_prospects) VALUES
-      ('free',     'Gratuit',    50,   0,  100),
+      ('free',     'Gratuit',     1,   0,  100),
       ('pro',      'Pro',       300,  29,  1000),
       ('business', 'Business', 1000,  79, 10000)
     ON CONFLICT (id) DO NOTHING
   `);
+
+  // Le plan gratuit est limité à 1 seule recherche à vie (cf. FREE_PLAN_SEARCH_LIMIT) :
+  // on aligne aussi la limite quotidienne historique (anciennement 50) pour les bases déjà seedées.
+  await db.query(`UPDATE plans SET daily_limit = 1 WHERE id = 'free' AND daily_limit <> 1`);
 
   await db.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'

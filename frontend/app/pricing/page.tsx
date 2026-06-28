@@ -15,7 +15,7 @@ interface PlanInfo {
 
 const PLAN_FEATURES: Record<string, string[]> = {
   free: [
-    '50 recherches / jour',
+    '1 recherche gratuite',
     '100 prospects en base',
     'CRM basique',
     'Export CSV',

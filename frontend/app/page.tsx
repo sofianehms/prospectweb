@@ -458,7 +458,7 @@ function Pricing() {
             <p className="text-[13px] text-gray-400 dark:text-slate-500 mb-6 leading-relaxed">Pour découvrir Nosite et tester la prospection locale.</p>
             <Link href="/sign-up" className="flex items-center justify-center py-3 border border-gray-200 dark:border-slate-700 rounded-[9px] text-sm font-semibold text-gray-900 dark:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all mb-6">Démarrer gratuitement</Link>
             <div className="flex flex-col gap-2.5">
-              {['50 recherches / jour', '100 prospects en base', 'Export CSV', 'CRM basique', 'Score site web'].map((f, i) => (
+              {['1 recherche gratuite', '100 prospects en base', 'Export CSV', 'CRM basique', 'Score site web'].map((f, i) => (
                 <div key={i} className="flex gap-2.5 items-center">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-7" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   <span className="text-sm text-gray-500 dark:text-slate-400">{f}</span>

@@ -141,7 +141,9 @@ export default function SubscriptionTab({ toast }: { toast: (msg: string) => voi
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <Stat label="Statut" value={statusLabel} accent={isActive || (!isPaid)} />
-          <Stat label="Recherches / jour" value={plan ? String(plan.dailyLimit) : '—'} />
+          {isPaid
+            ? <Stat label="Recherches / jour" value={plan ? String(plan.dailyLimit) : '—'} />
+            : <Stat label="Recherches" value="1 gratuite" />}
           <Stat label="Prospects" value={plan ? `${plan.maxProspects.toLocaleString('fr-FR')} max` : '—'} />
           <Stat label="Utilisé aujourd'hui" value={usage ? `${usage.calls} / ${usage.limit}` : '—'} />
         </div>

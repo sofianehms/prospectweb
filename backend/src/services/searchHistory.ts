@@ -50,6 +50,14 @@ export async function recordSearch(
   return rowToRecord(rows[0]);
 }
 
+export async function countUserSearches(userId: string): Promise<number> {
+  const { rows } = await getPool().query<{ count: string }>(
+    'SELECT COUNT(*)::int AS count FROM search_history WHERE user_id = $1',
+    [userId],
+  );
+  return Number(rows[0]?.count ?? 0);
+}
+
 export async function listSearchHistory(userId: string, limit = 20): Promise<SearchRecord[]> {
   const { rows } = await getPool().query<SearchRow>(
     'SELECT * FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',

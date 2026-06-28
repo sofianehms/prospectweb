@@ -36,17 +36,6 @@ const NAV_ITEMS = [
   },
 ]
 
-const NAV_BOTTOM = [
-  {
-    href: '/prospects', label: 'CRM',
-    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="3" height="10" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="6" y="5" width="3" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/><rect x="11" y="2" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.3"/></svg>,
-  },
-  {
-    href: '/settings', label: 'Paramètres',
-    icon: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M3.1 12.9l1.1-1.1M11.8 4.2l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
-  },
-]
-
 function extractName(user: UserInfo | null): string {
   if (!user) return '…'
   if (user.firstName) return user.firstName
@@ -208,29 +197,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 key={item.href}
-                href={item.href}
-                className="flex items-center gap-[10px] transition-all duration-200"
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 9,
-                  border: `1px solid ${active ? 'var(--accent-border)' : 'var(--border)'}`,
-                  fontSize: 14, fontWeight: active ? 600 : 500,
-                  background: active ? 'var(--accent-d)' : 'var(--surface2)',
-                  color: active ? 'var(--accent)' : 'var(--t3)',
-                }}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            )
-          })}
-
-          <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
-
-          {NAV_BOTTOM.map(item => {
-            const active = isActive(item.href)
-            return (
-              <Link
-                key={item.href + item.label}
                 href={item.href}
                 className="flex items-center gap-[10px] transition-all duration-200"
                 style={{

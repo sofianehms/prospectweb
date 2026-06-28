@@ -8,8 +8,9 @@ import { requireInternalSecret } from '../middleware/auth';
 import { searchRateLimiter } from '../middleware/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
 import { QuotaExceededError } from '../services/googleQuota';
-import { checkUserQuota, trackUserCalls, UserQuotaExceededError } from '../services/userQuota';
-import { recordSearch, getKnownPlaceIds } from '../services/searchHistory';
+import { checkUserQuota, trackUserCalls, setUserLimitOverride, UserQuotaExceededError } from '../services/userQuota';
+import { recordSearch, getKnownPlaceIds, countUserSearches } from '../services/searchHistory';
+import { getUserPlan, isFreePlan, FreePlanLimitError, FREE_PLAN_SEARCH_LIMIT } from '../services/planStore';
 
 const router = Router();
 router.use(requireInternalSecret);
@@ -93,6 +94,30 @@ router.get('/', async (req: Request, res: Response) => {
       return;
     }
 
+    const userId = req.user!.sub;
+    const addressStr = typeof address === 'string' ? address : `${center.lat},${center.lng}`;
+
+    // Gate du plan gratuit : 1 seule recherche à vie. Vérifié AVANT le cache pour qu'un
+    // utilisateur ayant déjà consommé sa recherche soit bloqué même sur un résultat en cache.
+    let onFreePlan = false;
+    if (process.env.DATABASE_URL) {
+      try {
+        const plan = await getUserPlan(userId);
+        setUserLimitOverride(userId, plan.dailyLimit);
+
+        if (isFreePlan(plan)) {
+          onFreePlan = true;
+          const previousSearches = await countUserSearches(userId);
+          if (previousSearches >= FREE_PLAN_SEARCH_LIMIT) {
+            throw new FreePlanLimitError();
+          }
+        }
+      } catch (err) {
+        if (err instanceof FreePlanLimitError) throw err;
+        /* sinon : on retombe sur la limite par défaut (env) */
+      }
+    }
+
     const key = cacheKey({
       lat: Number(center.lat.toFixed(4)),
       lng: Number(center.lng.toFixed(4)),
@@ -101,17 +126,19 @@ router.get('/', async (req: Request, res: Response) => {
     });
     const cached = await getCached<{ center: typeof center; radius: number; summary: object; establishments: unknown[] }>(key);
     if (cached) {
+      // Un résultat servi depuis le cache compte quand même comme la recherche unique du plan gratuit.
+      if (onFreePlan) {
+        recordSearch(userId, {
+          address: addressStr,
+          lat: center.lat,
+          lng: center.lng,
+          radius: radiusMeters,
+          types: typeList.join(','),
+          resultCount: cached.establishments.length,
+        }).catch(err => console.error('[search-history] save failed:', err.message));
+      }
       res.json(cached);
       return;
-    }
-
-    const userId = req.user!.sub;
-
-    if (process.env.DATABASE_URL) {
-      try {
-        const { syncLimitFromPlan } = await import('../services/userQuota');
-        await syncLimitFromPlan(userId);
-      } catch { /* fallback to env default */ }
     }
 
     checkUserQuota(userId);
@@ -176,7 +203,6 @@ router.get('/', async (req: Request, res: Response) => {
       establishments.map(e => setCached(`establishment:${e.id}`, e))
     );
 
-    const addressStr = typeof address === 'string' ? address : `${center.lat},${center.lng}`;
     recordSearch(userId, {
       address: addressStr,
       lat: center.lat,
@@ -188,6 +214,10 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(payload);
   } catch (err) {
+    if (err instanceof FreePlanLimitError) {
+      res.status(402).json({ error: err.message });
+      return;
+    }
     if (err instanceof UserQuotaExceededError || err instanceof QuotaExceededError) {
       res.status(429).json({ error: err.message });
       return;
