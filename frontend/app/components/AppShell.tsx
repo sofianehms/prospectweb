@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
 import { useEffect, useRef, useState } from 'react'
+import { LogoMark } from './Logo'
 
 type Theme = 'light' | 'dark'
 
@@ -123,8 +124,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* SIDEBAR — collapsed rail */}
       {!sidebarOpen && (
         <aside className="hidden md:flex flex-col items-center" aria-label="Navigation principale" style={{ width: 48, flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)', padding: '12px 0', gap: 2 }}>
-          <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7, marginBottom: 8 }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, marginBottom: 8, color: 'var(--t1)' }}>
+            <LogoMark size={20} />
           </div>
           <button
             onClick={toggleSidebar}
@@ -171,11 +172,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col overflow-hidden" aria-label="Navigation principale" style={{ width: 'var(--sidebar)', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}>
-          <Link href="/dashboard" className="flex items-center gap-[9px] flex-1 min-w-0">
-            <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 7 }}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2.2" fill="var(--on-accent)"/><path d="M6.5 1.5V3M6.5 10V11.5M1.5 6.5H3M10 6.5h1.5" stroke="var(--on-accent)" strokeWidth="1.2" strokeLinecap="round"/></svg>
-            </div>
-            <span className="font-display" style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.03em' }}>nosite</span>
+          <Link href="/dashboard" className="flex items-center gap-[9px] flex-1 min-w-0" style={{ color: 'var(--t1)' }}>
+            <LogoMark size={22} />
+            <span className="font-display" style={{ fontWeight: 600, fontSize: 17, letterSpacing: '-0.03em' }}>nosite</span>
           </Link>
           <button
             onClick={toggleSidebar}

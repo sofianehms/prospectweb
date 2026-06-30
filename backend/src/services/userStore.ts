@@ -32,17 +32,30 @@ export async function ensureClerkUser(
     [clerkId],
   );
   const isNew = rows.length === 0;
+  let isWelcomeEligible = isNew;
 
-  await getPool().query(
-    `INSERT INTO users (id, email, password_hash, first_name, last_name)
-     VALUES ($1, $2, '', '', '')
-     ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email`,
-    [clerkId, emailToStore],
-  );
+  try {
+    await getPool().query(
+      `INSERT INTO users (id, email, password_hash, first_name, last_name)
+       VALUES ($1, $2, '', '', '')
+       ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email`,
+      [clerkId, emailToStore],
+    );
+  } catch (err) {
+    if ((err as { code?: string }).code === '23505' && normalizedEmail) {
+      // L'email existe déjà sous un autre id : Clerk a réémis un nouvel id pour ce même
+      // utilisateur. On ré-attache la ligne existante (plan, abonnement Stripe, prospects,
+      // historique via ON UPDATE CASCADE) au nouvel id plutôt que d'échouer silencieusement.
+      await getPool().query('UPDATE users SET id = $1 WHERE email = $2', [clerkId, normalizedEmail]);
+      isWelcomeEligible = false;
+    } else {
+      throw err;
+    }
+  }
 
   if (normalizedEmail) provisionedWithEmail.add(clerkId);
 
-  if (isNew && normalizedEmail) {
+  if (isWelcomeEligible && normalizedEmail) {
     try {
       const { sendWelcomeEmail } = await import('./emailService');
       const name = normalizedEmail.split('@')[0].split(/[._-]/)[0];

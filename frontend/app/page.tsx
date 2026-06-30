@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { useState } from 'react'
+import Logo from './components/Logo'
 
 /* ══════════════════════════════════════════════════════
    NAV
@@ -13,11 +14,8 @@ function Nav() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-200 h-16 px-6 md:px-16 flex items-center justify-between backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-transparent">
-      <Link href="/" className="flex items-center gap-2.5 shrink-0">
-        <div className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center shrink-0" style={{ background: 'var(--accent)' }}>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="var(--on-accent)" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="var(--on-accent)" strokeWidth="1.3" strokeLinecap="round" /></svg>
-        </div>
-        <span className="font-display font-bold text-[19px] tracking-tight text-gray-900 dark:text-slate-100">nosite</span>
+      <Link href="/" className="flex items-center shrink-0 text-gray-900 dark:text-slate-100">
+        <Logo size={26} textSize={19} gap={10} />
       </Link>
       <div className="hidden md:flex items-center gap-9">
         <a href="#produit" className="text-sm font-medium text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors">Produit</a>
@@ -625,11 +623,8 @@ function LandingFooter() {
       <div className="max-w-[1140px] mx-auto">
         <div className="mb-10 grid gap-8 grid-cols-2 md:grid-cols-4">
           <div>
-            <div className="mb-3 flex items-center gap-2.5">
-              <div className="w-[22px] h-[22px] rounded-[5px] flex items-center justify-center shrink-0" style={{ background: 'var(--accent)' }}>
-                <svg width="11" height="11" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2.5" fill="var(--on-accent)" /><path d="M7.5 2v1.5M7.5 11.5V13M2 7.5h1.5M11.5 7.5H13M3.7 3.7l1.1 1.1M10.2 10.2l1.1 1.1M3.7 11.3l1.1-1.1M10.2 4.8l1.1-1.1" stroke="var(--on-accent)" strokeWidth="1.3" strokeLinecap="round" /></svg>
-              </div>
-              <span className="font-display font-bold text-sm text-gray-900 dark:text-slate-100">nosite</span>
+            <div className="mb-3 flex items-center text-gray-900 dark:text-slate-100">
+              <Logo size={18} textSize={14} gap={7} />
             </div>
             <p className="text-xs text-gray-400 dark:text-slate-500 leading-relaxed">Le moteur de détection d&apos;opportunités commerciales pour les agences et freelances du web.</p>
           </div>

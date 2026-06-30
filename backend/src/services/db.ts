@@ -164,4 +164,27 @@ export async function initDb(): Promise<void> {
       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+
+  // Clerk peut réémettre un nouvel id pour un même utilisateur (changement d'instance,
+  // compte recréé...). ensureClerkUser() ré-attache alors la ligne existante au nouvel id
+  // (UPDATE users SET id = ...) : ON UPDATE CASCADE fait suivre prospects/historique/clés API
+  // au lieu de les laisser orphelins.
+  for (const [table, constraint] of [
+    ['prospects', 'prospects_user_id_fkey'],
+    ['search_history', 'search_history_user_id_fkey'],
+    ['api_keys', 'api_keys_user_id_fkey'],
+  ]) {
+    await db.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = '${constraint}' AND confupdtype = 'c'
+        ) THEN
+          ALTER TABLE ${table} DROP CONSTRAINT IF EXISTS ${constraint};
+          ALTER TABLE ${table} ADD CONSTRAINT ${constraint}
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE;
+        END IF;
+      END $$;
+    `);
+  }
 }
