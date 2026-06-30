@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import AppShell from '../components/AppShell'
 import { identify } from '@/app/lib/analytics'
 
-interface UserInfo { id: string; email: string }
+interface UserInfo { id: string; email: string; firstName?: string; lastName?: string }
 interface UsageInfo { calls: number; limit: number; remaining: number; date: string }
 interface Prospect {
   id: string; name: string; address: string; type: string;
@@ -93,7 +93,7 @@ export default function DashboardPage() {
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
 
-  const firstName = user ? extractFirstName(user.email) : '…'
+  const firstName = user?.firstName || (user ? extractFirstName(user.email) : '…')
 
   // CRM counts
   const crmCounts: Record<string, number> = {}
@@ -130,7 +130,7 @@ export default function DashboardPage() {
         }}>
           <div>
             <h1 className="font-display" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 4 }}>
-              Bonjour, {loading ? '…' : firstName} 👋
+              Tableau de bord
             </h1>
             <p style={{ fontSize: 14, color: 'var(--t3)' }}>
               {formatDate(today)} · {prospects.length} opportunit&eacute;{prospects.length !== 1 ? 's' : ''} en base
@@ -438,18 +438,21 @@ export default function DashboardPage() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {history.slice(0, 5).map(h => (
-                        <div key={h.id} style={{
+                        <Link key={h.id} href={`/results?historyId=${h.id}`} style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '12px 14px',
                           borderRadius: 10,
                           background: 'var(--surface2)',
+                          textDecoration: 'none',
+                          transition: 'background .15s',
                         }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <p style={{
                               fontSize: 13,
                               fontWeight: 600,
+                              color: 'var(--t1)',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -472,7 +475,7 @@ export default function DashboardPage() {
                           }}>
                             {h.resultCount} opp.
                           </span>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}

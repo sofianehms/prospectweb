@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { SearchResult, WebsiteStatus } from '@/app/types/establishment'
+import type { Establishment, SearchResult, WebsiteStatus } from '@/app/types/establishment'
 
 const STATUS_COLOR: Record<WebsiteStatus, string> = {
   none:        '#f97316', // orange
@@ -54,10 +54,19 @@ function dotIcon(color: string, status: WebsiteStatus) {
   })
 }
 
-export default function Map({ data, fullHeight = false }: { data: SearchResult; fullHeight?: boolean }) {
+export default function Map({
+  data, establishments, fullHeight = false,
+}: {
+  data: SearchResult
+  establishments?: Establishment[]
+  fullHeight?: boolean
+}) {
   const containerRef    = useRef<HTMLDivElement>(null)
   const mapRef          = useRef<L.Map | null>(null)
+  const markersRef       = useRef<L.LayerGroup | null>(null)
+  const shown = establishments ?? data.establishments
 
+  // Initialisation de la carte (centre, cercle de rayon) — une seule fois par recherche
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
@@ -91,33 +100,7 @@ export default function Map({ data, fullHeight = false }: { data: SearchResult; 
       weight:      2,
     }).addTo(map)
 
-    // Marqueurs des établissements
-    data.establishments.forEach(e => {
-      const color = STATUS_COLOR[e.websiteStatus]
-      const label = STATUS_LABEL[e.websiteStatus]
-
-      L.marker([e.lat, e.lng], { icon: dotIcon(color, e.websiteStatus) })
-        .bindPopup(
-          `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:170px;padding:2px 0">
-            <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:var(--t1)">${e.name}</p>
-            <p style="margin:0 0 8px;font-size:11px;color:var(--t3)">${e.type.replace(/_/g,' ')}</p>
-            <span style="
-              display:inline-block;padding:2px 8px;border-radius:9999px;
-              font-size:11px;font-weight:600;
-              background:${color}18;color:${color};
-            ">${label}</span>
-            <div style="margin-top:10px">
-              <a href="/results/${e.id}" style="
-                display:inline-block;padding:5px 12px;border-radius:7px;
-                background:var(--t1);color:var(--surface);font-size:11px;font-weight:600;
-                text-decoration:none;
-              ">Voir la fiche →</a>
-            </div>
-          </div>`,
-          { minWidth: 180, closeButton: true }
-        )
-        .addTo(map)
-    })
+    markersRef.current = L.layerGroup().addTo(map)
 
     // Ajuste la vue sur le cercle de recherche
     map.fitBounds(circle.getBounds().pad(0.1))
@@ -127,8 +110,49 @@ export default function Map({ data, fullHeight = false }: { data: SearchResult; 
     return () => {
       map.remove()
       mapRef.current = null
+      markersRef.current = null
     }
   }, [data])
+
+  // Marqueurs des établissements — recréés à chaque changement de filtre, sans toucher au zoom/pan
+  useEffect(() => {
+    const layer = markersRef.current
+    if (!layer) return
+    layer.clearLayers()
+
+    shown.forEach(e => {
+      const color = STATUS_COLOR[e.websiteStatus]
+      const label = STATUS_LABEL[e.websiteStatus]
+
+      // Le popup Leaflet a toujours un fond blanc, quel que soit le thème de l'app
+      const popupText = '#1a1a1a'
+      const popupMuted = '#666'
+      const popupBtnBg = '#1a1a1a'
+      const popupBtnFg = '#fff'
+
+      L.marker([e.lat, e.lng], { icon: dotIcon(color, e.websiteStatus) })
+        .bindPopup(
+          `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:170px;padding:2px 0">
+            <p style="margin:0 0 2px;font-weight:700;font-size:13px;color:${popupText}">${e.name || 'Sans nom'}</p>
+            <p style="margin:0 0 8px;font-size:11px;color:${popupMuted}">${e.type.replace(/_/g,' ')}</p>
+            <span style="
+              display:inline-block;padding:2px 8px;border-radius:9999px;
+              font-size:11px;font-weight:600;
+              background:${color}18;color:${color};
+            ">${label}</span>
+            <div style="margin-top:10px">
+              <a href="/results/${e.id}" style="
+                display:inline-block;padding:5px 12px;border-radius:7px;
+                background:${popupBtnBg};color:${popupBtnFg};font-size:11px;font-weight:600;
+                text-decoration:none;
+              ">Voir la fiche →</a>
+            </div>
+          </div>`,
+          { minWidth: 180, closeButton: true }
+        )
+        .addTo(layer)
+    })
+  }, [shown])
 
   return (
     <div className={fullHeight ? 'relative h-full' : 'relative'}>

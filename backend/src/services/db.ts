@@ -87,6 +87,10 @@ export async function initDb(): Promise<void> {
   `);
 
   await db.query(`
+    ALTER TABLE search_history ADD COLUMN IF NOT EXISTS results JSONB
+  `);
+
+  await db.query(`
     ALTER TABLE prospects ADD COLUMN IF NOT EXISTS follow_up_at TIMESTAMPTZ
   `);
 

@@ -197,6 +197,10 @@ export default function ResultsClient({
               )
             })}
           </div>
+          <Link href="/results" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border-b)', color: 'var(--t2)', fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'all .15s' }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 3h9M2 6.5h9M2 10h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+            Recherches récentes
+          </Link>
           <Link href="/search" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="var(--on-accent)" strokeWidth="1.4" /><path d="M12 12l-2-2" stroke="var(--on-accent)" strokeWidth="1.4" strokeLinecap="round" /></svg>
             Modifier la recherche
@@ -243,7 +247,7 @@ export default function ResultsClient({
       {/* MAP VIEW */}
       {viewMode === 'map' && (
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-          <MapWrapper data={data} fullHeight />
+          <MapWrapper data={data} establishments={filtered} fullHeight />
         </div>
       )}
 

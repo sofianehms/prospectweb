@@ -116,7 +116,7 @@ export default function SearchForm() {
     const params = new URLSearchParams({ radius: String(radius * 1000) })
     if (categories.length > 0) params.set('types', categories.join(','))
     if (activeFilters.length > 0) params.set('filters', activeFilters.join(','))
-    if (coords) { params.set('lat', String(coords.lat)); params.set('lng', String(coords.lng)) }
+    if (coords) { params.set('lat', String(coords.lat)); params.set('lng', String(coords.lng)); params.set('address', address.trim()) }
     else params.set('address', address.trim())
     track(events.SEARCH, { types: categories, radius, filters: activeFilters })
     router.push(`/results?${params.toString()}`)

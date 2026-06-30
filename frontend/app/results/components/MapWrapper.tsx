@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { SearchResult } from '@/app/types/establishment'
+import type { Establishment, SearchResult } from '@/app/types/establishment'
 
 const Map = dynamic(() => import('./Map'), {
   ssr: false,
@@ -17,6 +17,12 @@ const Map = dynamic(() => import('./Map'), {
   ),
 })
 
-export default function MapWrapper({ data, fullHeight = false }: { data: SearchResult; fullHeight?: boolean }) {
-  return <Map data={data} fullHeight={fullHeight} />
+export default function MapWrapper({
+  data, establishments, fullHeight = false,
+}: {
+  data: SearchResult
+  establishments?: Establishment[]
+  fullHeight?: boolean
+}) {
+  return <Map data={data} establishments={establishments} fullHeight={fullHeight} />
 }

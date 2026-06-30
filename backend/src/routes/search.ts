@@ -32,6 +32,7 @@ type SearchRecordPayload = {
   radius: number;
   types: string;
   resultCount: number;
+  results?: unknown;
 };
 
 function resolveSiteStatus(
@@ -160,6 +161,7 @@ router.get('/', async (req: Request, res: Response) => {
         radius: radiusMeters,
         types: typeList.join(','),
         resultCount: cached.establishments.length,
+        results: cached,
       }, onFreePlan);
       res.json(cached);
       return;
@@ -234,6 +236,7 @@ router.get('/', async (req: Request, res: Response) => {
       radius: radiusMeters,
       types: typeList.join(','),
       resultCount: establishments.length,
+      results: payload,
     }, onFreePlan);
 
     res.json(payload);
