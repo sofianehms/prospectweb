@@ -15,9 +15,12 @@ export default function RouteChrome() {
     <>
       <ThemeToggle />
       <footer className="mt-auto py-4 text-center text-xs text-gray-400 dark:text-slate-500">
-        <a href="/privacy" className="underline transition hover:text-gray-600 dark:hover:text-slate-300">
-          Politique de confidentialit&eacute;
-        </a>
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <a href="/privacy" className="underline transition hover:text-gray-600 dark:hover:text-slate-300">Confidentialité</a>
+          <a href="/cgu" className="underline transition hover:text-gray-600 dark:hover:text-slate-300">CGU</a>
+          <a href="/cgv" className="underline transition hover:text-gray-600 dark:hover:text-slate-300">CGV</a>
+          <a href="/mentions-legales" className="underline transition hover:text-gray-600 dark:hover:text-slate-300">Mentions légales</a>
+        </nav>
       </footer>
     </>
   )

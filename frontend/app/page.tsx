@@ -650,9 +650,9 @@ function LandingFooter() {
             <p className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">Légal</p>
             <ul className="space-y-2 text-sm text-gray-500 dark:text-slate-400">
               <li><Link href="/privacy" className="hover:text-gray-900 dark:hover:text-slate-100 transition">Confidentialité</Link></li>
-              <li><span className="cursor-default">CGU</span></li>
-              <li><span className="cursor-default">RGPD</span></li>
-              <li><span className="cursor-default">Mentions légales</span></li>
+              <li><Link href="/cgu" className="hover:text-gray-900 dark:hover:text-slate-100 transition">CGU</Link></li>
+              <li><Link href="/cgv" className="hover:text-gray-900 dark:hover:text-slate-100 transition">CGV</Link></li>
+              <li><Link href="/mentions-legales" className="hover:text-gray-900 dark:hover:text-slate-100 transition">Mentions légales</Link></li>
             </ul>
           </div>
         </div>
