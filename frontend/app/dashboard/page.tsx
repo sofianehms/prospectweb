@@ -33,11 +33,6 @@ function timeAgo(dateStr: string): string {
   return `Il y a ${days} jours`
 }
 
-function extractFirstName(email: string): string {
-  const local = email.split('@')[0]
-  const name = local.split(/[._-]/)[0]
-  return name.charAt(0).toUpperCase() + name.slice(1)
-}
 
 const CRM_LABELS: Record<string, string> = {
   to_contact: 'À contacter',
@@ -93,7 +88,6 @@ export default function DashboardPage() {
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
 
-  const firstName = user?.firstName || (user ? extractFirstName(user.email) : '…')
 
   // CRM counts
   const crmCounts: Record<string, number> = {}
